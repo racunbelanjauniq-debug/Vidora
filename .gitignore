@@ -3,6 +3,7 @@
 *.env
 *.pem
 *.key
+.github/
 
 # Google Profiles & Session Data (Penting agar session Google tidak ter-push)
 worker/data/
