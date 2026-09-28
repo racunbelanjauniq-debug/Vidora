@@ -108,18 +108,20 @@ class VidoraDataBridge {
         }
     }
 
-    resetDemoUser(role = "superadmin") {
+    resetDemoUser(role = "superadmin", isSubscribed = null) {
+        const sub = isSubscribed !== null ? isSubscribed : (role === "superadmin");
         this.currentUser = {
             id: "owner-user-winal",
             email: "winalislam@gmail.com",
-            user_metadata: { full_name: "Winal Islam (Super Admin)" }
+            user_metadata: { full_name: role === "superadmin" ? "Winal Islam (Super Admin)" : "Winal Islam (Member)" }
         };
         this.currentProfile = {
             id: this.currentUser.id,
             email: this.currentUser.email,
-            full_name: "Winal Islam (Super Admin)",
+            full_name: role === "superadmin" ? "Winal Islam (Super Admin)" : "Winal Islam (Member)",
             role: role,
-            max_google_accounts: role === "superadmin" ? 99999 : 5
+            max_google_accounts: role === "superadmin" ? 99999 : 5,
+            is_subscribed: sub
         };
         localStorage.setItem("vidora_demo_current_user", JSON.stringify({
             user: this.currentUser,
@@ -132,6 +134,19 @@ class VidoraDataBridge {
         const nextRole = this.currentProfile?.role === "superadmin" ? "user" : "superadmin";
         this.resetDemoUser(nextRole);
         return this.currentProfile;
+    }
+
+    // Toggle Subscription Status for quick testing
+    toggleDemoSubscription() {
+        if (!this.currentProfile) return false;
+        this.currentProfile.is_subscribed = !this.currentProfile.is_subscribed;
+        if (!this.isLive) {
+            localStorage.setItem("vidora_demo_current_user", JSON.stringify({
+                user: this.currentUser,
+                profile: this.currentProfile
+            }));
+        }
+        return this.currentProfile.is_subscribed;
     }
 
     // Save Cloud Credentials
@@ -196,6 +211,18 @@ class VidoraDataBridge {
             if (isOwner && this.currentProfile) {
                 this.currentProfile.role = "superadmin";
                 this.currentProfile.max_google_accounts = 99999;
+                this.currentProfile.is_subscribed = true;
+            } else if (this.currentProfile) {
+                if (this.currentProfile.role === "superadmin" || this.currentProfile.role === "admin") {
+                    this.currentProfile.is_subscribed = true;
+                } else if (this.currentProfile.is_subscribed === undefined || this.currentProfile.is_subscribed === null) {
+                    try {
+                        const { data: paidOrders } = await this.client.from("orders").select("id").eq("user_id", this.currentUser.id).eq("status", "paid").limit(1);
+                        this.currentProfile.is_subscribed = (paidOrders && paidOrders.length > 0) ? true : false;
+                    } catch (e) {
+                        this.currentProfile.is_subscribed = false;
+                    }
+                }
             }
 
             return { user: this.currentUser, profile: this.currentProfile };
@@ -574,14 +601,21 @@ class VidoraDataBridge {
                 if (this.currentProfile) {
                     this.currentProfile.role = this.currentProfile.role === "superadmin" ? "superadmin" : "user";
                     this.currentProfile.max_google_accounts = this.currentProfile.role === "superadmin" ? 99999 : 5;
+                    this.currentProfile.is_subscribed = true;
                     localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
                 }
             }
             return true;
         }
         try {
-            const { error } = await this.client.from("orders").update({ status: "paid" }).eq("id", orderId);
+            const { data: orderData, error } = await this.client.from("orders").update({ status: "paid" }).eq("id", orderId).select().single();
             if (error) throw error;
+            if (orderData?.user_id) {
+                await this.client.from("profiles").update({ is_subscribed: true }).eq("id", orderData.user_id);
+            }
+            if (this.currentProfile && (this.currentProfile.id === orderData?.user_id || this.currentProfile.email === orderData?.customer_email)) {
+                this.currentProfile.is_subscribed = true;
+            }
             return true;
         } catch (e) {
             return true;

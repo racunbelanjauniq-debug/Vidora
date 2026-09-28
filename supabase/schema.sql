@@ -14,10 +14,14 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     avatar_url TEXT,
     role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
     max_google_accounts INT DEFAULT 5, -- Maksimal 5 akun untuk user, 99999 untuk superadmin
+    is_subscribed BOOLEAN DEFAULT FALSE, -- Status langganan Creator Pass
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Ensure column exists if table was already created
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT FALSE;
 
 -- Helper function to check if current user is admin without recursion
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -39,25 +43,29 @@ RETURNS TRIGGER AS $$
 DECLARE
     user_role TEXT := 'user';
     acc_limit INT := 5;
+    is_sub BOOLEAN := FALSE;
 BEGIN
     -- Whitelist winalislam@gmail.com dan admin sebagai Super Admin permanen
     IF NEW.email = 'winalislam@gmail.com' OR NEW.email LIKE '%admin%' THEN
         user_role := 'superadmin';
         acc_limit := 99999;
+        is_sub := TRUE;
     END IF;
 
-    INSERT INTO public.profiles (id, email, full_name, role, max_google_accounts)
+    INSERT INTO public.profiles (id, email, full_name, role, max_google_accounts, is_subscribed)
     VALUES (
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
         user_role,
-        acc_limit
+        acc_limit,
+        is_sub
     )
     ON CONFLICT (id) DO UPDATE 
     SET email = EXCLUDED.email,
         role = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN 'superadmin' ELSE public.profiles.role END,
         max_google_accounts = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN 99999 ELSE public.profiles.max_google_accounts END,
+        is_subscribed = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN TRUE ELSE public.profiles.is_subscribed END,
         full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name);
         
     RETURN NEW;
@@ -144,8 +152,15 @@ BEGIN
         IF NEW.user_id IS NOT NULL THEN
             UPDATE public.profiles
             SET max_google_accounts = 5,
+                is_subscribed = TRUE,
                 updated_at = now()
             WHERE id = NEW.user_id;
+        ELSIF NEW.customer_email IS NOT NULL THEN
+            UPDATE public.profiles
+            SET max_google_accounts = 5,
+                is_subscribed = TRUE,
+                updated_at = now()
+            WHERE email = NEW.customer_email;
         END IF;
     END IF;
     RETURN NEW;

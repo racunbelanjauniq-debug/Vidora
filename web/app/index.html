@@ -52,6 +52,18 @@
         <!-- TAB 1: STUDIO (Mirip 100% dengan Generate GAMA) -->
         <section id="tab-studio" class="tab-pane active">
 
+            <!-- Warning Banner untuk Non-Member / Belum Berlangganan -->
+            <div id="subWarningBanner" class="sub-warning-banner" style="display: none;">
+                <div class="banner-text">
+                    <i data-lucide="shield-alert" style="width: 18px; height: 18px; color: #fbbf24; flex-shrink: 0;"></i>
+                    <span><strong>Status Akun: Belum Berlangganan.</strong> Fitur generate video, gambar & auto-prompt terkunci sampai paket aktif.</span>
+                </div>
+                <button type="button" class="btn-banner-upgrade" id="btnBannerUpgrade">
+                    <i data-lucide="crown" style="width: 13px; height: 13px;"></i>
+                    <span>Langganan Rp 75rb</span>
+                </button>
+            </div>
+
             <!-- Sub-Tabs Generator Nav (Video, Image, Prompt Gen) -->
             <div class="sub-tabs-bar">
                 <button type="button" class="sub-tab-btn active" data-sub="video">
@@ -938,17 +950,30 @@
                     <span style="color: var(--text-secondary);">Batas Kuota Akun:</span>
                     <span id="userProfileLimitText" style="font-weight: 700; color: var(--accent-cyan);">Maks 5 Akun</span>
                 </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+                    <span style="color: var(--text-secondary);">Status Langganan:</span>
+                    <span id="userProfileSubStatus" style="font-weight: 700; color: #10b981;">Aktif (Creator Pass)</span>
+                </div>
             </div>
 
-            <!-- Testing Role Switcher -->
+            <!-- Testing Role & Subscription Switcher -->
             <div style="background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <div>
-                        <div style="font-size: 12px; font-weight: 700; color: #fbbf24;">Role Switcher (Super Admin)</div>
-                        <div style="font-size: 11px; color: var(--text-secondary);">Ubah tampilan untuk tes panel Admin</div>
+                        <div style="font-size: 12px; font-weight: 700; color: #fbbf24;">Role Switcher</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">Ganti peran untuk tes panel Admin</div>
                     </div>
                     <button type="button" class="btn-table-action" id="btnToggleRoleQuick" style="background: #fbbf24; color: #1e1b4b; font-weight: 800;">
                         Ganti Peran
+                    </button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(251, 191, 36, 0.15);">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 700; color: #fbbf24;">Status Langganan</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">Tes mode Member Aktif vs Non-Member</div>
+                    </div>
+                    <button type="button" class="btn-table-action" id="btnToggleSubQuick" style="background: rgba(255,255,255,0.1); color: #fff; font-weight: 700;">
+                        Tes Non-Member
                     </button>
                 </div>
             </div>
@@ -963,6 +988,72 @@
                     <span>Keluar dari Akun</span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ANDA BELUM BERLANGGANAN (SUBSCRIPTION GATE POPUP) -->
+    <div class="modal-backdrop" id="modalSubscriptionRequired">
+        <div class="modal-sheet sub-required-modal">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: -10px;">
+                <button type="button" class="btn-icon" id="btnCloseSubRequired" title="Tutup">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            
+            <div class="sub-required-icon-wrap">
+                <i data-lucide="lock" style="width: 30px; height: 30px; color: #fbbf24;"></i>
+            </div>
+
+            <h3 class="sub-required-title">Anda Belum Berlangganan</h3>
+            
+            <div class="sub-required-action-pill" id="subRequiredActionPill">
+                <i data-lucide="sparkles" style="width: 11px; height: 11px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+                <span id="subRequiredActionDesc">Akses Studio AI Generator Terkunci</span>
+            </div>
+
+            <p class="sub-required-desc">
+                Fitur generate <strong>Video AI 60fps</strong>, <strong>Gambar Produk</strong>, dan <strong>Smart Prompt Gemini</strong> hanya dapat diakses oleh member aktif <strong>VIDORA Creator Pass</strong>.
+            </p>
+
+            <div class="sub-plan-highlight">
+                <div class="sub-plan-header">
+                    <div>
+                        <span class="sub-plan-badge">PAKET KREATOR</span>
+                        <div class="sub-plan-name">VIDORA Creator Pass</div>
+                    </div>
+                    <div class="sub-plan-price">
+                        <div class="price-val">Rp 75.000</div>
+                        <div class="price-period">/ bulan</div>
+                    </div>
+                </div>
+                <ul class="sub-plan-perks">
+                    <li>
+                        <i data-lucide="check" style="width: 14px; height: 14px; color: #10b981; flex-shrink: 0;"></i>
+                        <span>Rotasi Otomatis Hingga 5 Akun Google</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width: 14px; height: 14px; color: #10b981; flex-shrink: 0;"></i>
+                        <span>Generate Video HD 60fps & Gambar Produk</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width: 14px; height: 14px; color: #10b981; flex-shrink: 0;"></i>
+                        <span>Smart Prompt Gemini Vision dari Foto Produk</span>
+                    </li>
+                    <li>
+                        <i data-lucide="check" style="width: 14px; height: 14px; color: #10b981; flex-shrink: 0;"></i>
+                        <span>Mode Latar Belakang (Invisible) & Antrian Cepat</span>
+                    </li>
+                </ul>
+            </div>
+
+            <button type="button" class="btn-subscribe-cta" id="btnSubRequiredCheckout">
+                <i data-lucide="crown" style="width: 18px; height: 18px;"></i>
+                <span>Langganan Sekarang — Rp 75.000 / bln</span>
+            </button>
+
+            <button type="button" class="btn-sub-later" id="btnSubRequiredDismiss">
+                Lihat-lihat Studio Dulu
+            </button>
         </div>
     </div>
 

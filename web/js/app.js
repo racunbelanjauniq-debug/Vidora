@@ -81,17 +81,57 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnHeaderAuth = document.getElementById("btnHeaderAuth");
     const navItemAdmin = document.getElementById("navItemAdmin");
 
-    // Modals
+    // Modals & Banners
     const modalAddAccount = document.getElementById("modalAddAccount");
     const modalVideoPlayer = document.getElementById("modalVideoPlayer");
     const modalAuth = document.getElementById("modalAuth");
     const modalUserProfile = document.getElementById("modalUserProfile");
     const modalCheckout = document.getElementById("modalCheckout");
+    const modalSubscriptionRequired = document.getElementById("modalSubscriptionRequired");
+    const subWarningBanner = document.getElementById("subWarningBanner");
+    const btnBannerUpgrade = document.getElementById("btnBannerUpgrade");
+    const btnCloseSubRequired = document.getElementById("btnCloseSubRequired");
+    const btnSubRequiredDismiss = document.getElementById("btnSubRequiredDismiss");
+    const btnSubRequiredCheckout = document.getElementById("btnSubRequiredCheckout");
+    const subRequiredActionDesc = document.getElementById("subRequiredActionDesc");
     const playerVideo = document.getElementById("playerVideo");
     const playerImage = document.getElementById("playerImage");
     const playerPromptText = document.getElementById("playerPromptText");
     const playerModalTitle = document.getElementById("playerModalTitle");
     const btnDownloadVideo = document.getElementById("btnDownloadVideo");
+
+    // =========================================================================
+    // Subscription Gate Helpers
+    // =========================================================================
+    function isUserSubscribed() {
+        if (!currentUser) return false;
+        if (activeProfile?.role === "superadmin" || activeProfile?.role === "admin") return true;
+        if (currentUser.email === "winalislam@gmail.com") return true;
+        return activeProfile?.is_subscribed === true;
+    }
+
+    function openSubscriptionRequiredModal(actionName = "") {
+        if (subRequiredActionDesc && actionName) {
+            subRequiredActionDesc.textContent = `Fitur "${actionName}" Terkunci — Perlu Langganan`;
+        }
+        if (modalSubscriptionRequired) {
+            modalSubscriptionRequired.classList.add("open");
+        }
+    }
+
+    function closeSubscriptionRequiredModal() {
+        if (modalSubscriptionRequired) {
+            modalSubscriptionRequired.classList.remove("open");
+        }
+    }
+
+    function checkSubscriptionAccess(actionName = "generate") {
+        if (!isUserSubscribed()) {
+            openSubscriptionRequiredModal(actionName);
+            return false;
+        }
+        return true;
+    }
 
     // =========================================================================
     // 1. Initial Load & Auth Sync
@@ -102,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         const session = await window.vidoraData.getSession();
         currentUser = session?.user || null;
-        activeProfile = session?.profile || { role: "user", max_google_accounts: 5 };
+        activeProfile = session?.profile || { role: "user", max_google_accounts: 5, is_subscribed: false };
 
         const btnCloseAuth = document.getElementById("btnCloseAuth");
 
@@ -124,6 +164,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         await refreshAccounts();
         await refreshJobs();
 
+        // Non-Member notification & banner
+        const isSub = isUserSubscribed();
+        if (subWarningBanner) {
+            subWarningBanner.style.display = isSub ? "none" : "flex";
+        }
+        if (!isSub) {
+            // Tampilkan popup otomatis saat non-member masuk sesuai instruksi:
+            // "jika seseorang masuk kesini non member pastikan tidak bisa melakukan generate dan muncul popup anda belum berlangganan"
+            setTimeout(() => {
+                openSubscriptionRequiredModal("Akses Studio AI Generator");
+            }, 600);
+        }
+
         // Check connection pill in admin tab
         updateConnectionStatusPill();
     }
@@ -143,11 +196,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                 userRoleBadge.style.color = "#fef08a";
                 userRoleBadge.style.background = "rgba(251, 191, 36, 0.15)";
                 navItemAdmin.style.display = "flex";
+            } else if (isUserSubscribed()) {
+                userRoleBadge.innerHTML = `<i data-lucide="check-circle" style="width:13px;height:13px;color:#10b981;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Aktif)</span>`;
+                userRoleBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
+                userRoleBadge.style.color = "#a7f3d0";
+                userRoleBadge.style.background = "rgba(16, 185, 129, 0.12)";
+                navItemAdmin.style.display = "none";
             } else {
-                userRoleBadge.innerHTML = `<i data-lucide="user" style="width:13px;height:13px;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'}</span>`;
-                userRoleBadge.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                userRoleBadge.style.color = "var(--text-secondary)";
-                userRoleBadge.style.background = "rgba(255, 255, 255, 0.04)";
+                userRoleBadge.innerHTML = `<i data-lucide="alert-triangle" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Belum Langganan)</span>`;
+                userRoleBadge.style.borderColor = "rgba(245, 158, 11, 0.4)";
+                userRoleBadge.style.color = "#fde68a";
+                userRoleBadge.style.background = "rgba(245, 158, 11, 0.12)";
                 navItemAdmin.style.display = "none";
             }
         }
@@ -260,6 +319,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         
         const badgeElem = document.getElementById("userProfileRoleBadge");
         const limitElem = document.getElementById("userProfileLimitText");
+        const subStatusElem = document.getElementById("userProfileSubStatus");
+        const btnToggleSubQuick = document.getElementById("btnToggleSubQuick");
+        const isSub = isUserSubscribed();
 
         if (activeProfile.role === "superadmin") {
             badgeElem.className = "role-badge-admin";
@@ -267,8 +329,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             limitElem.textContent = "Unlimited Akun";
         } else {
             badgeElem.className = "role-badge-user";
-            badgeElem.textContent = "Member Pro";
+            badgeElem.textContent = isSub ? "Member (Creator Pass)" : "Non-Member";
             limitElem.textContent = `Maks ${activeProfile.max_google_accounts || 5} Akun`;
+        }
+
+        if (subStatusElem) {
+            subStatusElem.textContent = isSub ? "Aktif (Creator Pass)" : "Belum Berlangganan";
+            subStatusElem.style.color = isSub ? "#10b981" : "#f59e0b";
+        }
+
+        if (btnToggleSubQuick) {
+            btnToggleSubQuick.textContent = isSub ? "Tes Non-Member" : "Tes Member Aktif";
         }
 
         modalUserProfile.classList.add("open");
@@ -288,6 +359,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         modalAuth.classList.remove("open");
     });
 
+    // Subscription required modal buttons
+    if (btnCloseSubRequired) {
+        btnCloseSubRequired.addEventListener("click", closeSubscriptionRequiredModal);
+    }
+    if (btnSubRequiredDismiss) {
+        btnSubRequiredDismiss.addEventListener("click", closeSubscriptionRequiredModal);
+    }
+    if (btnSubRequiredCheckout) {
+        btnSubRequiredCheckout.addEventListener("click", () => {
+            closeSubscriptionRequiredModal();
+            openCheckoutModal();
+        });
+    }
+    if (btnBannerUpgrade) {
+        btnBannerUpgrade.addEventListener("click", () => {
+            openCheckoutModal();
+        });
+    }
 
     // Toggle Role Quick in Demo
     document.getElementById("btnToggleRoleQuick").addEventListener("click", () => {
@@ -301,6 +390,24 @@ document.addEventListener("DOMContentLoaded", async () => {
             switchTab("studio");
         }
     });
+
+    // Toggle Subscription Status Quick in Demo/Testing
+    const btnToggleSubQuick = document.getElementById("btnToggleSubQuick");
+    if (btnToggleSubQuick) {
+        btnToggleSubQuick.addEventListener("click", () => {
+            const nextSub = window.vidoraData.toggleDemoSubscription();
+            if (activeProfile) activeProfile.is_subscribed = nextSub;
+            updateHeaderUI();
+            if (subWarningBanner) {
+                subWarningBanner.style.display = nextSub ? "none" : "flex";
+            }
+            modalUserProfile.classList.remove("open");
+            alert(`Status Langganan berhasil diubah: ${nextSub ? '✅ Aktif (Creator Pass)' : '⚠️ Belum Berlangganan (Non-Member)'}`);
+            if (!nextSub) {
+                openSubscriptionRequiredModal("Akses Studio AI Generator");
+            }
+        });
+    }
 
     // Auth Tabs
     const btnTabSignIn = document.getElementById("btnTabSignIn");
@@ -467,6 +574,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (activeProfile.role !== "superadmin") {
                     activeProfile.role = "user";
                     activeProfile.max_google_accounts = 5;
+                }
+                if (!window.vidoraData.isLive) {
+                    activeProfile.is_subscribed = true;
+                    if (subWarningBanner) subWarningBanner.style.display = "none";
                 }
                 updateHeaderUI();
             }
@@ -1044,6 +1155,8 @@ Requirements for the generated prompt:
     // 8. Auto Prompt Generation Handlers
     // =========================================================================
     btnVideoAutoPrompt.addEventListener("click", async () => {
+        if (!checkSubscriptionAccess("Auto Prompt Video")) return;
+
         if (!uploadedProductImage) {
             alert("Silakan upload foto produk terlebih dahulu di kotak upload di atas!");
             videoFileInput.click();
@@ -1068,6 +1181,8 @@ Requirements for the generated prompt:
     });
 
     btnImageAutoPrompt.addEventListener("click", async () => {
+        if (!checkSubscriptionAccess("Auto Prompt Gambar")) return;
+
         if (!uploadedProductImage) {
             alert("Silakan upload foto produk referensi terlebih dahulu!");
             imageFileInput.click();
@@ -1092,6 +1207,8 @@ Requirements for the generated prompt:
     });
 
     btnRunPromptGen.addEventListener("click", async () => {
+        if (!checkSubscriptionAccess("Generate Smart Prompt")) return;
+
         if (!uploadedProductImage) {
             alert("Silakan pilih/upload foto produk di tab Prompt Generator terlebih dahulu!");
             pgFileInput.click();
@@ -1141,6 +1258,8 @@ Requirements for the generated prompt:
     // 9. Generate Task Submission (Video & Image)
     // =========================================================================
     btnGenerateVideo.addEventListener("click", async () => {
+        if (!checkSubscriptionAccess("Generate Video AI (Omni Flash)")) return;
+
         const prompt = videoPromptInput.value.trim();
         if (!prompt) {
             alert("Harap masukkan prompt video atau gunakan 'Auto Prompt dari Foto' terlebih dahulu!");
@@ -1179,6 +1298,8 @@ Requirements for the generated prompt:
     });
 
     btnGenerateImage.addEventListener("click", async () => {
+        if (!checkSubscriptionAccess("Generate Gambar Produk (Nano Banana)")) return;
+
         const prompt = imagePromptInput.value.trim();
         if (!prompt) {
             alert("Harap masukkan prompt gambar atau gunakan 'Auto Prompt dari Foto'!");
@@ -1228,6 +1349,8 @@ Requirements for the generated prompt:
     const newAccountLabel = document.getElementById("newAccountLabel");
 
     btnAddAccount.addEventListener("click", () => {
+        if (!checkSubscriptionAccess("Tambah Akun Google")) return;
+
         const limit = activeProfile?.max_google_accounts || 5;
         if (activeProfile?.role !== "superadmin" && userAccounts.length >= limit) {
             if (confirm(`Batas kuota ${limit} akun Google tercapai!\n\nIngin upgrade ke paket Pro / Agency untuk menambah slot akun?`)) {
