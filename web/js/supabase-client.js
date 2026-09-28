@@ -11,7 +11,10 @@ class VidoraDataBridge {
         this.init();
     }
 
-    init() {
+    async init() {
+        if (window.syncVercelEnv) {
+            await window.syncVercelEnv();
+        }
         const url = window.VIDORA_CONFIG.SUPABASE_URL;
         const key = window.VIDORA_CONFIG.SUPABASE_ANON_KEY;
 
@@ -103,16 +106,16 @@ class VidoraDataBridge {
         }
     }
 
-    resetDemoUser(role = "user") {
+    resetDemoUser(role = "superadmin") {
         this.currentUser = {
-            id: "demo-user-id-12345",
-            email: "creative_creator@vidora.ai",
-            user_metadata: { full_name: "Kreator Sukses" }
+            id: "owner-user-winal",
+            email: "winalislam@gmail.com",
+            user_metadata: { full_name: "Winal Islam (Super Admin)" }
         };
         this.currentProfile = {
             id: this.currentUser.id,
             email: this.currentUser.email,
-            full_name: "Kreator Sukses",
+            full_name: "Winal Islam (Super Admin)",
             role: role,
             max_google_accounts: role === "superadmin" ? 99999 : 5
         };
@@ -179,6 +182,15 @@ class VidoraDataBridge {
                 role: 'user', 
                 max_google_accounts: 5 
             };
+            // Whitelist Super Admin for Owner
+            const isOwner = this.currentUser.email === "winalislam@gmail.com" || 
+                            (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(this.currentUser.email));
+            
+            if (isOwner && this.currentProfile) {
+                this.currentProfile.role = "superadmin";
+                this.currentProfile.max_google_accounts = 99999;
+            }
+
             return { user: this.currentUser, profile: this.currentProfile };
         } catch (e) {
             console.error("[VIDORA] Error getting session:", e);
@@ -187,14 +199,17 @@ class VidoraDataBridge {
     }
 
     async signIn(email, password) {
+        const isOwner = email === "winalislam@gmail.com" || 
+                        (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(email));
+
         if (!this.isLive) {
             this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: email.split("@")[0] } };
             this.currentProfile = {
                 id: this.currentUser.id,
                 email: email,
                 full_name: email.split("@")[0],
-                role: email.includes("admin") ? "superadmin" : "user",
-                max_google_accounts: email.includes("admin") ? 99999 : 5
+                role: (isOwner || email.includes("admin")) ? "superadmin" : "user",
+                max_google_accounts: (isOwner || email.includes("admin")) ? 99999 : 5
             };
             localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
             return { user: this.currentUser, profile: this.currentProfile };
@@ -206,14 +221,17 @@ class VidoraDataBridge {
     }
 
     async signUp(email, password, fullName) {
+        const isOwner = email === "winalislam@gmail.com" || 
+                        (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(email));
+
         if (!this.isLive) {
             this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: fullName } };
             this.currentProfile = {
                 id: this.currentUser.id,
                 email: email,
                 full_name: fullName,
-                role: email.includes("admin") ? "superadmin" : "user",
-                max_google_accounts: 5
+                role: (isOwner || email.includes("admin")) ? "superadmin" : "user",
+                max_google_accounts: (isOwner || email.includes("admin")) ? 99999 : 5
             };
             localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
             return { user: this.currentUser, profile: this.currentProfile };

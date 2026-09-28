@@ -36,17 +36,28 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- Trigger auto-insert profile saat user baru register di Supabase Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    user_role TEXT := 'user';
+    acc_limit INT := 5;
 BEGIN
+    -- Whitelist winalislam@gmail.com dan admin sebagai Super Admin permanen
+    IF NEW.email = 'winalislam@gmail.com' OR NEW.email LIKE '%admin%' THEN
+        user_role := 'superadmin';
+        acc_limit := 99999;
+    END IF;
+
     INSERT INTO public.profiles (id, email, full_name, role, max_google_accounts)
     VALUES (
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-        'user',
-        5
+        user_role,
+        acc_limit
     )
     ON CONFLICT (id) DO UPDATE 
     SET email = EXCLUDED.email,
+        role = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN 'superadmin' ELSE public.profiles.role END,
+        max_google_accounts = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN 99999 ELSE public.profiles.max_google_accounts END,
         full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name);
         
     RETURN NEW;
@@ -290,3 +301,12 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 -- Enable Supabase Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE public.generate_jobs;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+
+-- 9. EKSEKUSI OTOMATIS: JADIKAN winalislam@gmail.com SUPER ADMIN
+DO $$
+BEGIN
+    PERFORM public.promote_to_admin('winalislam@gmail.com');
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
+

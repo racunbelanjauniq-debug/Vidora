@@ -97,6 +97,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initial Load & Auth Sync
     // =========================================================================
     async function initApp() {
+        if (window.syncVercelEnv) {
+            await window.syncVercelEnv();
+        }
         const session = await window.vidoraData.getSession();
         currentUser = session?.user || null;
         activeProfile = session?.profile || { role: "user", max_google_accounts: 5 };
