@@ -136,13 +136,19 @@ CREATE TABLE IF NOT EXISTS public.orders (
     customer_email TEXT,
     plan_name TEXT DEFAULT 'VIDORA Creator Pass' NOT NULL,
     price INT DEFAULT 75000 NOT NULL,
-    payment_method TEXT DEFAULT 'QRIS' CHECK (payment_method IN ('QRIS', 'BANK', 'WHATSAPP')),
+    payment_method TEXT DEFAULT 'QRIS' CHECK (payment_method IN ('QRIS', 'BANK', 'WHATSAPP', 'PAKASIR', 'qris_pakasir', 'manual_transfer')),
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'rejected', 'expired')),
+    pakasir_payload JSONB DEFAULT '{}'::jsonb,
     payment_proof_url TEXT,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Ensure column exists if table was already created
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS pakasir_payload JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_payment_method_check;
+ALTER TABLE public.orders ADD CONSTRAINT orders_payment_method_check CHECK (payment_method IN ('QRIS', 'BANK', 'WHATSAPP', 'PAKASIR', 'qris_pakasir', 'manual_transfer'));
 
 -- Trigger auto-upgrade profile saat order status diubah jadi 'paid'
 CREATE OR REPLACE FUNCTION public.handle_order_paid()
@@ -227,6 +233,18 @@ VALUES (
         "template_order": "Halo {nama}, terima kasih! Pesanan {paket} ({invoice}) sebesar Rp {total} telah kami terima. Silakan selesaikan pembayaran untuk aktivasi akun.",
         "template_approval": "Selamat {nama}! Pembayaran Anda untuk {paket} ({invoice}) telah disetujui. Akun 5 Profil Google Anda kini telah AKTIF. Silakan buka studio di https://vidora.biz.id/app.html",
         "template_render": "Halo {nama}, render video AI produk Anda telah SELESAI! Unduh video Anda di galeri: {link_video}"
+    }'::jsonb
+)
+ON CONFLICT (key) DO NOTHING;
+
+INSERT INTO public.system_settings (key, value)
+VALUES (
+    'pakasir_config',
+    '{
+        "slug": "vidora",
+        "api_key": "",
+        "is_active": true,
+        "webhook_url": "https://vidora.biz.id/api/webhook-pakasir"
     }'::jsonb
 )
 ON CONFLICT (key) DO NOTHING;

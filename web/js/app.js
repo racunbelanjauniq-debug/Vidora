@@ -556,6 +556,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                 method: selectedPaymentMethod.toUpperCase()
             });
 
+            // Trigger automatic WhatsApp notification via xsender.id
+            if (window.xsender) {
+                window.xsender.notifyOrderPlaced(order).catch(err => console.warn("[Xsender] Gagal kirim notif order:", err));
+            }
+
+            // Jika QRIS dipilih, alihkan langsung ke halaman pembayaran Pakasir
+            if (selectedPaymentMethod === "qris") {
+                const slug = localStorage.getItem("cfg_pakasir_slug") || "vidora";
+                const redirectTarget = window.location.origin + "/app.html?order_id=" + order.id + "&status=success";
+                const pakasirPayUrl = `https://app.pakasir.com/pay/${slug}/${planPrice}?order_id=${order.id}&redirect=${encodeURIComponent(redirectTarget)}`;
+
+                modalCheckout.classList.remove("open");
+                alert(`Pemesanan ${order.id} Berhasil Dibuat!\n\nAnda akan dialihkan ke halaman pembayaran QRIS Pakasir.\nSetelah scan & bayar, akun Creator Pass (5 Profil Google) Anda akan AKTIF secara otomatis.`);
+                window.location.href = pakasirPayUrl;
+                return;
+            }
+
             if (selectedPaymentMethod === "whatsapp") {
                 const message = encodeURIComponent(
                     `Halo Admin VIDORA, saya ingin konfirmasi pemesanan lisensi:\n\n` +
@@ -572,11 +589,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             modalCheckout.classList.remove("open");
             alert(`Pemesanan Berhasil!\n\nNomor Invoice: ${order.id}\nPaket: ${planTitle}\nTotal: Rp ${planPrice.toLocaleString("id-ID")}\n\nStatus: Menunggu Pembayaran/Verifikasi.`);
-            
-            // Trigger automatic WhatsApp notification via xsender.id
-            if (window.xsender) {
-                window.xsender.notifyOrderPlaced(order).catch(err => console.warn("[Xsender] Gagal kirim notif order:", err));
-            }
 
             // Activate Creator Pass with strictly 5 accounts max
             if (activeProfile) {
@@ -2330,6 +2342,27 @@ Requirements for the generated prompt:
     const tabParam = urlParams.get("tab");
     const subParam = urlParams.get("sub");
     const authParam = urlParams.get("auth");
+    const statusParam = urlParams.get("status");
+    const orderIdParam = urlParams.get("order_id");
+
+    // Pakasir QRIS Payment Success Handler
+    if (statusParam === "success" && orderIdParam) {
+        setTimeout(() => {
+            alert(`🎉 PEMBAYARAN QRIS PAKASIR BERHASIL!\n\nNo. Invoice: ${orderIdParam}\nStatus: LUNAS\n\nAkun Creator Pass (5 Profil Google) Anda telah AKTIF secara otomatis. Selamat berkarya di VIDORA Studio!`);
+        }, 500);
+
+        if (activeProfile) {
+            activeProfile.is_subscribed = true;
+            if (activeProfile.role !== "superadmin") {
+                activeProfile.max_google_accounts = 5;
+            }
+            if (subWarningBanner) subWarningBanner.style.display = "none";
+            updateHeaderUI();
+        }
+
+        // Clean up URL query parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     if (authParam === "login" || authParam === "signup") {
         modalAuth.classList.add("open");

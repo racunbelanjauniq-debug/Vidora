@@ -475,10 +475,16 @@
 
                 <!-- QRIS View -->
                 <div id="lpPay_qris" class="lp-pay-view" style="background:#ffffff; border-radius:13px; padding:14px; text-align:center; margin-bottom:14px;">
-                    <div style="font-size:11.5px; font-weight:800; color:#1e1b4b; text-transform:uppercase; margin-bottom:8px;">Scan QRIS VIDORA</div>
+                    <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(99,102,241,0.15); color:#4f46e5; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:800; margin-bottom:10px;">
+                        ⚡ Pembayaran QRIS Otomatis (Pakasir)
+                    </div>
+                    <div style="font-size:11.5px; font-weight:800; color:#1e1b4b; text-transform:uppercase; margin-bottom:8px;">Scan QRIS VIDORA Studio</div>
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&amp;data=00020101021126570014ID.LINKAJA.WWW011893600911002123456702150000000000000000303UMI51440014ID.CO.QRIS.WWW0215ID10200000000005204549953033605802ID5914VIDORA%20STUDIO6007JAKARTA61051234062070703A016304" alt="QRIS VIDORA" style="width:160px; height:160px; display:block; margin:0 auto 8px;">
                     <div style="font-size:13px; font-weight:800; color:#1e1b4b;">Total: Rp 75.000</div>
                     <div style="font-size:10.5px; color:#64748b; margin-top:3px;">GoPay, OVO, Dana, ShopeePay, BCA Mobile, Mandiri</div>
+                    <div style="background:#f1f5f9; border-radius:8px; padding:8px; margin-top:10px; font-size:11px; color:#475569; line-height:1.4;">
+                        🚀 <strong>Verifikasi Instan:</strong> Klik "Bayar Sekarang" di bawah untuk membuka halaman pembayaran QRIS Pakasir dengan auto-fulfillment akun 5 Profil.
+                    </div>
                 </div>
 
                 <!-- Bank View -->
@@ -626,7 +632,18 @@
                 console.warn('Gagal record order:', err);
             }
 
-            // WhatsApp confirmation link
+            const slug = localStorage.getItem("cfg_pakasir_slug") || "vidora";
+            const redirectTarget = window.location.origin + "/app.html?order_id=" + orderId + "&status=success";
+            const pakasirPayUrl = `https://app.pakasir.com/pay/${slug}/${planPrice}?order_id=${orderId}&redirect=${encodeURIComponent(redirectTarget)}`;
+
+            if (method === 'qris') {
+                closeLpModal();
+                alert('Pesanan ' + orderId + ' Berhasil Dibuat!\n\nAnda akan dialihkan ke halaman pembayaran QRIS Pakasir.\nSetelah scan & bayar, akun Creator Pass (5 Profil Google) Anda akan AKTIF secara otomatis.');
+                window.location.href = pakasirPayUrl;
+                return;
+            }
+
+            // WhatsApp confirmation link for manual/bank
             const waMsg = encodeURIComponent(
                 'Halo Admin VIDORA, saya ingin konfirmasi pesanan lisensi:\n\n' +
                 '📋 *No Invoice:* ' + orderId + '\n' +
