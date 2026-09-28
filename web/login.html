@@ -142,7 +142,7 @@
             <h1 class="auth-title" id="authHeading">Masuk ke Studio</h1>
             <p class="auth-subtitle" id="authSubheading">Kelola profil akun Google dan produksi video & gambar AI produk Anda.</p>
 
-            <!-- Segmented Control (Apple HIG) -->
+            <!-- Segmented Control Auth Switcher -->
             <div class="auth-tabs">
                 <button type="button" class="auth-tab-btn active" id="btnTabLogin">Masuk</button>
                 <button type="button" class="auth-tab-btn" id="btnTabRegister">Daftar Akun Baru</button>
@@ -189,16 +189,7 @@
                 </button>
             </form>
 
-            <div class="guest-demo-divider">
-                <span>Atau Coba Terlebih Dahulu</span>
-            </div>
-
-            <button type="button" class="btn-secondary" id="btnMemberDemoGuest" style="width: 100%; justify-content: center; font-size: 13px;">
-                <i data-lucide="zap" style="width: 15px; height: 15px;"></i>
-                <span>Masuk Sebagai Tamu (Demo Mode)</span>
-            </button>
-
-            <div class="auth-footer">
+            <div class="auth-footer" style="margin-top: 24px;">
                 <a href="/">&larr; Kembali ke Beranda VIDORA</a>
                 &bull;
                 <a href="/admin/login" style="color: var(--text-tertiary);">Portal Admin</a>
@@ -298,12 +289,6 @@
                     submitBtn.disabled = false;
                     document.getElementById("btnSubmitRegText").textContent = "Daftar & Masuk ke Studio";
                 }
-            });
-
-            // Guest / Demo mode
-            document.getElementById("btnMemberDemoGuest").addEventListener("click", () => {
-                window.vidoraData.resetDemoUser("user");
-                window.location.href = "/app.html";
             });
         });
     </script>

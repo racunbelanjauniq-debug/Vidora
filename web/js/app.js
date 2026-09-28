@@ -468,12 +468,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 
-    // Guest / Demo continue
-    document.getElementById("btnContinueGuest").addEventListener("click", async () => {
-        window.vidoraData.resetDemoUser("user");
-        modalAuth.classList.remove("open");
-        await initApp();
-    });
+    // (Guest mode removed — strictly require account login)
+
 
     // Sign Out -> Redirect ke halaman Login
     document.getElementById("btnSignOut").addEventListener("click", async () => {
@@ -988,6 +984,55 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupFileUpload(imageDropzone, imageFileInput, imagePreviewBox, imagePreviewImg, btnRemoveImagePreview);
     setupFileUpload(pgDropzone, pgFileInput, pgPreviewBox, pgPreviewImg, btnRemovePgPreview);
 
+    // Style Chips toggle (Video Generator)
+    const videoStyleChipsContainer = document.getElementById("videoStyleChips");
+    let selectedVideoStyle = "cinematic";
+    if (videoStyleChipsContainer) {
+        videoStyleChipsContainer.querySelectorAll(".style-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                videoStyleChipsContainer.querySelectorAll(".style-chip").forEach(c => c.classList.remove("active"));
+                chip.classList.add("active");
+                selectedVideoStyle = chip.getAttribute("data-style");
+            });
+        });
+    }
+
+    // Style Chips toggle (Image Generator)
+    const imageStyleChipsContainer = document.getElementById("imageStyleChips");
+    let selectedImageStyle = "studio";
+    if (imageStyleChipsContainer) {
+        imageStyleChipsContainer.querySelectorAll(".style-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                imageStyleChipsContainer.querySelectorAll(".style-chip").forEach(c => c.classList.remove("active"));
+                chip.classList.add("active");
+                selectedImageStyle = chip.getAttribute("data-style");
+            });
+        });
+    }
+
+    // PG Mode toggle (Prompt Generator)
+    const pgModeHidden = document.getElementById("pgModeSelect");
+    document.querySelectorAll(".pg-mode-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".pg-mode-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            if (pgModeHidden) pgModeHidden.value = btn.getAttribute("data-pgmode");
+        });
+    });
+
+    // PG Style Cards toggle (Prompt Generator)
+    const pgStyleHidden = document.getElementById("pgStyleSelect");
+    const pgStyleGrid = document.getElementById("pgStyleGrid");
+    if (pgStyleGrid) {
+        pgStyleGrid.querySelectorAll(".style-card").forEach(card => {
+            card.addEventListener("click", () => {
+                pgStyleGrid.querySelectorAll(".style-card").forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+                if (pgStyleHidden) pgStyleHidden.value = card.getAttribute("data-pgstyle");
+            });
+        });
+    }
+
     // Ratio & Duration toggles
     document.querySelectorAll(".video-ratio-btn").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -1089,16 +1134,47 @@ document.addEventListener("DOMContentLoaded", async () => {
             platformInstruction = "Target Platform: TikTok Shop video. Include subtle commercial hook, viral pacing, framing tailored for TikTok overlay, and a natural CTA indicating 'Check Keranjang Kuning di bawah!'";
         } else if (platform === "shopee") {
             platformInstruction = "Target Platform: Shopee Video. Include bright commercial lighting, discount voucher callout feel, product detail focus, and a natural CTA indicating 'Klik Keranjang Oranye di bawah!'";
-        } else if (platform === "reels") {
-            platformInstruction = "Target Platform: Instagram Reels. Clean luxury modern aesthetic, seamless lifestyle loop, aesthetic color grading.";
+        } else if (platform === "instagram" || platform === "reels") {
+            platformInstruction = "Target Platform: Instagram Reels/Feed. Clean luxury modern aesthetic, seamless lifestyle loop, aesthetic color grading.";
+        } else if (platform === "youtube") {
+            platformInstruction = "Target Platform: YouTube Shorts. Dynamic pacing, clear value proposition in first 3 seconds, clean branding throughout.";
+        } else if (platform === "ads") {
+            platformInstruction = "Target Platform: Paid digital ads (Meta/TikTok Ads). High-impact first frame, immediate visual hook, strong CTA integration.";
+        } else if (platform === "marketplace") {
+            platformInstruction = "Target Platform: Marketplace product listing (Shopee/Tokopedia). Crystal-clear product detail, clean background, professional studio lighting.";
+        } else if (platform === "katalog") {
+            platformInstruction = "Target Platform: Product catalog / print material. Ultra-sharp details, perfect color accuracy, premium editorial quality.";
         }
 
-        const systemPrompt = `You are VIDORA Smart Prompt Generator, an expert commercial director and product photographer.
-Your task: Analyze the provided product photo and generate an extremely rich, cinematic, photorealistic prompt for Google Flow AI (Omni Flash).
+        // Full style instruction map (GAMA-style)
+        const styleInstructions = {
+            cinematic: "Style: Cinematic Luxury. Use dramatic volumetric lighting, subtle lens flare, film grain, color grading (cinematic teal-orange), slow macro tracking shot, 4K 60fps quality feel.",
+            hardselling: "Style: Hard Selling Commercial. High-energy composition, bold product hero shot with exploding action energy, motion blur trails, bright saturated colors, urgency-focused framing with CTA cues.",
+            softselling: "Style: Soft Selling Lifestyle. Warm pastel tones, natural golden hour lighting, product integrated into a cozy aspirational scene, gentle camera movement, emotional atmosphere.",
+            storytelling: "Style: Storytelling Narrative. Build an emotional scene — a relatable character moment with the product as the hero solving a problem. Dramatic light transitions, warm color palette.",
+            ugc: "Style: UGC Authentic. Handheld shaky camera feel, natural home lighting, close-up texture shots, unboxing style framing, realistic everyday context, no professional studio feel.",
+            asmr: "Style: ASMR Sensory. Extreme macro close-up of product textures, surfaces, and materials. Soft-focus bokeh background, satisfying liquid/powder/cream interactions, near-silent intimate framing.",
+            tutorial: "Style: Tutorial/How-To Educational. Clear instructional framing with step-by-step shot progression, text overlay space at top/bottom, clean mid-shot composition, neutral bright lighting.",
+            kuliner: "Style: Food & Culinary. Steam wisps, golden caramelized textures, glistening sauce, macro cheese-pull or chocolate drizzle, warm amber kitchen lighting, appetite-triggering extreme close-ups.",
+            beauty: "Style: Beauty & Skincare. Dewy glass-skin aesthetic, model close-up with flawless complexion, pink/rose pastel lighting, product serum drop macro, luxury AR-filter look.",
+            minimalist: "Style: Minimalist Clean. Pure white or deep black studio background, single product hero shot, sharp shadows, negative space composition, editorial simplicity.",
+            luxury: "Style: Luxury Prestige. Dark moodboard, gold-black-marble textures, dramatic single-source light, slow rotating pedestal shot, ultra-shallow depth of field, Rolex-ad quality.",
+            lifestyle: "Style: Lifestyle Activity. Product in natural human activity context — outdoor scene, social gathering, or morning routine. Natural daylight, candid movement, real-world authenticity.",
+            studio: "Style: Clean Product Studio. Pure white/gradient studio background, professional 3-point lighting setup, sharp product detail, no distractions, catalog-ready quality.",
+            katalog: "Style: Catalog Photography. Multiple angles implied, precise product proportions, accurate color rendering, flat or minimal background, professional retouching aesthetic.",
+            flatlay: "Style: Flat Lay Composition. Top-down bird's-eye view, carefully arranged product with complementary props, color-coordinated styling, even diffused lighting.",
+            detail: "Style: Close-Up Detail. Extreme macro photography highlighting product texture, material quality, stitching, or surface finish. Shallow depth of field, sharp focus on key detail.",
+            editorial: "Style: Editorial Art Photography. Creative avant-garde composition, dramatic lighting contrast, artistic backdrop, concept-driven styling, high-fashion magazine quality.",
+            outdoor: "Style: Outdoor Natural. Natural environment context — forest, beach, garden, or urban setting. Product harmonized with nature, golden hour or blue hour lighting."
+        };
+        const styleInstruction = styleInstructions[style] || styleInstructions.cinematic;
+
+        const systemPrompt = `You are VIDORA Smart Prompt Generator, an expert commercial director, product photographer, and AI video specialist.
+Your task: Analyze the provided product photo and generate an extremely rich, cinematic, photorealistic prompt optimized for Google Flow AI (Omni Flash) and Imagen image generation.
 Mode: ${mode}
-Style: ${style}
+${styleInstruction}
 ${platformInstruction}
-Additional details requested: ${extra || "None"}
+Additional details: ${extra || "None"}
 
 Requirements for the generated prompt:
 1. Describe the product clearly based on visual features (color, bottle shape, texture, material, packaging).
@@ -1168,7 +1244,7 @@ Requirements for the generated prompt:
         lucide.createIcons();
 
         const platform = document.getElementById("videoPlatformSelect")?.value || "tiktok";
-        const prompt = await analyzeProductImageWithGemini(uploadedProductImage, "Commercial Product Video", "Cinematic Commercial", platform);
+        const prompt = await analyzeProductImageWithGemini(uploadedProductImage, "Commercial Product Video", selectedVideoStyle || "cinematic", platform);
         
         btnVideoAutoPrompt.disabled = false;
         btnVideoAutoPrompt.innerHTML = `<i data-lucide="sparkles" style="width:13px;height:13px;"></i> <span>Auto Prompt dari Foto</span>`;
@@ -1193,8 +1269,8 @@ Requirements for the generated prompt:
         btnImageAutoPrompt.innerHTML = `<i data-lucide="loader" class="spin" style="width:13px;height:13px;"></i> <span>Menganalisa...</span>`;
         lucide.createIcons();
 
-        const platform = document.getElementById("imagePlatformSelect")?.value || "tiktok";
-        const prompt = await analyzeProductImageWithGemini(uploadedProductImage, "Product Studio Photography", "Studio Clean", platform);
+        const platform = document.getElementById("imagePlatformSelect")?.value || "marketplace";
+        const prompt = await analyzeProductImageWithGemini(uploadedProductImage, "Product Studio Photography", selectedImageStyle || "studio", platform);
         
         btnImageAutoPrompt.disabled = false;
         btnImageAutoPrompt.innerHTML = `<i data-lucide="sparkles" style="width:13px;height:13px;"></i> <span>Auto Prompt dari Foto</span>`;
@@ -1219,8 +1295,8 @@ Requirements for the generated prompt:
         btnRunPromptGen.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Menganalisa Objek Produk...</span>`;
         lucide.createIcons();
 
-        const mode = pgModeSelect.value;
-        const style = pgStyleSelect.value;
+        const mode = pgModeHidden ? pgModeHidden.value : "video";
+        const style = pgStyleHidden ? pgStyleHidden.value : "cinematic";
         const platform = pgPlatformSelect.value;
         const extra = pgExtraInput.value.trim();
 

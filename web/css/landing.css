@@ -1,44 +1,37 @@
 /* =========================================================================
-   VIDORA SaaS - Apple Human Interface Guidelines & UI/UX Pro Max Edition
-   Pure Human-Crafted Architecture | Zero AI-Slop Guarantee
-   Deep Titanium Black, Precision Typography, Frosted Vibrancy & Bento Hierarchy
+   VIDORA SaaS - Mobile-First App Shell Edition
+   Clean, Modern, Natural Indonesian Copy & Mobile-in-Desktop Viewport
    ========================================================================= */
 
 :root {
-    /* Apple Obsidian & Titanium Palette */
-    --bg-base: #000000;
-    --bg-surface: #0a0b0e;
-    --bg-card: rgba(14, 16, 22, 0.72);
-    --bg-card-elevated: #131620;
+    --bg-base: #06070a;
+    --bg-surface: #0a0b12;
+    --bg-card: rgba(16, 18, 28, 0.85);
+    --bg-card-elevated: #121522;
     
-    /* Apple Hairline Borders & Specular Highlights */
     --border-subtle: rgba(255, 255, 255, 0.08);
     --border-hover: rgba(255, 255, 255, 0.18);
     --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
     
-    /* Apple Curated Accents (No Cartoon Gradients) */
-    --accent-apple-blue: #0071e3;
+    --accent-blue: #0071e3;
     --accent-indigo: #6366f1;
-    --accent-emerald: #34c759;
+    --accent-emerald: #10b981;
     --accent-amber: #f59e0b;
+    --accent-cyan: #00f2fe;
     
-    /* Apple High-Readability Contrast System */
     --text-primary: #ffffff;
-    --text-secondary: #86868b;
-    --text-tertiary: #6e6e73;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
     
-    /* Typography Stack (Apple San Francisco Native) */
-    --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", -apple-system, sans-serif;
-    --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+    --font-system: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "SF Pro Display", sans-serif;
+    --font-mono: ui-monospace, Menlo, Consolas, monospace;
     
-    /* Continuous Radii */
     --radius-sm: 10px;
     --radius-md: 14px;
-    --radius-lg: 20px;
-    --radius-xl: 28px;
-    --radius-full: 980px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
     
-    /* Apple Spring Physics */
     --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -53,50 +46,86 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* =========================================================================
+   DESKTOP CANVAS & MOBILE APP SHELL (Exact DonasiHub Pattern)
+   ========================================================================= */
 body {
-    background-color: var(--bg-base);
+    background-color: #06070a;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
     color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
     overflow-x: hidden;
     line-height: 1.5;
-    letter-spacing: -0.011em;
+    letter-spacing: -0.01em;
+}
+
+/* Centered Mobile Container on PC/Laptop */
+.app-shell {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    background: #090a0f;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 74px; /* Space for bottom nav */
+    margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+    body {
+        background-image: none;
+        background-color: #090a0f;
+    }
+    .app-shell {
+        box-shadow: none;
+        border: none;
+    }
 }
 
 /* Container */
 .container {
-    max-width: 1140px;
-    margin: 0 auto;
-    padding: 0 24px;
     width: 100%;
+    max-width: 100%;
+    padding: 0 16px;
+    margin: 0 auto;
 }
 
 /* =========================================================================
-   1. APPLE FROSTED GLASS NAVIGATION BAR
+   1. APP HEADER
    ========================================================================= */
 .navbar {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: saturate(190%) blur(20px);
-    -webkit-backdrop-filter: saturate(190%) blur(20px);
+    width: 100%;
+    height: 60px;
+    background: rgba(9, 10, 15, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-subtle);
     z-index: 100;
     display: flex;
     align-items: center;
+    padding: 0 16px;
 }
 
 .nav-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
 }
 
 .brand-logo {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
     text-decoration: none;
 }
 
@@ -104,298 +133,238 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 9px;
-    background: linear-gradient(180deg, #2c2d35 0%, #15161c 100%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 15px;
-    font-weight: 800;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    font-size: 16px;
+    font-weight: 900;
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.4);
 }
 
 .brand-name {
-    font-size: 19px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 800;
     letter-spacing: -0.02em;
     color: #ffffff;
 }
 
 .brand-name span {
-    color: #86868b;
-    font-weight: 500;
+    color: #6366f1;
 }
 
-.nav-links {
+.nav-actions {
     display: flex;
     align-items: center;
-    gap: 28px;
+    gap: 8px;
 }
 
-.nav-link {
-    color: var(--text-secondary);
+.btn-nav-login {
+    color: #cbd5e1;
+    font-size: 12.5px;
+    font-weight: 600;
     text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: color 0.2s ease;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s;
 }
 
-.nav-link:hover {
+.btn-nav-login:hover {
     color: #ffffff;
 }
 
-.btn-nav-primary {
+.btn-nav-studio {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 18px;
+    gap: 5px;
+    padding: 7px 14px;
     border-radius: var(--radius-full);
-    background: #ffffff;
-    color: #000000;
-    font-weight: 600;
-    font-size: 13px;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 12.5px;
     text-decoration: none;
-    box-shadow: 0 2px 10px rgba(255, 255, 255, 0.15);
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.35);
     transition: all 0.2s var(--ease-spring);
 }
 
-.btn-nav-primary:hover {
-    background: #e5e5e7;
-    transform: translateY(-1px);
-}
-
-.btn-nav-primary:active {
-    transform: scale(0.97);
+.btn-nav-studio:active {
+    transform: scale(0.96);
 }
 
 /* =========================================================================
-   2. HERO SECTION (APPLE KEYNOTE MONUMENTAL STYLE)
+   2. HERO SECTION
    ========================================================================= */
 .hero {
-    padding-top: 130px;
-    padding-bottom: 70px;
+    padding: 20px 16px 16px;
     text-align: center;
-    position: relative;
-    background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.035) 0%, transparent 60%);
 }
 
 .eyebrow-pill {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
+    gap: 6px;
+    padding: 5px 12px;
     border-radius: var(--radius-full);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    font-size: 12px;
-    font-weight: 600;
-    color: #a1a1a6;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    font-size: 11px;
+    font-weight: 700;
+    color: #a5b4fc;
     letter-spacing: 0.03em;
-    margin-bottom: 24px;
-    backdrop-filter: blur(12px);
+    margin-bottom: 14px;
 }
 
 .hero-title {
-    font-size: clamp(38px, 5.5vw, 68px);
-    font-weight: 700;
-    letter-spacing: -0.035em;
-    line-height: 1.08;
-    max-width: 860px;
-    margin: 0 auto 20px;
-    background: linear-gradient(180deg, #ffffff 40%, rgba(255, 255, 255, 0.65) 100%);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.hero-title span {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .hero-subtitle {
-    font-size: clamp(16px, 2vw, 19px);
+    font-size: 13px;
     line-height: 1.5;
     color: var(--text-secondary);
-    max-width: 640px;
-    margin: 0 auto 36px;
+    margin-bottom: 18px;
     font-weight: 400;
-    letter-spacing: -0.01em;
 }
 
 .hero-cta {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    margin-bottom: 60px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
 .btn-apple-primary {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 14px 28px;
-    border-radius: var(--radius-full);
-    background: #ffffff;
-    color: #000000;
-    font-weight: 600;
-    font-size: 15px;
+    padding: 13px 20px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
     text-decoration: none;
-    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.16);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    border: none;
+    cursor: pointer;
     transition: all 0.2s var(--ease-spring);
-}
-
-.btn-apple-primary:hover {
-    background: #f5f5f7;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 26px rgba(255, 255, 255, 0.24);
 }
 
 .btn-apple-primary:active {
-    transform: scale(0.975);
+    transform: scale(0.98);
 }
 
 .btn-apple-secondary {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 14px 24px;
-    border-radius: var(--radius-full);
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #f5f5f7;
-    font-weight: 500;
-    font-size: 15px;
+    color: #f1f5f9;
+    font-weight: 600;
+    font-size: 13px;
     text-decoration: none;
-    backdrop-filter: blur(16px);
     transition: all 0.2s var(--ease-spring);
 }
 
-.btn-apple-secondary:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.btn-apple-secondary:active {
-    transform: scale(0.975);
-}
-
 /* =========================================================================
-   3. APPLE STUDIO WORKSPACE CANVAS (NO AI SLOP MOCKUP)
+   3. STUDIO SHOWCASE CANVAS (9:16 Video Demo Mockup)
    ========================================================================= */
 .studio-canvas {
-    max-width: 1040px;
-    margin: 0 auto;
-    background: #090a0d;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: var(--radius-xl);
-    padding: 8px;
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), var(--specular-top);
+    background: #0d0f17;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
 
 .studio-inner {
-    display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 20px;
-    padding: 24px;
-    background: #0e1017;
-    border-radius: calc(var(--radius-xl) - 6px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    text-align: left;
-}
-
-@media (max-width: 768px) {
-    .studio-inner {
-        grid-template-columns: 1fr;
-    }
-}
-
-.studio-hud {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 14px;
 }
 
 .hud-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 16px;
+    padding-bottom: 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    margin-bottom: 18px;
 }
 
 .hud-tag {
     font-size: 11px;
     font-weight: 700;
     color: var(--accent-emerald);
-    background: rgba(52, 199, 89, 0.12);
+    background: rgba(16, 185, 129, 0.12);
     padding: 4px 10px;
     border-radius: var(--radius-full);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .hud-title {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 10px;
+    color: white;
+    margin-bottom: 8px;
 }
 
 .hud-prompt-box {
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    margin-bottom: 18px;
-    font-family: var(--font-mono);
-    font-size: 12.5px;
-    line-height: 1.6;
+    border-radius: var(--radius-sm);
+    padding: 11px 12px;
+    font-size: 11.5px;
+    line-height: 1.5;
     color: #cbd5e1;
+    text-align: left;
+    margin-bottom: 10px;
 }
 
 .hud-meta-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
-    margin-bottom: 20px;
 }
 
 .meta-chip {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: #94a3b8;
-    font-size: 12px;
-    font-weight: 500;
-    padding: 5px 12px;
-    border-radius: var(--radius-sm);
-}
-
-.hud-progress-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 14px 16px;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.studio-preview-col {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
 }
 
 .video-frame-apple {
-    width: 100%;
-    max-width: 320px;
-    aspect-ratio: 9/16;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: black;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    aspect-ratio: 9/12;
+    max-height: 380px;
 }
 
 .video-frame-apple video {
@@ -407,227 +376,390 @@ body {
 
 .video-badge-overlay {
     position: absolute;
-    top: 14px;
-    right: 14px;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 800;
     padding: 3px 8px;
     border-radius: 6px;
+    z-index: 2;
 }
 
 /* =========================================================================
-   4. BENTO GRID ARCHITECTURE (APPLE KEYNOTE STYLE)
+   4. QUICK CATEGORY ICONS GRID (Exact DonasiHub Pattern)
+   ========================================================================= */
+.category-grid-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 14px 10px;
+    margin: 0 16px 18px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 6px;
+    text-align: center;
+}
+
+.cat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    gap: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.cat-item:active {
+    transform: scale(0.94);
+}
+
+.cat-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.cat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+/* =========================================================================
+   5. PROMO ACTION CARD (Like DonasiHub's Routine Card)
+   ========================================================================= */
+.promo-action-card {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(168, 85, 247, 0.12) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 16px;
+    padding: 13px 14px;
+    margin: 0 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.promo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #00f2fe;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.promo-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.promo-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.btn-promo-action {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 800;
+    padding: 9px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+}
+
+/* =========================================================================
+   6. SECTION HEADINGS & COMPACT MOBILE CARDS
    ========================================================================= */
 .section {
-    padding: 90px 0;
+    padding: 20px 16px;
+    border-top: 1px solid var(--border-subtle);
 }
 
 .section-eyebrow {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
+    font-size: 10.5px;
+    font-weight: 800;
     color: var(--accent-indigo);
-    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     display: block;
+    margin-bottom: 4px;
 }
 
 .section-title {
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    margin-bottom: 16px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
     color: #ffffff;
 }
 
 .section-desc {
+    font-size: 12.5px;
     color: var(--text-secondary);
-    font-size: 16px;
-    max-width: 580px;
-    margin: 0 auto 50px;
+    margin-bottom: 16px;
+    line-height: 1.45;
 }
 
+/* Vertical Steps & Feature Cards */
 .bento-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-}
-
-@media (max-width: 900px) {
-    .bento-grid {
-        grid-template-columns: 1fr;
-    }
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .bento-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-xl);
-    padding: 32px 28px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), var(--specular-top);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    transition: all 0.25s var(--ease-spring);
-    position: relative;
-    overflow: hidden;
-}
-
-.bento-card:hover {
-    border-color: var(--border-hover);
-    transform: translateY(-3px);
-}
-
-.bento-card.col-2 {
-    grid-column: span 2;
-}
-
-@media (max-width: 900px) {
-    .bento-card.col-2 {
-        grid-column: span 1;
-    }
+    background: #0d0f17;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 16px 14px;
+    text-align: left;
 }
 
 .bento-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 22px;
+    margin-bottom: 12px;
 }
 
 .bento-title {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
     color: #ffffff;
 }
 
 .bento-desc {
     color: var(--text-secondary);
-    font-size: 14.5px;
-    line-height: 1.6;
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 /* =========================================================================
-   5. PRICING SECTION (REALISTIC CREATOR PLAN - RP 75.000 / BLN)
+   7. PRICING SECTION (CREATOR PASS - RP 75.000 / BLN)
    ========================================================================= */
-.pricing-single-wrapper {
-    max-width: 580px;
-    margin: 0 auto;
-}
-
 .pricing-single-card {
     background: #0d0f17;
     border: 1.5px solid rgba(99, 102, 241, 0.45);
-    border-radius: var(--radius-xl);
-    padding: 44px 36px;
+    border-radius: var(--radius-lg);
+    padding: 22px 18px;
     text-align: left;
-    box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.7), var(--specular-top);
     position: relative;
-    transition: all 0.25s var(--ease-spring);
-}
-
-.pricing-single-card:hover {
-    border-color: rgba(99, 102, 241, 0.7);
-    box-shadow: 0 30px 70px -12px rgba(99, 102, 241, 0.25), var(--specular-top);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
 }
 
 .featured-pill {
     position: absolute;
-    top: -12px;
-    left: 36px;
+    top: -11px;
+    left: 18px;
     background: var(--accent-indigo);
     color: white;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 3px 12px;
+    padding: 3px 10px;
     border-radius: var(--radius-full);
 }
 
 .plan-name {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 6px;
+    font-size: 19px;
+    font-weight: 800;
+    margin-bottom: 2px;
     color: #ffffff;
 }
 
 .plan-desc {
     color: var(--text-secondary);
-    font-size: 14px;
-    margin-bottom: 22px;
-    line-height: 1.5;
+    font-size: 12px;
+    margin-bottom: 14px;
 }
 
 .plan-price {
-    font-size: 42px;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    margin-bottom: 0;
-    color: #ffffff;
+    font-size: 26px;
+    font-weight: 900;
+    color: #00f2fe;
 }
 
 .plan-price span {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-secondary);
 }
 
 .plan-features {
     list-style: none;
-    margin-bottom: 30px;
+    margin: 16px 0 20px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 9px;
 }
 
 .plan-features li {
-    font-size: 14px;
-    color: #d1d5db;
+    font-size: 12px;
+    color: #cbd5e1;
     display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.plan-features li.disabled {
-    color: #4b5563;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
 }
 
 .check-icon {
     color: var(--accent-emerald);
     font-weight: 800;
-    font-size: 14px;
+    font-size: 13px;
+    flex-shrink: 0;
 }
 
 /* =========================================================================
-   6. FOOTER
+   8. CLEAN, NATURAL INDONESIAN FOOTER
    ========================================================================= */
 .footer {
-    padding: 40px 0;
+    padding: 24px 16px;
     border-top: 1px solid var(--border-subtle);
-    background: #000000;
+    background: #07080c;
     color: var(--text-secondary);
-    font-size: 13px;
+    font-size: 11.5px;
+    text-align: center;
 }
 
 .footer-content {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
+    gap: 10px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.footer-links a {
+    color: var(--text-tertiary);
+    text-decoration: none;
+    font-size: 11.5px;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: #ffffff;
+}
+
+/* =========================================================================
+   9. FIXED MOBILE BOTTOM NAVIGATION BAR
+   ========================================================================= */
+.landing-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    height: 64px;
+    background: rgba(9, 10, 15, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 90;
+    padding: 0 4px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.landing-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.landing-nav-item.active,
+.landing-nav-item:hover {
+    color: #00f2fe;
+}
+
+.landing-nav-item.center-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+    margin-top: -16px;
+    padding: 0;
+}
+
+/* =========================================================================
+   10. FLOATING WHATSAPP BUTTON (Exact DonasiHub Pattern)
+   ========================================================================= */
+.floating-wa-btn {
+    position: fixed;
+    bottom: 78px;
+    right: calc(50% - 224px);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #25d366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45);
+    z-index: 95;
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+@media (max-width: 480px) {
+    .floating-wa-btn {
+        right: 14px;
+    }
+}
+
+.floating-wa-btn:active {
+    transform: scale(0.92);
 }

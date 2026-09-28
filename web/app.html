@@ -121,16 +121,45 @@
                         </select>
                     </div>
 
+                    <!-- Gaya Video / Mood Preset (GAMA Style) -->
+                    <div class="form-group">
+                        <label class="form-label">Gaya Konten:</label>
+                        <div class="style-chips" id="videoStyleChips">
+                            <div class="style-chip active" data-style="cinematic">🎬 Cinematic</div>
+                            <div class="style-chip" data-style="hardselling">🔥 Hard Selling</div>
+                            <div class="style-chip" data-style="softselling">💝 Soft Selling</div>
+                            <div class="style-chip" data-style="storytelling">📖 Storytelling</div>
+                            <div class="style-chip" data-style="ugc">📱 UGC Viral</div>
+                            <div class="style-chip" data-style="asmr">🎧 ASMR</div>
+                            <div class="style-chip" data-style="tutorial">🎓 Tutorial</div>
+                            <div class="style-chip" data-style="kuliner">🍽️ Kuliner</div>
+                            <div class="style-chip" data-style="beauty">💄 Beauty</div>
+                            <div class="style-chip" data-style="minimalist">✨ Minimalist</div>
+                        </div>
+                    </div>
+
+                    <!-- Platform Target Video -->
+                    <div class="form-group">
+                        <label class="form-label" for="videoPlatformSelect">Platform Target:</label>
+                        <select class="form-select" id="videoPlatformSelect">
+                            <option value="tiktok" selected>TikTok (Keranjang Kuning)</option>
+                            <option value="shopee">Shopee Video (Keranjang Oranye)</option>
+                            <option value="instagram">Instagram Reels</option>
+                            <option value="youtube">YouTube Shorts</option>
+                            <option value="ads">Iklan Berbayar (Meta/TikTok Ads)</option>
+                        </select>
+                    </div>
+
                     <!-- Prompt Video -->
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <label class="form-label" style="margin-bottom: 0;" for="videoPromptInput">Prompt Video:</label>
                             <button type="button" class="btn-auto-prompt" id="btnVideoAutoPrompt">
                                 <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
-                                <span>Auto Prompt dari Foto</span>
+                                <span>Auto Prompt AI</span>
                             </button>
                         </div>
-                        <textarea class="form-textarea" id="videoPromptInput" placeholder="Deskripsi adegan video yang diinginkan (atau gunakan Auto Prompt dari foto produk)..."></textarea>
+                        <textarea class="form-textarea" id="videoPromptInput" placeholder="Deskripsi adegan video (atau klik Auto Prompt AI untuk analisa foto Anda)..."></textarea>
                     </div>
 
                     <!-- Rasio Video -->
@@ -224,16 +253,42 @@
                         </select>
                     </div>
 
+                    <!-- Gaya Foto / Style Preset (GAMA Style) -->
+                    <div class="form-group">
+                        <label class="form-label">Gaya Foto:</label>
+                        <div class="style-chips" id="imageStyleChips">
+                            <div class="style-chip active" data-style="studio">📸 Studio Bersih</div>
+                            <div class="style-chip" data-style="lifestyle">🌿 Lifestyle</div>
+                            <div class="style-chip" data-style="katalog">📋 Katalog</div>
+                            <div class="style-chip" data-style="luxury">👑 Luxury</div>
+                            <div class="style-chip" data-style="outdoor">🌤️ Outdoor</div>
+                            <div class="style-chip" data-style="flatlay">📐 Flat Lay</div>
+                            <div class="style-chip" data-style="detail">🔍 Close-Up Detail</div>
+                            <div class="style-chip" data-style="editorial">🎨 Editorial Art</div>
+                        </div>
+                    </div>
+
+                    <!-- Platform Target Image -->
+                    <div class="form-group">
+                        <label class="form-label" for="imagePlatformSelect">Platform Target:</label>
+                        <select class="form-select" id="imagePlatformSelect">
+                            <option value="marketplace" selected>Marketplace (Shopee/Tokopedia)</option>
+                            <option value="instagram">Instagram Feed</option>
+                            <option value="katalog">Katalog Produk (Print)</option>
+                            <option value="ads">Iklan Digital (Meta/Google Ads)</option>
+                        </select>
+                    </div>
+
                     <!-- Prompt Gambar -->
                     <div class="form-group">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                             <label class="form-label" style="margin-bottom: 0;" for="imagePromptInput">Prompt Gambar:</label>
                             <button type="button" class="btn-auto-prompt" id="btnImageAutoPrompt">
                                 <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
-                                <span>Auto Prompt dari Foto</span>
+                                <span>Auto Prompt AI</span>
                             </button>
                         </div>
-                        <textarea class="form-textarea" id="imagePromptInput" placeholder="Deskripsi konsep foto studio/katalog yang ingin dibuat..."></textarea>
+                        <textarea class="form-textarea" id="imagePromptInput" placeholder="Deskripsi konsep foto studio/katalog (atau klik Auto Prompt AI)..."></textarea>
                     </div>
 
                     <!-- Rasio Gambar -->
@@ -304,26 +359,86 @@
                         </div>
                     </div>
 
-                    <!-- Jenis Prompt -->
+                    <!-- Jenis Output -->
                     <div class="form-group">
-                        <label class="form-label" for="pgModeSelect">Jenis Prompt:</label>
-                        <select class="form-select" id="pgModeSelect">
-                            <option value="video" selected>Prompt Video (Sinematik 9:16)</option>
-                            <option value="image">Prompt Image (Foto Studio Produk)</option>
-                        </select>
+                        <label class="form-label">Jenis Output Prompt:</label>
+                        <div class="pg-mode-toggle">
+                            <button type="button" class="pg-mode-btn active" data-pgmode="video" id="pgModeVideo">
+                                <i data-lucide="video" style="width:14px;height:14px;"></i> Video Sinematik
+                            </button>
+                            <button type="button" class="pg-mode-btn" data-pgmode="image" id="pgModeImage">
+                                <i data-lucide="image" style="width:14px;height:14px;"></i> Foto Studio
+                            </button>
+                        </div>
+                        <input type="hidden" id="pgModeSelect" value="video">
                     </div>
 
-                    <!-- Gaya Konten (GAMA Style) -->
+                    <!-- Gaya Konten — GAMA Style Full Grid -->
                     <div class="form-group">
-                        <label class="form-label" for="pgStyleSelect">Gaya Konten:</label>
-                        <select class="form-select" id="pgStyleSelect">
-                            <option value="cinematic" selected>Cinematic Luxury (Pencahayaan Megah & Eksklusif)</option>
-                            <option value="affiliate">Affiliate Jualan (Fokus Fitur & Keranjang Kuning)</option>
-                            <option value="storyboard">Storyboard Cerita (Rangkaian Adegan Emosional)</option>
-                            <option value="minimalist">Minimalist Studio (Background Bersih & Modern)</option>
-                            <option value="ugc">UGC Natural (Gaya Kamera HP Realistis)</option>
-                            <option value="kuliner">Food & Kuliner (Fokus Tekstur Lezat & Asap Hangat)</option>
-                        </select>
+                        <label class="form-label">Gaya Konten / Mood:</label>
+                        <div class="style-grid" id="pgStyleGrid">
+                            <div class="style-card active" data-pgstyle="cinematic">
+                                <div class="style-card-icon">&#x1F3AC;</div>
+                                <div class="style-card-name">Cinematic</div>
+                                <div class="style-card-desc">Megah &amp; eksklusif</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="hardselling">
+                                <div class="style-card-icon">&#x1F525;</div>
+                                <div class="style-card-name">Hard Selling</div>
+                                <div class="style-card-desc">CTA agresif, keranjang</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="softselling">
+                                <div class="style-card-icon">&#x1F49D;</div>
+                                <div class="style-card-name">Soft Selling</div>
+                                <div class="style-card-desc">Emosi &amp; kebutuhan</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="storytelling">
+                                <div class="style-card-icon">&#x1F4D6;</div>
+                                <div class="style-card-name">Storytelling</div>
+                                <div class="style-card-desc">Narasi emosional</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="ugc">
+                                <div class="style-card-icon">&#x1F4F1;</div>
+                                <div class="style-card-name">UGC Viral</div>
+                                <div class="style-card-desc">Kamera HP realistis</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="asmr">
+                                <div class="style-card-icon">&#x1F3A7;</div>
+                                <div class="style-card-name">ASMR</div>
+                                <div class="style-card-desc">Tekstur &amp; detail</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="tutorial">
+                                <div class="style-card-icon">&#x1F393;</div>
+                                <div class="style-card-name">Tutorial</div>
+                                <div class="style-card-desc">How-to &amp; edukasi</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="kuliner">
+                                <div class="style-card-icon">&#x1F37D;</div>
+                                <div class="style-card-name">Kuliner</div>
+                                <div class="style-card-desc">Food &amp; tekstur lezat</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="beauty">
+                                <div class="style-card-icon">&#x1F484;</div>
+                                <div class="style-card-name">Beauty</div>
+                                <div class="style-card-desc">Kecantikan &amp; skincare</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="minimalist">
+                                <div class="style-card-icon">&#x2728;</div>
+                                <div class="style-card-name">Minimalist</div>
+                                <div class="style-card-desc">Clean &amp; modern</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="luxury">
+                                <div class="style-card-icon">&#x1F451;</div>
+                                <div class="style-card-name">Luxury</div>
+                                <div class="style-card-desc">Premium &amp; prestige</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="lifestyle">
+                                <div class="style-card-icon">&#x1F33F;</div>
+                                <div class="style-card-name">Lifestyle</div>
+                                <div class="style-card-desc">Aktivitas &amp; gaya hidup</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="pgStyleSelect" value="cinematic">
                     </div>
 
                     <!-- Platform Target -->
@@ -332,22 +447,23 @@
                         <select class="form-select" id="pgPlatformSelect">
                             <option value="tiktok" selected>TikTok (Keranjang Kuning)</option>
                             <option value="shopee">Shopee Video (Keranjang Oranye)</option>
-                            <option value="instagram">Instagram Reels</option>
+                            <option value="instagram">Instagram Reels / Feed</option>
                             <option value="youtube">YouTube Shorts</option>
                             <option value="ads">Iklan Berbayar (Meta/TikTok Ads)</option>
+                            <option value="general">Konten Umum (Multi-Platform)</option>
                         </select>
                     </div>
 
                     <!-- Catatan Tambahan -->
                     <div class="form-group">
                         <label class="form-label" for="pgExtraInput">Catatan Khusus (Opsional):</label>
-                        <input type="text" class="form-input" id="pgExtraInput" placeholder="Misal: ada model wanita Indonesia, latar pantai sore...">
+                        <input type="text" class="form-input" id="pgExtraInput" placeholder="Misal: model wanita Indonesia, latar pantai sore, tanpa teks overlay...">
                     </div>
 
                     <!-- Generate Prompt Button -->
                     <button class="btn-generate" id="btnRunPromptGen" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                         <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
-                        <span>GENERATE PROMPT DARI GAMBAR</span>
+                        <span>GENERATE SMART PROMPT</span>
                     </button>
 
                     <!-- Kotak Hasil Prompt -->
@@ -912,11 +1028,8 @@
                 </button>
             </form>
 
-            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--card-border); text-align: center;">
-                <button type="button" class="btn-secondary" id="btnContinueGuest" style="width: 100%; justify-content: center; font-size: 12px;">
-                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
-                    <span>Lanjutkan Sebagai Tamu / Demo Mode</span>
-                </button>
+            <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--card-border); text-align: center;">
+                <p style="font-size: 11.5px; color: var(--text-tertiary); line-height: 1.5;">Dengan mendaftar, Anda menyetujui <a href="/" style="color: #818cf8; text-decoration: underline;">Syarat &amp; Ketentuan</a> VIDORA Studio.</p>
             </div>
         </div>
     </div>
