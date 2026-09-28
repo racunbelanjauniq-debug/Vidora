@@ -1031,21 +1031,22 @@
                         </p>
 
                         <form id="formAdminXsenderConfig">
-                            <div class="form-group">
-                                <label class="form-label" for="xsenderApiUrl">API Endpoint URL (xsender.id):</label>
-                                <input type="url" class="form-input" id="xsenderApiUrl" placeholder="https://api.xsender.id/v1/messages" required>
-                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Default: <code>https://api.xsender.id/v1/messages</code></small>
+                            <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
+                                <p style="font-size: 11.5px; color: #a7f3d0; margin: 0; line-height: 1.4;">
+                                    💡 <strong>Otomatis Terhubung:</strong> Menggunakan gateway resmi <code>https://xsender.id/send-message</code> sama seperti di GAMA PRO. Tidak perlu mencari atau mengisi endpoint manual.
+                                </p>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="xsenderApiToken">API Token / Secret Key:</label>
-                                <input type="password" class="form-input" id="xsenderApiToken" placeholder="Masukkan token API xsender.id Anda...">
+                                <label class="form-label" for="xsenderApiKey">XSender API Key / Token:</label>
+                                <input type="password" class="form-input" id="xsenderApiKey" placeholder="Masukkan API Key dari dashboard xsender.id" required>
                                 <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapatkan dari dashboard akun Anda di xsender.id</small>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label" for="xsenderDeviceId">Device ID / Sender ID (Opsional):</label>
-                                <input type="text" class="form-input" id="xsenderDeviceId" placeholder="Contoh: dev_xxxx atau kosongkan jika default">
+                                <label class="form-label" for="xsenderSender">Nomor Sender WhatsApp (Device Terdaftar):</label>
+                                <input type="text" class="form-input" id="xsenderSender" placeholder="Contoh: 081234567890 atau 6281234567890" required>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Nomor WA yang telah discan di dashboard xsender.id</small>
                             </div>
 
                             <div class="form-group">

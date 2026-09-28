@@ -1055,18 +1055,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!window.xsender) return;
         const cfg = window.xsender.config;
 
-        const urlInput = document.getElementById("xsenderApiUrl");
-        const tokenInput = document.getElementById("xsenderApiToken");
-        const deviceInput = document.getElementById("xsenderDeviceId");
+        const tokenInput = document.getElementById("xsenderApiKey") || document.getElementById("xsenderApiToken");
+        const deviceInput = document.getElementById("xsenderSender") || document.getElementById("xsenderDeviceId");
         const adminPhoneInput = document.getElementById("xsenderAdminPhone");
         const chkOrder = document.getElementById("checkNotifyOrder");
         const chkApproval = document.getElementById("checkNotifyApproval");
         const chkRender = document.getElementById("checkNotifyRender");
         const tplApproval = document.getElementById("xsenderTemplateApproval");
 
-        if (urlInput) urlInput.value = cfg.apiUrl || "https://api.xsender.id/v1/messages";
-        if (tokenInput) tokenInput.value = cfg.apiToken || "";
-        if (deviceInput) deviceInput.value = cfg.deviceId || "";
+        if (tokenInput) tokenInput.value = cfg.apiKey || cfg.apiToken || "";
+        if (deviceInput) deviceInput.value = cfg.sender || cfg.deviceId || "";
         if (adminPhoneInput) adminPhoneInput.value = cfg.adminPhone || "";
         if (chkOrder) chkOrder.checked = cfg.notifyOnOrder !== false;
         if (chkApproval) chkApproval.checked = cfg.notifyOnApproval !== false;
@@ -1078,10 +1076,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (formAdminXsender) {
         formAdminXsender.addEventListener("submit", async (e) => {
             e.preventDefault();
+            const tokenInput = document.getElementById("xsenderApiKey") || document.getElementById("xsenderApiToken");
+            const senderInput = document.getElementById("xsenderSender") || document.getElementById("xsenderDeviceId");
             const newCfg = {
-                apiUrl: document.getElementById("xsenderApiUrl").value.trim(),
-                apiToken: document.getElementById("xsenderApiToken").value.trim(),
-                deviceId: document.getElementById("xsenderDeviceId").value.trim(),
+                apiKey: tokenInput ? tokenInput.value.trim() : "",
+                sender: senderInput ? senderInput.value.trim() : "",
                 adminPhone: document.getElementById("xsenderAdminPhone").value.trim(),
                 notifyOnOrder: document.getElementById("checkNotifyOrder").checked,
                 notifyOnApproval: document.getElementById("checkNotifyApproval").checked,

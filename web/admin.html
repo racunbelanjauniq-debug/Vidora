@@ -950,26 +950,34 @@
                 </div>
 
                 <form id="formAdminXsender">
-                    <div class="form-group">
-                        <label class="form-label">Endpoint API xsender.id:</label>
-                        <input type="url" class="form-input" id="cfgXsenderUrl" placeholder="https://api.xsender.id/v1/messages" required>
+                    <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+                        <p style="font-size: 12px; color: #a7f3d0; margin: 0; line-height: 1.5;">
+                            💡 <strong>Otomatis Terhubung (Tanpa Endpoint Manual):</strong> Server VIDORA otomatis terhubung ke gateway resmi <code>https://xsender.id/send-message</code> sama persis seperti di GAMA PRO. Anda hanya perlu memasukkan <strong>API Key</strong> dan <strong>Nomor Sender</strong> yang Anda scan di dashboard xsender.id.
+                        </p>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
                         <div class="form-group">
-                            <label class="form-label">API Token / Secret Key:</label>
-                            <input type="password" class="form-input" id="cfgXsenderToken" placeholder="Masukkan token xsender Anda...">
+                            <label class="form-label">XSender API Key / Token:</label>
+                            <div style="position: relative;">
+                                <input type="password" class="form-input" id="cfgXsenderApiKey" placeholder="Masukkan API Key dari dashboard xsender.id" style="padding-right: 40px;" required>
+                                <button type="button" id="btnToggleXsenderKey" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px;">
+                                    <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                            <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapatkan di menu Dashboard &rarr; API Key pada akun xsender.id Anda.</small>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Device ID / Sender (Opsional):</label>
-                            <input type="text" class="form-input" id="cfgXsenderDevice" placeholder="Contoh: dev_xxxx">
+                            <label class="form-label">Nomor Sender WhatsApp (Device Terdaftar):</label>
+                            <input type="text" class="form-input" id="cfgXsenderSender" placeholder="Contoh: 081234567890 atau 6281234567890" required>
+                            <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Nomor WhatsApp pengirim yang telah Anda scan QR di dashboard xsender.id.</small>
                         </div>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="margin-bottom: 18px;">
                         <label class="form-label">Nomor WhatsApp Admin (Penerima Laporan Order):</label>
-                        <input type="tel" class="form-input" id="cfgXsenderAdminPhone" placeholder="08xxxxxxxxxx">
-                        <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Setiap ada pembeli klik langganan, bot akan mengirimkan laporan instan ke nomor ini.</small>
+                        <input type="tel" class="form-input" id="cfgXsenderAdminPhone" placeholder="Contoh: 081234567890">
+                        <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Setiap ada pembeli checkout atau pembayaran QRIS Pakasir selesai, notifikasi instan akan dikirim ke nomor ini.</small>
                     </div>
 
                     <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 14px; margin: 18px 0;">
@@ -1507,10 +1515,9 @@
             document.getElementById("cfgR2Domain").value = localStorage.getItem("vidora_r2_domain") || window.VIDORA_CONFIG.R2_PUBLIC_DOMAIN;
 
             if (window.xsender) {
-                document.getElementById("cfgXsenderUrl").value = window.xsender.config.endpointUrl;
-                document.getElementById("cfgXsenderToken").value = window.xsender.config.apiToken;
-                document.getElementById("cfgXsenderDevice").value = window.xsender.config.deviceId;
-                document.getElementById("cfgXsenderAdminPhone").value = window.xsender.config.adminPhone;
+                document.getElementById("cfgXsenderApiKey").value = window.xsender.config.apiKey || window.xsender.config.apiToken || "";
+                document.getElementById("cfgXsenderSender").value = window.xsender.config.sender || window.xsender.config.deviceId || "";
+                document.getElementById("cfgXsenderAdminPhone").value = window.xsender.config.adminPhone || "";
             }
 
             // Pakasir Gateway Settings
@@ -1586,16 +1593,25 @@
         });
 
         // WhatsApp Form Submit
-        document.getElementById("formAdminXsender").addEventListener("submit", (e) => {
+        document.getElementById("formAdminXsender").addEventListener("submit", async (e) => {
             e.preventDefault();
             if (!window.xsender) return;
-            window.xsender.saveConfig({
-                endpointUrl: document.getElementById("cfgXsenderUrl").value.trim(),
-                apiToken: document.getElementById("cfgXsenderToken").value.trim(),
-                deviceId: document.getElementById("cfgXsenderDevice").value.trim(),
-                adminPhone: document.getElementById("cfgXsenderAdminPhone").value.trim()
+            const apiKey = document.getElementById("cfgXsenderApiKey").value.trim();
+            const sender = document.getElementById("cfgXsenderSender").value.trim();
+            const adminPhone = document.getElementById("cfgXsenderAdminPhone").value.trim();
+
+            await window.xsender.saveConfig({
+                apiKey: apiKey,
+                sender: sender,
+                adminPhone: adminPhone
             });
-            alert("Konfigurasi WhatsApp Gateway (xsender.id) berhasil disimpan!");
+            alert("✅ Konfigurasi WhatsApp Gateway (xsender.id) berhasil disimpan!");
+        });
+
+        // Toggle Password Visibility for XSender API Key
+        document.getElementById("btnToggleXsenderKey")?.addEventListener("click", () => {
+            const input = document.getElementById("cfgXsenderApiKey");
+            input.type = input.type === "password" ? "text" : "password";
         });
 
         // Test WhatsApp Send
