@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Super Admin — VIDORA</title>
     <meta name="robots" content="noindex, nofollow">
-    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="/css/app.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -20,7 +20,6 @@
             overflow-x: hidden;
         }
 
-        /* Subtle gold ambient glow in center */
         body::before {
             content: "";
             position: absolute;
@@ -174,7 +173,7 @@
 
             <div class="admin-security-banner">
                 <i data-lucide="shield-alert" style="width: 18px; height: 18px; flex-shrink: 0; color: #fbbf24;"></i>
-                <span>Area terbatas. Seluruh percobaan akses diverifikasi langsung oleh protokol otorisasi Supabase.</span>
+                <span>Area terbatas. Seluruh akses diverifikasi langsung oleh protokol otorisasi Supabase.</span>
             </div>
 
             <!-- Error Box -->
@@ -203,16 +202,16 @@
             </button>
 
             <div class="admin-footer">
-                <a href="../login">&larr; Halaman Login Member</a>
+                <a href="/login">&larr; Halaman Login Member</a>
                 &bull;
-                <a href="../index.html">Beranda</a>
+                <a href="/">Beranda</a>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <script src="../js/config.js"></script>
-    <script src="../js/supabase-client.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/supabase-client.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -258,7 +257,7 @@
                     }
 
                     // Success! Redirect to Admin Tab in Studio
-                    window.location.href = "../app.html?tab=admin";
+                    window.location.href = "/app.html?tab=admin";
                 } catch (err) {
                     showError(err.message || "Gagal masuk. Periksa kembali email dan password.");
                     btnSubmit.disabled = false;
@@ -269,7 +268,7 @@
             // Quick Dev Login as Owner
             document.getElementById("btnAdminQuickDev").addEventListener("click", () => {
                 window.vidoraData.resetDemoUser("superadmin");
-                window.location.href = "../app.html?tab=admin";
+                window.location.href = "/app.html?tab=admin";
             });
         });
     </script>

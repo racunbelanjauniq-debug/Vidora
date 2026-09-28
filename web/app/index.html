@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIDORA Studio — AI Video & Image Generator</title>
+    <meta name="description" content="Studio AI Video & Image Generator berbasis foto produk dan multi-akun Google.">
+    <link rel="stylesheet" href="/css/app.css">
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // STRICT AUTH GUARD: Tendang langsung ke /login jika belum ada sesi login
+        (function() {
+            const hasDemoSession = localStorage.getItem("vidora_demo_current_user");
+            const hasSbSession = Object.keys(localStorage).some(k => k.startsWith("sb-") && k.endsWith("-auth-token"));
+            if (!hasDemoSession && !hasSbSession) {
+                window.location.replace("/login");
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- App Header (Bersih tanpa tombol pengaturan/teknis) -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="index.html" class="header-brand" title="Ke Beranda">
+                <div class="app-logo-badge">V</div>
+                <div class="header-title">VID<span>ORA</span></div>
+            </a>
+            <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn-header-upgrade" id="btnHeaderUpgrade">
+                    <i data-lucide="crown" style="width: 13px; height: 13px;"></i>
+                    <span>Upgrade</span>
+                </button>
+                <div class="user-badge" id="userRoleBadge" style="cursor: pointer;" title="Klik untuk menu profil / ganti peran">
+                    <i data-lucide="user" style="width: 13px; height: 13px;"></i>
+                    <span id="userRoleText">Member</span>
+                </div>
+                <button type="button" class="btn-header-auth" id="btnHeaderAuth" style="display: none;">
+                    <i data-lucide="log-in" style="width: 13px; height: 13px;"></i>
+                    <span>Masuk</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="app-container">
+
+        <!-- TAB 1: STUDIO (Mirip 100% dengan Generate GAMA) -->
+        <section id="tab-studio" class="tab-pane active">
+
+            <!-- Sub-Tabs Generator Nav (Video, Image, Prompt Gen) -->
+            <div class="sub-tabs-bar">
+                <button type="button" class="sub-tab-btn active" data-sub="video">
+                    <i data-lucide="video" style="width: 16px; height: 16px;"></i>
+                    <span>Video Generator</span>
+                </button>
+                <button type="button" class="sub-tab-btn" data-sub="image">
+                    <i data-lucide="image" style="width: 16px; height: 16px;"></i>
+                    <span>Image Generator</span>
+                </button>
+                <button type="button" class="sub-tab-btn" data-sub="promptgen">
+                    <i data-lucide="lightbulb" style="width: 16px; height: 16px;"></i>
+                    <span>Prompt Generator</span>
+                </button>
+            </div>
+
+            <!-- SUB-VIEW 1: VIDEO GENERATOR -->
+            <div id="subview-video" class="sub-view-content">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">
+                            <i data-lucide="video" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                            <span>AI Video Generator</span>
+                        </h2>
+                        <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); color: #c7d2fe; padding: 3px 8px; border-radius: 6px; font-weight: 700;">HD 60fps</span>
+                    </div>
+
+                    <!-- Upload Foto Produk -->
+                    <div class="form-group">
+                        <label class="form-label">Foto Produk Referensi:</label>
+                        <div class="upload-dropzone" id="videoDropzone">
+                            <div class="dropzone-content">
+                                <div class="dropzone-icon">
+                                    <i data-lucide="upload-cloud"></i>
+                                </div>
+                                <div class="dropzone-title">Upload Foto Produk</div>
+                                <div class="dropzone-subtitle">Ketuk untuk pilih dari galeri / kamera</div>
+                            </div>
+                        </div>
+                        <input type="file" id="videoFileInput" accept="image/*" style="display: none;">
+                        
+                        <div class="image-preview-box" id="videoPreviewBox">
+                            <img id="videoPreviewImg" src="" alt="Pratinjau Foto Produk">
+                            <button type="button" class="btn-remove-preview" id="btnRemoveVideoPreview">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Akun Google -->
+                    <div class="form-group">
+                        <label class="form-label" for="videoAccountSelect">Pilih Akun Google:</label>
+                        <select class="form-select account-dropdown" id="videoAccountSelect">
+                            <option value="">-- Rotasi Otomatis Semua Akun Aktif --</option>
+                        </select>
+                    </div>
+
+                    <!-- Prompt Video -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0;" for="videoPromptInput">Prompt Video:</label>
+                            <button type="button" class="btn-auto-prompt" id="btnVideoAutoPrompt">
+                                <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
+                                <span>Auto Prompt dari Foto</span>
+                            </button>
+                        </div>
+                        <textarea class="form-textarea" id="videoPromptInput" placeholder="Deskripsi adegan video yang diinginkan (atau gunakan Auto Prompt dari foto produk)..."></textarea>
+                    </div>
+
+                    <!-- Rasio Video -->
+                    <div class="form-group">
+                        <label class="form-label">Aspek Rasio:</label>
+                        <div class="options-grid">
+                            <div class="option-btn video-ratio-btn active" data-ratio="9:16">
+                                <span>9:16</span>
+                                <small style="font-size: 10px; color: var(--text-tertiary);">Shorts/TikTok</small>
+                            </div>
+                            <div class="option-btn video-ratio-btn" data-ratio="16:9">
+                                <span>16:9</span>
+                                <small style="font-size: 10px; color: var(--text-tertiary);">Landscape</small>
+                            </div>
+                            <div class="option-btn video-ratio-btn" data-ratio="1:1">
+                                <span>1:1</span>
+                                <small style="font-size: 10px; color: var(--text-tertiary);">Square</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Durasi Video -->
+                    <div class="form-group">
+                        <label class="form-label">Durasi Video:</label>
+                        <div class="options-grid-4">
+                            <div class="option-btn video-dur-btn" data-duration="4s">4s</div>
+                            <div class="option-btn video-dur-btn" data-duration="6s">6s</div>
+                            <div class="option-btn video-dur-btn active" data-duration="8s">8s</div>
+                            <div class="option-btn video-dur-btn" data-duration="10s">10s</div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Tersembunyi (Invisible) -->
+                    <div class="switch-row">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Mode Tersembunyi (Invisible)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Browser otomasi berjalan di background</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="videoHiddenCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Tombol Generate Video -->
+                    <button class="btn-generate" id="btnGenerateVideo">
+                        <i data-lucide="play" style="width: 18px; height: 18px;"></i>
+                        <span>GENERATE VIDEO AI</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 2: IMAGE GENERATOR -->
+            <div id="subview-image" class="sub-view-content" style="display: none;">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">
+                            <i data-lucide="image" style="color: #10b981; width: 19px; height: 19px;"></i>
+                            <span>AI Image Generator</span>
+                        </h2>
+                        <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Foto Studio AI</span>
+                    </div>
+
+                    <!-- Upload Foto Produk Image Gen -->
+                    <div class="form-group">
+                        <label class="form-label">Foto Produk Referensi:</label>
+                        <div class="upload-dropzone" id="imageDropzone">
+                            <div class="dropzone-content">
+                                <div class="dropzone-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.12);">
+                                    <i data-lucide="image-plus"></i>
+                                </div>
+                                <div class="dropzone-title">Upload Foto Produk</div>
+                                <div class="dropzone-subtitle">Foto produk asli untuk diubah ke foto studio AI</div>
+                            </div>
+                        </div>
+                        <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+                        
+                        <div class="image-preview-box" id="imagePreviewBox">
+                            <img id="imagePreviewImg" src="" alt="Pratinjau Foto Produk">
+                            <button type="button" class="btn-remove-preview" id="btnRemoveImagePreview">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Akun Google -->
+                    <div class="form-group">
+                        <label class="form-label" for="imageAccountSelect">Pilih Akun Google:</label>
+                        <select class="form-select account-dropdown" id="imageAccountSelect">
+                            <option value="">-- Rotasi Otomatis Semua Akun Aktif --</option>
+                        </select>
+                    </div>
+
+                    <!-- Prompt Gambar -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0;" for="imagePromptInput">Prompt Gambar:</label>
+                            <button type="button" class="btn-auto-prompt" id="btnImageAutoPrompt">
+                                <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
+                                <span>Auto Prompt dari Foto</span>
+                            </button>
+                        </div>
+                        <textarea class="form-textarea" id="imagePromptInput" placeholder="Deskripsi konsep foto studio/katalog yang ingin dibuat..."></textarea>
+                    </div>
+
+                    <!-- Rasio Gambar -->
+                    <div class="form-group">
+                        <label class="form-label">Aspek Rasio Gambar:</label>
+                        <div class="options-grid-4">
+                            <div class="option-btn image-ratio-btn active" data-ratio="9:16">9:16</div>
+                            <div class="option-btn image-ratio-btn" data-ratio="1:1">1:1</div>
+                            <div class="option-btn image-ratio-btn" data-ratio="16:9">16:9</div>
+                            <div class="option-btn image-ratio-btn" data-ratio="4:3">4:3</div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Tersembunyi -->
+                    <div class="switch-row">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Mode Tersembunyi (Invisible)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Browser otomasi berjalan di background</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="imageHiddenCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Tombol Generate Gambar -->
+                    <button class="btn-generate" id="btnGenerateImage" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
+                        <span>GENERATE GAMBAR AI</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 3: PROMPT GENERATOR DARI FOTO (Persis GAMA PRO) -->
+            <div id="subview-promptgen" class="sub-view-content" style="display: none;">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">
+                            <i data-lucide="lightbulb" style="color: #f59e0b; width: 19px; height: 19px;"></i>
+                            <span>Prompt Generator dari Gambar</span>
+                        </h2>
+                        <span style="font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #fde68a; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Analisa Visual</span>
+                    </div>
+
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                        Upload foto produk Anda ➔ AI menganalisa komposisi, warna, dan pencahayaan lalu menyusun prompt siap pakai untuk Video atau Gambar.
+                    </p>
+
+                    <!-- Upload Foto Produk Prompt Gen -->
+                    <div class="form-group">
+                        <label class="form-label">File Gambar Produk:</label>
+                        <div class="upload-dropzone" id="pgDropzone">
+                            <div class="dropzone-content">
+                                <div class="dropzone-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12);">
+                                    <i data-lucide="sparkle"></i>
+                                </div>
+                                <div class="dropzone-title">Pilih / Upload Gambar Produk</div>
+                                <div class="dropzone-subtitle">AI akan mendeteksi objek produk secara otomatis</div>
+                            </div>
+                        </div>
+                        <input type="file" id="pgFileInput" accept="image/*" style="display: none;">
+                        
+                        <div class="image-preview-box" id="pgPreviewBox">
+                            <img id="pgPreviewImg" src="" alt="Pratinjau Gambar Produk">
+                            <button type="button" class="btn-remove-preview" id="btnRemovePgPreview">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Jenis Prompt -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgModeSelect">Jenis Prompt:</label>
+                        <select class="form-select" id="pgModeSelect">
+                            <option value="video" selected>Prompt Video (Sinematik 9:16)</option>
+                            <option value="image">Prompt Image (Foto Studio Produk)</option>
+                        </select>
+                    </div>
+
+                    <!-- Gaya Konten (GAMA Style) -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgStyleSelect">Gaya Konten:</label>
+                        <select class="form-select" id="pgStyleSelect">
+                            <option value="cinematic" selected>Cinematic Luxury (Pencahayaan Megah & Eksklusif)</option>
+                            <option value="affiliate">Affiliate Jualan (Fokus Fitur & Keranjang Kuning)</option>
+                            <option value="storyboard">Storyboard Cerita (Rangkaian Adegan Emosional)</option>
+                            <option value="minimalist">Minimalist Studio (Background Bersih & Modern)</option>
+                            <option value="ugc">UGC Natural (Gaya Kamera HP Realistis)</option>
+                            <option value="kuliner">Food & Kuliner (Fokus Tekstur Lezat & Asap Hangat)</option>
+                        </select>
+                    </div>
+
+                    <!-- Platform Target -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgPlatformSelect">Platform Target:</label>
+                        <select class="form-select" id="pgPlatformSelect">
+                            <option value="tiktok" selected>TikTok (Keranjang Kuning)</option>
+                            <option value="shopee">Shopee Video (Keranjang Oranye)</option>
+                            <option value="instagram">Instagram Reels</option>
+                            <option value="youtube">YouTube Shorts</option>
+                            <option value="ads">Iklan Berbayar (Meta/TikTok Ads)</option>
+                        </select>
+                    </div>
+
+                    <!-- Catatan Tambahan -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgExtraInput">Catatan Khusus (Opsional):</label>
+                        <input type="text" class="form-input" id="pgExtraInput" placeholder="Misal: ada model wanita Indonesia, latar pantai sore...">
+                    </div>
+
+                    <!-- Generate Prompt Button -->
+                    <button class="btn-generate" id="btnRunPromptGen" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
+                        <span>GENERATE PROMPT DARI GAMBAR</span>
+                    </button>
+
+                    <!-- Kotak Hasil Prompt -->
+                    <div class="prompt-result-card" id="pgResultCard">
+                        <label class="form-label" style="color: #fde68a;">Hasil Prompt Siap Pakai:</label>
+                        <textarea class="form-textarea" id="pgResultText" style="min-height: 120px;" readonly></textarea>
+                        
+                        <div class="prompt-result-actions">
+                            <button type="button" class="btn-secondary" id="btnPgCopy">
+                                <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                                <span>Salin</span>
+                            </button>
+                            <button type="button" class="btn-secondary" id="btnPgSendToVideo" style="border-color: var(--primary); color: #c7d2fe;">
+                                <i data-lucide="video" style="width: 14px; height: 14px;"></i>
+                                <span>Kirim ke Video Generator</span>
+                            </button>
+                            <button type="button" class="btn-secondary" id="btnPgSendToImage" style="border-color: #10b981; color: #6ee7b7;">
+                                <i data-lucide="image" style="width: 14px; height: 14px;"></i>
+                                <span>Kirim ke Image Generator</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- TAB 2: AKUN GOOGLE & API KEY (Setiap User Isi Milik Sendiri) -->
+        <section id="tab-accounts" class="tab-pane">
+            
+            <!-- Card 1: API Key Gemini User Sendiri -->
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="key" style="color: #f59e0b; width: 19px; height: 19px;"></i>
+                        <span>API Key Gemini Saya</span>
+                    </h2>
+                    <span id="geminiKeyStatusBadge" style="font-size: 11px; background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Belum Diisi</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Digunakan untuk fitur <strong>Auto Prompt</strong> dan analisa foto produk secara cerdas. 
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #818cf8; text-decoration: underline;">Dapatkan API Key gratis di Google AI Studio &rarr;</a>
+                </p>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="password" class="form-input" id="userGeminiKeyInput" placeholder="AIzaSy..." style="font-family: monospace;">
+                        <button type="button" class="btn-secondary" id="btnToggleShowGeminiKey" title="Lihat/Sembunyikan">
+                            <i data-lucide="eye" id="eyeIconGemini" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn-generate" id="btnSaveGeminiKey" style="padding: 11px; font-size: 13px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+                    <span>Simpan API Key Gemini</span>
+                </button>
+            </div>
+
+            <!-- Card 2: Multi-Akun Google User Sendiri -->
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="users" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                        <span>Profil Akun Google Saya</span>
+                    </h2>
+                    <button class="btn-icon" id="btnOpenAddAccount" title="Tambah Akun">
+                        <i data-lucide="plus" style="width: 18px; height: 18px; color: #818cf8;"></i>
+                    </button>
+                </div>
+
+                <!-- Limit Progress -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600;">
+                        <span>Kapasitas Akun Terpasang</span>
+                        <span id="accountLimitText" style="color: #a5b4fc;">0 / 5 Slot Terpakai</span>
+                    </div>
+                    <div class="limit-progress-bar">
+                        <div class="limit-fill" id="accountLimitFill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div id="accountsList" style="margin-top: 16px;">
+                    <!-- Akun ter-render otomatis oleh JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ANTRIAN (Queue Realtime) -->
+        <section id="tab-queue" class="tab-pane">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="layers" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                        <span>Antrian Tugas Generate</span>
+                    </h2>
+                    <span style="font-size: 11px; color: var(--text-tertiary);">Realtime Auto-Sync</span>
+                </div>
+
+                <div id="queueList">
+                    <!-- Queue items ter-render otomatis -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: GALERI KONTEN -->
+        <section id="tab-gallery" class="tab-pane">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="film" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                        <span>Galeri Konten Anda</span>
+                    </h2>
+                    <span style="font-size: 11px; color: #10b981; font-weight: 600;">Siap Download</span>
+                </div>
+
+                <div class="gallery-grid" id="galleryGrid">
+                    <!-- Video/Image cards ter-render otomatis -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: DASHBOARD SUPER ADMIN -->
+        <section id="tab-admin" class="tab-pane">
+            <div class="card">
+                <div class="card-title-row" style="margin-bottom: 16px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <h2 class="card-title" style="color: #fbbf24;">
+                                <i data-lucide="shield-check" style="width: 20px; height: 20px;"></i>
+                                <span>Panel Super Admin VIDORA</span>
+                            </h2>
+                            <span class="admin-badge-indicator">PUSAT KONTROL</span>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-tertiary);">
+                            Kelola pengguna, antrian sistem, pesanan paket, dan koneksi server database.
+                        </p>
+                    </div>
+                    <div id="adminConnectionPill" class="connection-status-pill disconnected">
+                        <span class="status-dot red"></span>
+                        <span id="adminConnectionText">Demo / Offline</span>
+                    </div>
+                </div>
+
+                <!-- Admin Metrics -->
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Total Pengguna</span>
+                        <span class="admin-stat-value" id="statTotalUsers">1</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Antrian Berjalan</span>
+                        <span class="admin-stat-value" id="statActiveJobs" style="color: #00f2fe;">0</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Total Selesai</span>
+                        <span class="admin-stat-value" id="statCompletedJobs" style="color: #10b981;">0</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Akun Google Vault</span>
+                        <span class="admin-stat-value" id="statGoogleAccounts">0</span>
+                    </div>
+                </div>
+
+                <!-- Admin Sub-Navigation -->
+                <div class="admin-sub-tabs">
+                    <button type="button" class="admin-sub-tab-btn active" data-adminsub="connection">
+                        <i data-lucide="database" style="width: 15px; height: 15px;"></i>
+                        <span>Koneksi Supabase & Cloud</span>
+                    </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="users">
+                        <i data-lucide="users" style="width: 15px; height: 15px;"></i>
+                        <span>Kelola Pengguna</span>
+                    </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="queue">
+                        <i data-lucide="activity" style="width: 15px; height: 15px;"></i>
+                        <span>Antrian Global</span>
+                    </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="orders">
+                        <i data-lucide="credit-card" style="width: 15px; height: 15px;"></i>
+                        <span>Pesanan Masuk (CO)</span>
+                    </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="whatsapp">
+                        <i data-lucide="message-square" style="width: 15px; height: 15px;"></i>
+                        <span>WhatsApp (xsender.id)</span>
+                    </button>
+                </div>
+
+                <!-- SUB-PANE 1: KONEKSI SUPABASE & CLOUDFLARE R2 -->
+                <div id="adminsub-connection" class="admin-sub-content">
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
+                        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="link" style="width: 16px; height: 16px;"></i>
+                            <span>Hubungkan Database & Media Cloud</span>
+                        </h3>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                            Masukkan URL & Anon Key dari project Supabase Anda serta Domain Publik Cloudflare R2. Pengaturan ini langsung tersimpan dan aktif untuk seluruh sistem tanpa perlu edit kode!
+                        </p>
+
+                        <form id="formAdminCloudConfig">
+                            <div class="form-group">
+                                <label class="form-label" for="inputSupabaseUrl">Supabase Project URL:</label>
+                                <input type="url" class="form-input" id="inputSupabaseUrl" placeholder="https://xxxxxxxx.supabase.co" required>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapat ditemukan di: Supabase Dashboard -> Project Settings -> API -> Project URL</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="inputSupabaseKey">Supabase Anon / Public API Key:</label>
+                                <input type="password" class="form-input" id="inputSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapat ditemukan di: Supabase Dashboard -> Project Settings -> API -> Project API keys (anon public)</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="inputR2Domain">Domain Publik Penyimpanan Media:</label>
+                                <input type="text" class="form-input" id="inputR2Domain" placeholder="https://pub-xxxxxxxx.r2.dev">
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Domain publik Cloudflare R2 tempat streaming video hasil render</small>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button type="submit" class="btn-generate" style="flex: 2;">
+                                    <i data-lucide="save" style="width: 18px; height: 18px;"></i>
+                                    <span>Simpan & Aktifkan Koneksi</span>
+                                </button>
+                                <button type="button" class="btn-secondary" id="btnAdminTestConnection" style="flex: 1; justify-content: center;">
+                                    <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+                                    <span>Tes Koneksi</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Panduan SQL Quick Copy -->
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--card-border); border-radius: var(--radius-md); padding: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 12px; font-weight: 700; color: #a5b4fc;">SQL Database Schema Ready</span>
+                            <button type="button" class="btn-copy-account" id="btnCopySqlSchema">
+                                <i data-lucide="copy" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Salin Query SQL
+                            </button>
+                        </div>
+                        <p style="font-size: 11px; color: var(--text-tertiary);">
+                            Jalankan file <code>supabase/schema.sql</code> di Supabase SQL Editor jika belum dieksekusi agar seluruh tabel profil, antrian, dan batasan 5 akun siap otomatis.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 2: KELOLA PENGGUNA -->
+                <div id="adminsub-users" class="admin-sub-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Daftar Pengguna Terdaftar</span>
+                        <button type="button" class="btn-table-action" id="btnRefreshAdminUsers">
+                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Pengguna / Email</th>
+                                    <th>Peran (Role)</th>
+                                    <th>Limit Akun</th>
+                                    <th>Aksi Cepat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUsersTableBody">
+                                <!-- Ter-render dinamis -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 3: ANTRIAN GLOBAL -->
+                <div id="adminsub-queue" class="admin-sub-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Seluruh Tugas Generate Sistem</span>
+                        <button type="button" class="btn-table-action" id="btnRefreshAdminQueue">
+                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID / Waktu</th>
+                                    <th>Prompt</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminQueueTableBody">
+                                <!-- Ter-render dinamis -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 4: PESANAN & CHECKOUT (CO) -->
+                <div id="adminsub-orders" class="admin-sub-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Riwayat Pemesanan Paket (Checkout)</span>
+                        <button type="button" class="btn-table-action" id="btnRefreshAdminOrders">
+                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Invoice / Nama</th>
+                                    <th>Paket & Harga</th>
+                                    <th>Metode</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminOrdersTableBody">
+                                <!-- Ter-render dinamis -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 5: WHATSAPP GATEWAY (xsender.id) -->
+                <div id="adminsub-whatsapp" class="admin-sub-content" style="display: none;">
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="font-size: 15px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="message-circle" style="width: 17px; height: 17px;"></i>
+                                <span>Integrasi WhatsApp Gateway (xsender.id)</span>
+                            </h3>
+                            <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 2px 8px; border-radius: 6px; font-weight: 700;">Otomasi Pesan</span>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                            Kirim notifikasi otomatis langsung ke WhatsApp pelanggan dan admin saat order checkout Rp 75.000 masuk, saat aktivasi 5 profil disetujui, dan ketika video hasil render selesai.
+                        </p>
+
+                        <form id="formAdminXsenderConfig">
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderApiUrl">API Endpoint URL (xsender.id):</label>
+                                <input type="url" class="form-input" id="xsenderApiUrl" placeholder="https://api.xsender.id/v1/messages" required>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Default: <code>https://api.xsender.id/v1/messages</code></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderApiToken">API Token / Secret Key:</label>
+                                <input type="password" class="form-input" id="xsenderApiToken" placeholder="Masukkan token API xsender.id Anda...">
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapatkan dari dashboard akun Anda di xsender.id</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderDeviceId">Device ID / Sender ID (Opsional):</label>
+                                <input type="text" class="form-input" id="xsenderDeviceId" placeholder="Contoh: dev_xxxx atau kosongkan jika default">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderAdminPhone">Nomor WhatsApp Admin (Penerima Laporan Order):</label>
+                                <input type="tel" class="form-input" id="xsenderAdminPhone" placeholder="Contoh: 081234567890">
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Nomor WA yang akan menerima notifikasi setiap ada user memesan paket</small>
+                            </div>
+
+                            <div style="height: 1px; background: rgba(255,255,255,0.06); margin: 18px 0;"></div>
+
+                            <h4 style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 12px;">Trigger Notifikasi Otomatis:</h4>
+
+                            <div class="switch-row" style="margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 600;">Notifikasi Order Masuk</div>
+                                    <div style="font-size: 11px; color: var(--text-tertiary);">Kirim invoice ke pelanggan & kirim alert ke admin</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="checkNotifyOrder" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-row" style="margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 600;">Notifikasi Aktivasi Akun (5 Profil Aktif)</div>
+                                    <div style="font-size: 11px; color: var(--text-tertiary);">Kirim pesan selamat saat admin klik Setujui Pembayaran</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="checkNotifyApproval" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-row" style="margin-bottom: 16px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 600;">Notifikasi Video Selesai Render</div>
+                                    <div style="font-size: 11px; color: var(--text-tertiary);">Kirim link video ke WhatsApp user saat generate selesai</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="checkNotifyRender" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Template Editor -->
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderTemplateApproval">Template Pesan Aktivasi Akun Sukses:</label>
+                                <textarea class="form-textarea" id="xsenderTemplateApproval" rows="3" style="font-size: 12px;"></textarea>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Variabel: <code>{nama}</code>, <code>{paket}</code>, <code>{invoice}</code>, <code>{total}</code></small>
+                            </div>
+
+                            <button type="submit" class="btn-generate" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: 100%; margin-top: 10px;">
+                                <i data-lucide="save" style="width: 17px; height: 17px;"></i>
+                                <span>Simpan Pengaturan WhatsApp</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Uji Coba Kirim Pesan WhatsApp -->
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--card-border); border-radius: var(--radius-md); padding: 18px;">
+                        <h4 style="font-size: 13.5px; font-weight: 700; color: #fbbf24; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="send" style="width: 15px; height: 15px;"></i>
+                            <span>Uji Coba Kirim Pesan WhatsApp (Test Ping)</span>
+                        </h4>
+                        <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px;">
+                            Kirim pesan uji coba ke nomor WhatsApp Anda untuk memastikan token API dan endpoint xsender.id sudah terhubung.
+                        </p>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="tel" class="form-input" id="testWaTargetPhone" placeholder="Nomor WhatsApp (misal: 081234567890)" style="flex: 2; min-width: 180px;">
+                            <button type="button" class="btn-apple-primary" id="btnSendTestWa" style="flex: 1; min-width: 140px; justify-content: center; font-size: 13px;">
+                                <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+                                <span>Kirim Pesan Tes</span>
+                            </button>
+                        </div>
+                        <div id="testWaResult" style="margin-top: 10px; font-size: 12px; display: none; padding: 10px; border-radius: var(--radius-sm);"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Tab Navigation for Mobile & Desktop Shell -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-tab="studio">
+            <i data-lucide="clapperboard"></i>
+            <span>Studio</span>
+        </button>
+        <button class="nav-item" data-tab="accounts">
+            <i data-lucide="user-check"></i>
+            <span>Akun</span>
+        </button>
+        <button class="nav-item" data-tab="queue">
+            <i data-lucide="activity"></i>
+            <span>Antrian</span>
+        </button>
+        <button class="nav-item" data-tab="gallery">
+            <i data-lucide="grid"></i>
+            <span>Galeri</span>
+        </button>
+        <button class="nav-item" data-tab="admin" id="navItemAdmin" style="display: none;">
+            <i data-lucide="shield-check" style="color: #fbbf24;"></i>
+            <span style="color: #fbbf24;">Admin</span>
+        </button>
+    </nav>
+
+    <!-- MODAL: TAMBAH AKUN GOOGLE -->
+    <div class="modal-backdrop" id="modalAddAccount">
+        <div class="modal-sheet">
+            <div class="card-title-row">
+                <h3 class="card-title">Tambah Akun Google</h3>
+                <button class="btn-icon" id="btnCloseAddAccount">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                Daftarkan alamat Gmail yang ingin Anda gunakan untuk generate video dan gambar.
+            </p>
+            <form id="formAddAccount">
+                <div class="form-group">
+                    <label class="form-label" for="newAccountEmail">Email Google (Gmail):</label>
+                    <input type="email" class="form-input" id="newAccountEmail" placeholder="namaakun@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newAccountLabel">Label / Keterangan (Opsional):</label>
+                    <input type="text" class="form-input" id="newAccountLabel" placeholder="Contoh: Akun Utama / Cadangan">
+                </div>
+                <button type="submit" class="btn-generate" style="margin-top: 10px;">
+                    <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+                    <span>Simpan Akun</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: MEDIA PLAYER (Video / Gambar) -->
+    <div class="modal-backdrop" id="modalVideoPlayer">
+        <div class="modal-sheet" style="max-width: 420px; padding: 18px;">
+            <div class="card-title-row" style="margin-bottom: 12px;">
+                <h3 class="card-title" id="playerModalTitle" style="font-size: 16px;">Pratinjau Hasil</h3>
+                <button class="btn-icon" id="btnClosePlayer">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <div style="background: black; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 14px;">
+                <video id="playerVideo" controls playsinline style="width: 100%; aspect-ratio: 9/16; max-height: 480px; display: block; object-fit: contain;"></video>
+                <img id="playerImage" src="" alt="Hasil Gambar" style="width: 100%; aspect-ratio: 9/16; max-height: 480px; display: none; object-fit: contain;">
+            </div>
+            <p id="playerPromptText" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-style: italic; max-height: 60px; overflow-y: auto;"></p>
+            <button class="btn-generate" id="btnDownloadVideo">
+                <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+                <span>Download File</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: AUTENTIKASI (MASUK / DAFTAR) -->
+    <div class="modal-backdrop" id="modalAuth">
+        <div class="modal-sheet" style="max-width: 420px;">
+            <div class="card-title-row" style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="app-logo-badge" style="width: 28px; height: 28px; font-size: 14px;">V</div>
+                    <h3 class="card-title" style="font-size: 17px;">Selamat Datang di VIDORA</h3>
+                </div>
+                <button class="btn-icon" id="btnCloseAuth">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="btnTabSignIn" data-authtab="signin">Masuk</button>
+                <button type="button" class="auth-tab-btn" id="btnTabSignUp" data-authtab="signup">Daftar Akun</button>
+            </div>
+
+            <!-- Form Sign In -->
+            <form id="formSignIn">
+                <div class="form-group">
+                    <label class="form-label" for="signInEmail">Email:</label>
+                    <input type="email" class="form-input" id="signInEmail" placeholder="nama@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signInPassword">Password:</label>
+                    <input type="password" class="form-input" id="signInPassword" placeholder="••••••••" required>
+                </div>
+                <div id="authSignInError" style="font-size: 12px; color: #f43f5e; margin-bottom: 12px; display: none;"></div>
+                <button type="submit" class="btn-generate" style="margin-top: 10px;">
+                    <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+                    <span>Masuk ke Studio</span>
+                </button>
+            </form>
+
+            <!-- Form Sign Up -->
+            <form id="formSignUp" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="signUpName">Nama Lengkap:</label>
+                    <input type="text" class="form-input" id="signUpName" placeholder="Contoh: Budi Santoso" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signUpEmail">Email:</label>
+                    <input type="email" class="form-input" id="signUpEmail" placeholder="nama@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signUpPassword">Password (min 6 karakter):</label>
+                    <input type="password" class="form-input" id="signUpPassword" placeholder="••••••••" minlength="6" required>
+                </div>
+                <div id="authSignUpError" style="font-size: 12px; color: #f43f5e; margin-bottom: 12px; display: none;"></div>
+                <button type="submit" class="btn-generate" style="margin-top: 10px;">
+                    <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                    <span>Buat Akun Sekarang</span>
+                </button>
+            </form>
+
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--card-border); text-align: center;">
+                <button type="button" class="btn-secondary" id="btnContinueGuest" style="width: 100%; justify-content: center; font-size: 12px;">
+                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                    <span>Lanjutkan Sebagai Tamu / Demo Mode</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PROFIL PENGGUNA -->
+    <div class="modal-backdrop" id="modalUserProfile">
+        <div class="modal-sheet" style="max-width: 400px;">
+            <div class="card-title-row" style="margin-bottom: 14px;">
+                <h3 class="card-title">Profil Pengguna</h3>
+                <button class="btn-icon" id="btnCloseProfileModal">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: white;" id="userProfileInitial">
+                        K
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 15px;" id="userProfileName">Kreator Sukses</div>
+                        <div style="font-size: 12px; color: var(--text-tertiary);" id="userProfileEmail">creator@vidora.ai</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+                    <span style="color: var(--text-secondary);">Status Paket:</span>
+                    <span id="userProfileRoleBadge" class="role-badge-user">Member Pro</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+                    <span style="color: var(--text-secondary);">Batas Kuota Akun:</span>
+                    <span id="userProfileLimitText" style="font-weight: 700; color: var(--accent-cyan);">Maks 5 Akun</span>
+                </div>
+            </div>
+
+            <!-- Testing Role Switcher -->
+            <div style="background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 700; color: #fbbf24;">Role Switcher (Super Admin)</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">Ubah tampilan untuk tes panel Admin</div>
+                    </div>
+                    <button type="button" class="btn-table-action" id="btnToggleRoleQuick" style="background: #fbbf24; color: #1e1b4b; font-weight: 800;">
+                        Ganti Peran
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="btn-generate" id="btnProfileUpgrade" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);">
+                    <i data-lucide="crown" style="width: 16px; height: 16px;"></i>
+                    <span>Beli Slot / Upgrade Paket</span>
+                </button>
+                <button type="button" class="btn-secondary" id="btnSignOut" style="justify-content: center; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);">
+                    <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                    <span>Keluar dari Akun</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FORM CHECKOUT (CO) & UPGRADE PAKET -->
+    <div class="modal-backdrop" id="modalCheckout">
+        <div class="modal-sheet" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+            <div class="card-title-row" style="margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="shopping-cart" style="color: #f59e0b; width: 20px; height: 20px;"></i>
+                    <h3 class="card-title" style="font-size: 17px;">Form Checkout & Langganan</h3>
+                </div>
+                <button class="btn-icon" id="btnCloseCheckout">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+
+            <!-- Pilihan Paket Realistis -->
+            <label class="form-label">1. Paket Langganan:</label>
+            <div style="background: rgba(99, 102, 241, 0.1); border: 1.5px solid var(--primary); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 700; font-size: 15px; color: white;">VIDORA Creator Pass</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">Maksimal 5 Profil Akun Google &bull; Akses Penuh Studio</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 18px; font-weight: 800; color: var(--accent-cyan);">Rp 75.000</div>
+                    <div style="font-size: 11px; color: var(--text-tertiary);">/ bulan</div>
+                </div>
+            </div>
+
+            <!-- Form Data Pemesan -->
+            <form id="formCheckoutOrder">
+                <label class="form-label">2. Data Pemesan / Akun:</label>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <input type="text" class="form-input" id="coCustomerName" placeholder="Nama Lengkap Pemesan" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <input type="tel" class="form-input" id="coCustomerPhone" placeholder="Nomor WhatsApp (Contoh: 08123456789)" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <input type="email" class="form-input" id="coCustomerEmail" placeholder="Alamat Email Aktif" required>
+                </div>
+
+                <!-- Metode Pembayaran -->
+                <label class="form-label">3. Pilih Metode Pembayaran:</label>
+                <div class="payment-method-grid">
+                    <div class="payment-method-item active" data-paymethod="qris">
+                        <i data-lucide="qr-code" style="width: 16px; height: 16px; margin-bottom: 4px; display: block; margin: 0 auto 4px;"></i>
+                        <span>QRIS Instan</span>
+                    </div>
+                    <div class="payment-method-item" data-paymethod="bank">
+                        <i data-lucide="landmark" style="width: 16px; height: 16px; margin-bottom: 4px; display: block; margin: 0 auto 4px;"></i>
+                        <span>Transfer Bank</span>
+                    </div>
+                    <div class="payment-method-item" data-paymethod="whatsapp">
+                        <i data-lucide="message-circle" style="width: 16px; height: 16px; margin-bottom: 4px; display: block; margin: 0 auto 4px;"></i>
+                        <span>WhatsApp</span>
+                    </div>
+                </div>
+
+                <!-- Pilihan Tampilan Pembayaran -->
+                <div id="payViewQris" class="qris-preview-box">
+                    <span style="font-size: 12px; font-weight: 700; color: #1e1b4b; text-transform: uppercase;">Scan QRIS VIDORA</span>
+                    <!-- Barcode Visual QRIS Generator -->
+                    <img class="qris-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020101021126570014ID.LINKAJA.WWW011893600911002123456702150000000000000000303UMI51440014ID.CO.QRIS.WWW0215ID10200000000005204549953033605802ID5914VIDORA%20STUDIO6007JAKARTA61051234062070703A016304" alt="QRIS Barcode">
+                    <span style="font-size: 12px; font-weight: 800; color: #1e1b4b;" id="qrisAmountText">Total: Rp 75.000</span>
+                    <span style="font-size: 11px; color: #64748b;">Mendukung: GoPay, OVO, Dana, ShopeePay, BCA Mobile, Livin Mandiri</span>
+                </div>
+
+                <div id="payViewBank" class="bank-info-box" style="display: none;">
+                    <div class="bank-row">
+                        <div>
+                            <div style="font-weight: 700; color: white;">Bank Central Asia (BCA)</div>
+                            <div style="color: var(--accent-cyan); font-family: monospace; font-size: 15px; font-weight: 700;" id="bankNumberBca">8012 3456 7890</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="btn-copy-account" onclick="navigator.clipboard.writeText('801234567890'); alert('Nomor Rekening BCA disalin!')">Salin</button>
+                    </div>
+                    <div class="bank-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
+                        <div>
+                            <div style="font-weight: 700; color: white;">Bank Mandiri</div>
+                            <div style="color: var(--accent-cyan); font-family: monospace; font-size: 15px; font-weight: 700;">137 00 9876543 2</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="btn-copy-account" onclick="navigator.clipboard.writeText('1370098765432'); alert('Nomor Rekening Mandiri disalin!')">Salin</button>
+                    </div>
+                </div>
+
+                <div id="payViewWhatsapp" style="display: none; padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); margin-bottom: 14px;">
+                    <p style="font-size: 12px; color: #a7f3d0; line-height: 1.5;">
+                        Pemesanan akan langsung dibuatkan invoice dan diarahkan ke WhatsApp Admin Official untuk verifikasi dan aktivasi instan tanpa ribet.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-wa-checkout" id="btnSubmitCheckout">
+                    <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
+                    <span id="btnSubmitCheckoutText">Konfirmasi & Aktifkan Paket</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/config.js"></script>
+    <script src="/js/supabase-client.js"></script>
+    <script src="/js/xsender-service.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
