@@ -38,8 +38,8 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // GET request untuk tes konektivitas webhook di admin atau browser
-  if (req.method === 'GET') {
+  // GET / HEAD request untuk tes konektivitas webhook di admin atau browser / uptime checker
+  if (req.method === 'GET' || req.method === 'HEAD') {
     return res.status(200).json({
       status: 'active',
       service: 'VIDORA Studio Pakasir Webhook Fulfillment Engine',
