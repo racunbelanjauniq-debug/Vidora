@@ -1,42 +1,62 @@
 /* =========================================================================
-   VIDORA SaaS - Mobile-First App Styles (GAMA Generator Architecture)
+   VIDORA SaaS - Apple HIG & UI/UX Pro Max Design System
+   Human Interface Guidelines Compliant | Precision Typography & Micro-Interactions
    ========================================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
 
 :root {
-    --app-bg: #090b10;
-    --card-bg: #121622;
+    /* Apple HIG Color Palette - Deep Dark Mode */
+    --app-bg: #090a0f;
+    --card-bg: rgba(18, 21, 30, 0.76);
+    --card-bg-elevated: #161a26;
     --card-border: rgba(255, 255, 255, 0.08);
-    --input-bg: #0c0e15;
+    --card-border-hover: rgba(255, 255, 255, 0.16);
+    --card-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    --input-bg: rgba(11, 13, 20, 0.9);
     
+    /* Apple Semantic Accents */
     --primary: #6366f1;
     --primary-hover: #4f46e5;
-    --primary-glow: rgba(99, 102, 241, 0.4);
+    --primary-glow: rgba(99, 102, 241, 0.32);
     
+    --accent-blue: #007aff;
     --accent-cyan: #00f2fe;
     --accent-emerald: #10b981;
     --accent-rose: #f43f5e;
     --accent-amber: #f59e0b;
     
-    --text-primary: #f8fafc;
+    /* Apple High-Contrast Text System */
+    --text-primary: #ffffff;
     --text-secondary: #94a3b8;
     --text-tertiary: #64748b;
     
-    --radius-sm: 8px;
+    /* Apple Continuous Radii (Squircle-feel) */
+    --radius-xs: 6px;
+    --radius-sm: 10px;
     --radius-md: 14px;
     --radius-lg: 20px;
+    --radius-xl: 26px;
     --radius-full: 9999px;
     
+    /* System Heights & Touch Targets */
     --bottom-nav-height: 68px;
     --header-height: 64px;
+    --min-tap-target: 44px;
+    
+    /* Apple Fluid Springs & Curves */
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Plus Jakarta Sans", "Inter", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -44,20 +64,22 @@ body {
     background-color: var(--app-bg);
     color: var(--text-primary);
     min-height: 100vh;
-    padding-bottom: calc(var(--bottom-nav-height) + 20px);
+    padding-bottom: calc(var(--bottom-nav-height) + 24px);
+    letter-spacing: -0.011em;
 }
 
-/* Header */
+/* Apple Frosted Glass Header */
 .app-header {
     position: sticky;
     top: 0;
     left: 0;
     right: 0;
     height: var(--header-height);
-    background: rgba(9, 11, 16, 0.88);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(9, 10, 15, 0.78);
+    backdrop-filter: saturate(190%) blur(24px);
+    -webkit-backdrop-filter: saturate(190%) blur(24px);
     border-bottom: 1px solid var(--card-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     z-index: 90;
     display: flex;
     align-items: center;
@@ -141,23 +163,24 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Sub-Tab Navigation (Mirip GAMA PRO: Video / Image / Prompt Gen) */
+/* Sub-Tab Navigation (Apple iOS Segmented Control) */
 .sub-tabs-bar {
     display: flex;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
-    padding: 4px;
+    padding: 3px;
     margin-bottom: 20px;
-    gap: 4px;
+    gap: 3px;
 }
 
 .sub-tab-btn {
     flex: 1;
-    padding: 10px 12px;
-    background: none;
+    min-height: 38px;
+    padding: 8px 12px;
+    background: transparent;
     border: none;
-    border-radius: 10px;
+    border-radius: 11px;
     color: var(--text-secondary);
     font-size: 13px;
     font-weight: 600;
@@ -166,7 +189,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    transition: all 0.2s;
+    transition: all 0.2s var(--ease-spring);
     white-space: nowrap;
 }
 
@@ -174,21 +197,28 @@ body {
     color: var(--text-primary);
 }
 
-.sub-tab-btn.active {
-    background: var(--card-bg);
-    color: var(--primary);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(99, 102, 241, 0.3);
+.sub-tab-btn:active {
+    transform: scale(0.98);
 }
 
-/* Cards */
+.sub-tab-btn.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Cards (Apple HIG Depth & Deference) */
 .card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: var(--radius-lg);
     padding: 22px 20px;
     margin-bottom: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.42), var(--card-specular);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: border-color 0.2s ease;
 }
 
 .card-title-row {
@@ -199,9 +229,10 @@ body {
 }
 
 .card-title {
-    font-family: 'Outfit', sans-serif;
-    font-size: 18px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Outfit", sans-serif;
+    font-size: 17px;
     font-weight: 700;
+    letter-spacing: -0.015em;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -429,39 +460,48 @@ body {
     border-radius: 50%;
 }
 
-input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider { background-color: #34c759; /* Apple System Green */ }
 input:checked + .slider:before { transform: translateX(20px); }
 
-/* Main Generate Button */
+/* Main Action Button (Apple HIG Precision Primary) */
 .btn-generate {
     width: 100%;
-    padding: 16px;
+    min-height: 50px;
+    padding: 13px 20px;
     border-radius: var(--radius-md);
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-    border: none;
+    background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     color: white;
-    font-family: 'Outfit', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    box-shadow: 0 8px 25px var(--primary-glow);
-    transition: all 0.25s ease;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.2s var(--ease-spring);
     margin-top: 14px;
 }
 
 .btn-generate:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 35px rgba(99, 102, 241, 0.6);
+    background: linear-gradient(180deg, #6d70f7 0%, #5850ec 100%);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.btn-generate:active {
+    transform: scale(0.982);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
 }
 
 .btn-generate:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
 /* Secondary Actions */
@@ -616,17 +656,18 @@ input:checked + .slider:before { transform: translateX(20px); }
     font-weight: 500;
 }
 
-/* Bottom Navigation Bar for Mobile */
+/* Apple HIG Floating Glass Navigation */
 .bottom-nav {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     height: var(--bottom-nav-height);
-    background: rgba(14, 17, 26, 0.95);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-top: 1px solid var(--card-border);
+    background: rgba(14, 16, 24, 0.78);
+    backdrop-filter: saturate(190%) blur(24px);
+    -webkit-backdrop-filter: saturate(190%) blur(24px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
     z-index: 100;
     display: flex;
     justify-content: space-around;
@@ -637,25 +678,34 @@ input:checked + .slider:before { transform: translateX(20px); }
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    min-width: var(--min-tap-target);
+    min-height: var(--min-tap-target);
+    gap: 3px;
     color: var(--text-tertiary);
     text-decoration: none;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s;
+    transition: all 0.2s var(--ease-spring);
     background: none;
     border: none;
-    padding: 8px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+}
+
+.nav-item:active {
+    transform: scale(0.92);
 }
 
 .nav-item.active {
-    color: var(--primary);
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
-.nav-item i {
-    width: 22px;
-    height: 22px;
+.nav-item.active i {
+    color: var(--primary);
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
 }
 
 /* Modal Popup */

@@ -4,6 +4,7 @@
 *.pem
 *.key
 .github/
+.agents/
 
 # Google Profiles & Session Data (Penting agar session Google tidak ter-push)
 worker/data/

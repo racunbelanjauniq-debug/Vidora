@@ -22,13 +22,15 @@
     --text-muted: #94a3b8;
     --text-sub: #64748b;
     
-    --font-heading: 'Outfit', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
+    --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Outfit", sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Plus Jakarta Sans", sans-serif;
     
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 22px;
     --radius-full: 9999px;
+    
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -36,6 +38,9 @@
     padding: 0;
     box-sizing: border-box;
     font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -44,6 +49,7 @@ body {
     color: var(--text-main);
     overflow-x: hidden;
     line-height: 1.6;
+    letter-spacing: -0.011em;
 }
 
 /* Background Ambient Glows */
@@ -457,19 +463,30 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-glass);
     border-radius: 24px;
-    padding: 40px 32px;
+    padding: 38px 30px;
     position: relative;
-    backdrop-filter: blur(12px);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 16px 40px -10px rgba(0, 0, 0, 0.5);
+    transition: all 0.25s var(--ease-spring);
+}
+
+.pricing-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-4px);
 }
 
 .pricing-card.featured {
     border: 2px solid var(--primary);
-    background: linear-gradient(180deg, rgba(30, 27, 75, 0.6) 0%, rgba(18, 22, 34, 0.9) 100%);
-    box-shadow: 0 20px 50px -10px var(--primary-glow);
+    background: linear-gradient(180deg, rgba(30, 27, 75, 0.75) 0%, rgba(18, 22, 34, 0.95) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 24px 50px -10px var(--primary-glow);
     transform: scale(1.03);
+}
+
+.pricing-card.featured:hover {
+    transform: scale(1.03) translateY(-4px);
 }
 
 .pricing-badge {
@@ -480,11 +497,12 @@ body {
     background: var(--accent-gradient);
     color: white;
     padding: 4px 16px;
-    border-radius: 20px;
-    font-size: 12px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px var(--primary-glow);
 }
 
 .plan-name {
