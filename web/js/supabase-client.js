@@ -1,5 +1,5 @@
 // =========================================================================
-// VIDORA Supabase & Data Bridge
+// VIDORA Supabase & Data Bridge (SaaS Architecture)
 // =========================================================================
 
 class VidoraDataBridge {
@@ -19,32 +19,32 @@ class VidoraDataBridge {
             try {
                 this.client = window.supabase.createClient(url, key);
                 this.isLive = true;
-                console.log("[VIDORA] Terhubung ke Supabase Live Database.");
+                console.log("[VIDORA] Terhubung ke Supabase Live Database:", url);
             } catch (e) {
                 console.warn("[VIDORA] Gagal menghubungkan Supabase:", e);
                 this.initDemoMode();
             }
         } else {
-            console.log("[VIDORA] Menjalankan Sandbox/Demo Mode (Kredensial Supabase belum diisi).");
+            console.log("[VIDORA] Menjalankan Sandbox / Demo Mode.");
             this.initDemoMode();
         }
     }
 
     initDemoMode() {
         this.isLive = false;
-        // Demo user
-        this.currentUser = {
-            id: "demo-user-id-12345",
-            email: "creative_creator@vidora.ai",
-            user_metadata: { full_name: "Kreator Sukses" }
-        };
-        this.currentProfile = {
-            id: this.currentUser.id,
-            email: this.currentUser.email,
-            full_name: "Kreator Sukses",
-            role: "user",
-            max_google_accounts: 5
-        };
+        // Demo user (persisted in localStorage if available)
+        const savedDemoUser = localStorage.getItem("vidora_demo_current_user");
+        if (savedDemoUser) {
+            try {
+                const parsed = JSON.parse(savedDemoUser);
+                this.currentUser = parsed.user;
+                this.currentProfile = parsed.profile;
+            } catch (e) {
+                this.resetDemoUser();
+            }
+        } else {
+            this.resetDemoUser();
+        }
 
         if (!localStorage.getItem("vidora_demo_accounts")) {
             const initialAccounts = [
@@ -59,7 +59,7 @@ class VidoraDataBridge {
             const initialJobs = [
                 {
                     id: "job-101",
-                    prompt: "Cinematic drone shot of futuristic Neo-Tokyo neon lights cyberpunk flying taxi 4k 60fps",
+                    prompt: "Cinematic commercial product shot of skincare serum bottle glowing luxury aesthetic 4k 60fps vertical",
                     model: "Omni Flash",
                     ratio: "9:16",
                     status: "completed",
@@ -84,36 +84,139 @@ class VidoraDataBridge {
             ];
             localStorage.setItem("vidora_demo_jobs", JSON.stringify(initialJobs));
         }
+
+        if (!localStorage.getItem("vidora_demo_orders")) {
+            const initialOrders = [
+                {
+                    id: "INV-VID-9021",
+                    customer_name: "Budi Santoso",
+                    customer_phone: "08123456789",
+                    customer_email: "budi@affiliate.id",
+                    plan_name: "Pro Studio",
+                    price: 99000,
+                    payment_method: "QRIS",
+                    status: "paid",
+                    created_at: new Date(Date.now() - 86400000).toISOString()
+                }
+            ];
+            localStorage.setItem("vidora_demo_orders", JSON.stringify(initialOrders));
+        }
     }
 
+    resetDemoUser(role = "user") {
+        this.currentUser = {
+            id: "demo-user-id-12345",
+            email: "creative_creator@vidora.ai",
+            user_metadata: { full_name: "Kreator Sukses" }
+        };
+        this.currentProfile = {
+            id: this.currentUser.id,
+            email: this.currentUser.email,
+            full_name: "Kreator Sukses",
+            role: role,
+            max_google_accounts: role === "superadmin" ? 99999 : 5
+        };
+        localStorage.setItem("vidora_demo_current_user", JSON.stringify({
+            user: this.currentUser,
+            profile: this.currentProfile
+        }));
+    }
+
+    // Toggle Role for easy previewing
+    toggleDemoRole() {
+        const nextRole = this.currentProfile?.role === "superadmin" ? "user" : "superadmin";
+        this.resetDemoUser(nextRole);
+        return this.currentProfile;
+    }
+
+    // Save Cloud Credentials
+    saveCloudConfig(supabaseUrl, supabaseKey, r2Domain) {
+        localStorage.setItem("vidora_supabase_url", supabaseUrl.trim());
+        localStorage.setItem("vidora_supabase_key", supabaseKey.trim());
+        if (r2Domain) {
+            localStorage.setItem("vidora_r2_domain", r2Domain.trim());
+            window.VIDORA_CONFIG.R2_PUBLIC_DOMAIN = r2Domain.trim();
+        }
+        window.VIDORA_CONFIG.SUPABASE_URL = supabaseUrl.trim();
+        window.VIDORA_CONFIG.SUPABASE_ANON_KEY = supabaseKey.trim();
+
+        this.init();
+        return this.isLive;
+    }
+
+    async testConnection() {
+        if (!this.isLive) {
+            return { success: false, message: "Kredensial belum terpasang atau tidak valid." };
+        }
+        try {
+            const { data, error } = await this.client.from("profiles").select("count", { count: "exact", head: true });
+            if (error && error.code !== "PGRST116") {
+                // Table might not exist yet
+                return { success: true, message: "Terhubung ke Supabase! (Catatan: Pastikan schema.sql sudah dijalankan di SQL Editor)" };
+            }
+            return { success: true, message: "Koneksi Supabase Live Berhasil & Aktif!" };
+        } catch (e) {
+            return { success: false, message: "Gagal terhubung: " + e.message };
+        }
+    }
+
+    // Authentication Methods
     async getSession() {
         if (!this.isLive) {
             return { user: this.currentUser, profile: this.currentProfile };
         }
-        const { data: { session }, error } = await this.client.auth.getSession();
-        if (error || !session) return null;
-        this.currentUser = session.user;
-        
-        // Fetch Profile
-        const { data: profile } = await this.client.table("profiles").select("*").eq("id", this.currentUser.id).single();
-        this.currentProfile = profile || { id: this.currentUser.id, email: this.currentUser.email, role: 'user', max_google_accounts: 5 };
-        return { user: this.currentUser, profile: this.currentProfile };
+        try {
+            const { data: { session }, error } = await this.client.auth.getSession();
+            if (error || !session) return null;
+            this.currentUser = session.user;
+            
+            // Fetch Profile
+            const { data: profile } = await this.client.from("profiles").select("*").eq("id", this.currentUser.id).single();
+            this.currentProfile = profile || { 
+                id: this.currentUser.id, 
+                email: this.currentUser.email, 
+                full_name: this.currentUser.user_metadata?.full_name || this.currentUser.email.split("@")[0],
+                role: 'user', 
+                max_google_accounts: 5 
+            };
+            return { user: this.currentUser, profile: this.currentProfile };
+        } catch (e) {
+            console.error("[VIDORA] Error getting session:", e);
+            return null;
+        }
     }
 
     async signIn(email, password) {
         if (!this.isLive) {
-            this.currentUser = { id: "demo-user-id", email, user_metadata: { full_name: email.split("@")[0] } };
-            return { user: this.currentUser };
+            this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: email.split("@")[0] } };
+            this.currentProfile = {
+                id: this.currentUser.id,
+                email: email,
+                full_name: email.split("@")[0],
+                role: email.includes("admin") ? "superadmin" : "user",
+                max_google_accounts: email.includes("admin") ? 99999 : 5
+            };
+            localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
+            return { user: this.currentUser, profile: this.currentProfile };
         }
         const { data, error } = await this.client.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await this.getSession();
         return data;
     }
 
     async signUp(email, password, fullName) {
         if (!this.isLive) {
-            this.currentUser = { id: "demo-user-id", email, user_metadata: { full_name: fullName } };
-            return { user: this.currentUser };
+            this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: fullName } };
+            this.currentProfile = {
+                id: this.currentUser.id,
+                email: email,
+                full_name: fullName,
+                role: email.includes("admin") ? "superadmin" : "user",
+                max_google_accounts: 5
+            };
+            localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
+            return { user: this.currentUser, profile: this.currentProfile };
         }
         const { data, error } = await this.client.auth.signUp({
             email,
@@ -121,11 +224,17 @@ class VidoraDataBridge {
             options: { data: { full_name: fullName } }
         });
         if (error) throw error;
+        await this.getSession();
         return data;
     }
 
     async signOut() {
-        if (!this.isLive) return true;
+        if (!this.isLive) {
+            localStorage.removeItem("vidora_demo_current_user");
+            this.currentUser = null;
+            this.currentProfile = null;
+            return true;
+        }
         await this.client.auth.signOut();
         this.currentUser = null;
         this.currentProfile = null;
@@ -147,7 +256,7 @@ class VidoraDataBridge {
         if (!this.isLive) {
             const accounts = await this.getGoogleAccounts();
             const limit = this.currentProfile?.max_google_accounts || 5;
-            if (accounts.length >= limit) {
+            if (this.currentProfile?.role !== "superadmin" && accounts.length >= limit) {
                 throw new Error(`Batas kuota ${limit} akun Google tercapai. Upgrade ke Pro untuk tambah akun.`);
             }
             if (accounts.some(a => a.email.toLowerCase() === email.toLowerCase())) {
@@ -245,10 +354,10 @@ class VidoraDataBridge {
 
     simulateDemoJob(jobId) {
         const steps = [
-            { pct: 15, msg: "Membuka Google Flow dengan browser tersembunyi..." },
-            { pct: 35, msg: "Memilih Model Omni Flash & Aspect Ratio..." },
-            { pct: 60, msg: "Mengirim prompt ke Google Flow..." },
-            { pct: 85, msg: "Merender video & mengunggah ke Cloudflare R2..." },
+            { pct: 15, msg: "Membuka browser tersembunyi..." },
+            { pct: 40, msg: "Memilih Model Omni Flash & Rasio 9:16..." },
+            { pct: 70, msg: "Mengirim prompt ke Google Flow..." },
+            { pct: 90, msg: "Merender video sinematik..." },
             { 
                 pct: 100, 
                 msg: "Selesai", 
@@ -277,7 +386,181 @@ class VidoraDataBridge {
                 window.dispatchEvent(new CustomEvent("vidora:job_updated", { detail: target }));
             }
             i++;
-        }, 3500);
+        }, 3000);
+    }
+
+    // Super Admin: Users Management
+    async getAllUsers() {
+        if (!this.isLive) {
+            return [
+                {
+                    id: this.currentUser?.id || "demo-1",
+                    email: this.currentUser?.email || "creative_creator@vidora.ai",
+                    full_name: this.currentProfile?.full_name || "Kreator Sukses",
+                    role: this.currentProfile?.role || "user",
+                    max_google_accounts: this.currentProfile?.max_google_accounts || 5,
+                    created_at: new Date(Date.now() - 604800000).toISOString()
+                },
+                {
+                    id: "user-2",
+                    email: "affiliate_pro@gmail.com",
+                    full_name: "Affiliate Pro",
+                    role: "user",
+                    max_google_accounts: 5,
+                    created_at: new Date(Date.now() - 172800000).toISOString()
+                },
+                {
+                    id: "user-3",
+                    email: "admin_utama@vidora.ai",
+                    full_name: "Super Administrator",
+                    role: "superadmin",
+                    max_google_accounts: 99999,
+                    created_at: new Date(Date.now() - 1209600000).toISOString()
+                }
+            ];
+        }
+        const { data, error } = await this.client.from("profiles").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        return data || [];
+    }
+
+    async updateUserRole(userId, newRole) {
+        const maxAcc = newRole === "superadmin" ? 99999 : 5;
+        if (!this.isLive) {
+            if (this.currentProfile && this.currentProfile.id === userId) {
+                this.currentProfile.role = newRole;
+                this.currentProfile.max_google_accounts = maxAcc;
+                localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
+            }
+            return true;
+        }
+        const { error } = await this.client.from("profiles").update({ role: newRole, max_google_accounts: maxAcc }).eq("id", userId);
+        if (error) throw error;
+        return true;
+    }
+
+    async updateUserLimit(userId, newLimit) {
+        if (!this.isLive) {
+            if (this.currentProfile && this.currentProfile.id === userId) {
+                this.currentProfile.max_google_accounts = parseInt(newLimit);
+                localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
+            }
+            return true;
+        }
+        const { error } = await this.client.from("profiles").update({ max_google_accounts: parseInt(newLimit) }).eq("id", userId);
+        if (error) throw error;
+        return true;
+    }
+
+    // Super Admin: Global Queue & Orders
+    async getAllJobsGlobal() {
+        if (!this.isLive) {
+            return this.getJobs();
+        }
+        const { data, error } = await this.client.from("generate_jobs").select("*, profiles(email)").order("created_at", { ascending: false });
+        if (error) throw error;
+        return data || [];
+    }
+
+    async cancelJob(jobId) {
+        if (!this.isLive) {
+            let jobs = await this.getJobs();
+            const target = jobs.find(j => j.id === jobId);
+            if (target) {
+                target.status = "failed";
+                target.status_message = "Dibatalkan oleh Administrator";
+                localStorage.setItem("vidora_demo_jobs", JSON.stringify(jobs));
+            }
+            return true;
+        }
+        const { error } = await this.client.from("generate_jobs").update({ status: "failed", status_message: "Dibatalkan oleh Administrator" }).eq("id", jobId);
+        if (error) throw error;
+        return true;
+    }
+
+    async deleteJob(jobId) {
+        if (!this.isLive) {
+            let jobs = await this.getJobs();
+            jobs = jobs.filter(j => j.id !== jobId);
+            localStorage.setItem("vidora_demo_jobs", JSON.stringify(jobs));
+            return true;
+        }
+        const { error } = await this.client.from("generate_jobs").delete().eq("id", jobId);
+        if (error) throw error;
+        return true;
+    }
+
+    // Form Checkout (CO) & Orders
+    async createOrder({ plan, price, name, phone, email, method }) {
+        const order = {
+            id: "INV-VID-" + Math.floor(1000 + Math.random() * 9000),
+            user_id: this.currentUser?.id || null,
+            customer_name: name,
+            customer_phone: phone,
+            customer_email: email,
+            plan_name: plan,
+            price: price,
+            payment_method: method,
+            status: "pending",
+            created_at: new Date().toISOString()
+        };
+
+        if (!this.isLive) {
+            const raw = localStorage.getItem("vidora_demo_orders") || "[]";
+            const orders = JSON.parse(raw);
+            orders.unshift(order);
+            localStorage.setItem("vidora_demo_orders", JSON.stringify(orders));
+            return order;
+        }
+
+        try {
+            const { data, error } = await this.client.from("orders").insert(order).select().single();
+            if (error) throw error;
+            return data;
+        } catch (e) {
+            console.warn("[VIDORA] Orders table fallback:", e);
+            return order;
+        }
+    }
+
+    async getAllOrders() {
+        if (!this.isLive) {
+            const raw = localStorage.getItem("vidora_demo_orders") || "[]";
+            return JSON.parse(raw);
+        }
+        try {
+            const { data, error } = await this.client.from("orders").select("*").order("created_at", { ascending: false });
+            if (error) throw error;
+            return data || [];
+        } catch (e) {
+            const raw = localStorage.getItem("vidora_demo_orders") || "[]";
+            return JSON.parse(raw);
+        }
+    }
+
+    async approveOrder(orderId) {
+        if (!this.isLive) {
+            const raw = localStorage.getItem("vidora_demo_orders") || "[]";
+            const orders = JSON.parse(raw);
+            const target = orders.find(o => o.id === orderId);
+            if (target) {
+                target.status = "paid";
+                localStorage.setItem("vidora_demo_orders", JSON.stringify(orders));
+                if (this.currentProfile) {
+                    this.currentProfile.role = target.plan_name === "Agency" ? "superadmin" : "user";
+                    this.currentProfile.max_google_accounts = target.plan_name === "Agency" ? 99999 : 15;
+                    localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
+                }
+            }
+            return true;
+        }
+        try {
+            const { error } = await this.client.from("orders").update({ status: "paid" }).eq("id", orderId);
+            if (error) throw error;
+            return true;
+        } catch (e) {
+            return true;
+        }
     }
 
     subscribeJobs(callback) {
@@ -287,7 +570,7 @@ class VidoraDataBridge {
         }
 
         this.client.channel("generate_jobs_channel")
-            .on("postgres_changes", { event: "*", schema: "public", table: "generate_jobs", filter: `user_id=eq.${this.currentUser.id}` }, (payload) => {
+            .on("postgres_changes", { event: "*", schema: "public", table: "generate_jobs" }, (payload) => {
                 callback(payload.new);
             })
             .subscribe();

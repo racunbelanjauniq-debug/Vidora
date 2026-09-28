@@ -19,11 +19,19 @@
                 <div class="app-logo-badge">V</div>
                 <div class="header-title">VID<span>ORA</span></div>
             </a>
-            <div class="header-actions">
-                <div class="user-badge" id="userRoleBadge">
+            <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn-header-upgrade" id="btnHeaderUpgrade">
+                    <i data-lucide="crown" style="width: 13px; height: 13px;"></i>
+                    <span>Upgrade</span>
+                </button>
+                <div class="user-badge" id="userRoleBadge" style="cursor: pointer;" title="Klik untuk menu profil / ganti peran">
                     <i data-lucide="user" style="width: 13px; height: 13px;"></i>
-                    <span>Member Pro</span>
+                    <span id="userRoleText">Member</span>
                 </div>
+                <button type="button" class="btn-header-auth" id="btnHeaderAuth" style="display: none;">
+                    <i data-lucide="log-in" style="width: 13px; height: 13px;"></i>
+                    <span>Masuk</span>
+                </button>
             </div>
         </div>
     </header>
@@ -438,6 +446,204 @@
             </div>
         </section>
 
+        <!-- TAB 5: DASHBOARD SUPER ADMIN -->
+        <section id="tab-admin" class="tab-pane">
+            <div class="card">
+                <div class="card-title-row" style="margin-bottom: 16px;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <h2 class="card-title" style="color: #fbbf24;">
+                                <i data-lucide="shield-check" style="width: 20px; height: 20px;"></i>
+                                <span>Panel Super Admin VIDORA</span>
+                            </h2>
+                            <span class="admin-badge-indicator">PUSAT KONTROL</span>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-tertiary);">
+                            Kelola pengguna, antrian sistem, pesanan paket, dan koneksi server database.
+                        </p>
+                    </div>
+                    <div id="adminConnectionPill" class="connection-status-pill disconnected">
+                        <span class="status-dot red"></span>
+                        <span id="adminConnectionText">Demo / Offline</span>
+                    </div>
+                </div>
+
+                <!-- Admin Metrics -->
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Total Pengguna</span>
+                        <span class="admin-stat-value" id="statTotalUsers">1</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Antrian Berjalan</span>
+                        <span class="admin-stat-value" id="statActiveJobs" style="color: #00f2fe;">0</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Total Selesai</span>
+                        <span class="admin-stat-value" id="statCompletedJobs" style="color: #10b981;">0</span>
+                    </div>
+                    <div class="admin-stat-card">
+                        <span class="admin-stat-label">Akun Google Vault</span>
+                        <span class="admin-stat-value" id="statGoogleAccounts">0</span>
+                    </div>
+                </div>
+
+                <!-- Admin Sub-Navigation -->
+                <div class="admin-sub-tabs">
+                    <button type="button" class="admin-sub-tab-btn active" data-adminsub="connection">
+                        <i data-lucide="database" style="width: 15px; height: 15px;"></i>
+                        <span>Koneksi Supabase & Cloud</span>
+                    </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="users">
+                        <i data-lucide="users" style="width: 15px; height: 15px;"></i>
+                        <span>Kelola Pengguna</span>
+                    </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="queue">
+                        <i data-lucide="activity" style="width: 15px; height: 15px;"></i>
+                        <span>Antrian Global</span>
+                    </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="orders">
+                        <i data-lucide="credit-card" style="width: 15px; height: 15px;"></i>
+                        <span>Pesanan Masuk (CO)</span>
+                    </button>
+                </div>
+
+                <!-- SUB-PANE 1: KONEKSI SUPABASE & CLOUDFLARE R2 -->
+                <div id="adminsub-connection" class="admin-sub-content">
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
+                        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 8px; color: var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="link" style="width: 16px; height: 16px;"></i>
+                            <span>Hubungkan Database & Media Cloud</span>
+                        </h3>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                            Masukkan URL & Anon Key dari project Supabase Anda serta Domain Publik Cloudflare R2. Pengaturan ini langsung tersimpan dan aktif untuk seluruh sistem tanpa perlu edit kode!
+                        </p>
+
+                        <form id="formAdminCloudConfig">
+                            <div class="form-group">
+                                <label class="form-label" for="inputSupabaseUrl">Supabase Project URL:</label>
+                                <input type="url" class="form-input" id="inputSupabaseUrl" placeholder="https://xxxxxxxx.supabase.co" required>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapat ditemukan di: Supabase Dashboard -> Project Settings -> API -> Project URL</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="inputSupabaseKey">Supabase Anon / Public API Key:</label>
+                                <input type="password" class="form-input" id="inputSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapat ditemukan di: Supabase Dashboard -> Project Settings -> API -> Project API keys (anon public)</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="inputR2Domain">Domain Publik Penyimpanan Media:</label>
+                                <input type="text" class="form-input" id="inputR2Domain" placeholder="https://pub-xxxxxxxx.r2.dev">
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Domain publik Cloudflare R2 tempat streaming video hasil render</small>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button type="submit" class="btn-generate" style="flex: 2;">
+                                    <i data-lucide="save" style="width: 18px; height: 18px;"></i>
+                                    <span>Simpan & Aktifkan Koneksi</span>
+                                </button>
+                                <button type="button" class="btn-secondary" id="btnAdminTestConnection" style="flex: 1; justify-content: center;">
+                                    <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
+                                    <span>Tes Koneksi</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Panduan SQL Quick Copy -->
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--card-border); border-radius: var(--radius-md); padding: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 12px; font-weight: 700; color: #a5b4fc;">SQL Database Schema Ready</span>
+                            <button type="button" class="btn-copy-account" id="btnCopySqlSchema">
+                                <i data-lucide="copy" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i> Salin Query SQL
+                            </button>
+                        </div>
+                        <p style="font-size: 11px; color: var(--text-tertiary);">
+                            Jalankan file <code>supabase/schema.sql</code> di Supabase SQL Editor jika belum dieksekusi agar seluruh tabel profil, antrian, dan batasan 5 akun siap otomatis.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 2: KELOLA PENGGUNA -->
+                <div id="adminsub-users" class="admin-sub-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Daftar Pengguna Terdaftar</span>
+                        <button type="button" class="btn-table-action" id="btnRefreshAdminUsers">
+                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Pengguna / Email</th>
+                                    <th>Peran (Role)</th>
+                                    <th>Limit Akun</th>
+                                    <th>Aksi Cepat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminUsersTableBody">
+                                <!-- Ter-render dinamis -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 3: ANTRIAN GLOBAL -->
+                <div id="adminsub-queue" class="admin-sub-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Seluruh Tugas Generate Sistem</span>
+                        <button type="button" class="btn-table-action" id="btnRefreshAdminQueue">
+                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID / Waktu</th>
+                                    <th>Prompt</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminQueueTableBody">
+                                <!-- Ter-render dinamis -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 4: PESANAN & CHECKOUT (CO) -->
+                <div id="adminsub-orders" class="admin-sub-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 13px; color: var(--text-secondary);">Riwayat Pemesanan Paket (Checkout)</span>
+                        <button type="button" class="btn-table-action" id="btnRefreshAdminOrders">
+                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                        </button>
+                    </div>
+                    <div class="admin-table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Invoice / Nama</th>
+                                    <th>Paket & Harga</th>
+                                    <th>Metode</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminOrdersTableBody">
+                                <!-- Ter-render dinamis -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
     </main>
 
     <!-- Bottom Tab Navigation for Mobile & Desktop Shell -->
@@ -457,6 +663,10 @@
         <button class="nav-item" data-tab="gallery">
             <i data-lucide="grid"></i>
             <span>Galeri</span>
+        </button>
+        <button class="nav-item" data-tab="admin" id="navItemAdmin" style="display: none;">
+            <i data-lucide="shield-check" style="color: #fbbf24;"></i>
+            <span style="color: #fbbf24;">Admin</span>
         </button>
     </nav>
 
@@ -507,6 +717,234 @@
                 <i data-lucide="download" style="width: 18px; height: 18px;"></i>
                 <span>Download File</span>
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL: AUTENTIKASI (MASUK / DAFTAR) -->
+    <div class="modal-backdrop" id="modalAuth">
+        <div class="modal-sheet" style="max-width: 420px;">
+            <div class="card-title-row" style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="app-logo-badge" style="width: 28px; height: 28px; font-size: 14px;">V</div>
+                    <h3 class="card-title" style="font-size: 17px;">Selamat Datang di VIDORA</h3>
+                </div>
+                <button class="btn-icon" id="btnCloseAuth">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="btnTabSignIn" data-authtab="signin">Masuk</button>
+                <button type="button" class="auth-tab-btn" id="btnTabSignUp" data-authtab="signup">Daftar Akun</button>
+            </div>
+
+            <!-- Form Sign In -->
+            <form id="formSignIn">
+                <div class="form-group">
+                    <label class="form-label" for="signInEmail">Email:</label>
+                    <input type="email" class="form-input" id="signInEmail" placeholder="nama@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signInPassword">Password:</label>
+                    <input type="password" class="form-input" id="signInPassword" placeholder="••••••••" required>
+                </div>
+                <div id="authSignInError" style="font-size: 12px; color: #f43f5e; margin-bottom: 12px; display: none;"></div>
+                <button type="submit" class="btn-generate" style="margin-top: 10px;">
+                    <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+                    <span>Masuk ke Studio</span>
+                </button>
+            </form>
+
+            <!-- Form Sign Up -->
+            <form id="formSignUp" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="signUpName">Nama Lengkap:</label>
+                    <input type="text" class="form-input" id="signUpName" placeholder="Contoh: Budi Santoso" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signUpEmail">Email:</label>
+                    <input type="email" class="form-input" id="signUpEmail" placeholder="nama@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signUpPassword">Password (min 6 karakter):</label>
+                    <input type="password" class="form-input" id="signUpPassword" placeholder="••••••••" minlength="6" required>
+                </div>
+                <div id="authSignUpError" style="font-size: 12px; color: #f43f5e; margin-bottom: 12px; display: none;"></div>
+                <button type="submit" class="btn-generate" style="margin-top: 10px;">
+                    <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                    <span>Buat Akun Sekarang</span>
+                </button>
+            </form>
+
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--card-border); text-align: center;">
+                <button type="button" class="btn-secondary" id="btnContinueGuest" style="width: 100%; justify-content: center; font-size: 12px;">
+                    <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                    <span>Lanjutkan Sebagai Tamu / Demo Mode</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PROFIL PENGGUNA -->
+    <div class="modal-backdrop" id="modalUserProfile">
+        <div class="modal-sheet" style="max-width: 400px;">
+            <div class="card-title-row" style="margin-bottom: 14px;">
+                <h3 class="card-title">Profil Pengguna</h3>
+                <button class="btn-icon" id="btnCloseProfileModal">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: white;" id="userProfileInitial">
+                        K
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 15px;" id="userProfileName">Kreator Sukses</div>
+                        <div style="font-size: 12px; color: var(--text-tertiary);" id="userProfileEmail">creator@vidora.ai</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+                    <span style="color: var(--text-secondary);">Status Paket:</span>
+                    <span id="userProfileRoleBadge" class="role-badge-user">Member Pro</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 12px;">
+                    <span style="color: var(--text-secondary);">Batas Kuota Akun:</span>
+                    <span id="userProfileLimitText" style="font-weight: 700; color: var(--accent-cyan);">Maks 5 Akun</span>
+                </div>
+            </div>
+
+            <!-- Testing Role Switcher -->
+            <div style="background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 700; color: #fbbf24;">Role Switcher (Super Admin)</div>
+                        <div style="font-size: 11px; color: var(--text-secondary);">Ubah tampilan untuk tes panel Admin</div>
+                    </div>
+                    <button type="button" class="btn-table-action" id="btnToggleRoleQuick" style="background: #fbbf24; color: #1e1b4b; font-weight: 800;">
+                        Ganti Peran
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="btn-generate" id="btnProfileUpgrade" style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);">
+                    <i data-lucide="crown" style="width: 16px; height: 16px;"></i>
+                    <span>Beli Slot / Upgrade Paket</span>
+                </button>
+                <button type="button" class="btn-secondary" id="btnSignOut" style="justify-content: center; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);">
+                    <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                    <span>Keluar dari Akun</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FORM CHECKOUT (CO) & UPGRADE PAKET -->
+    <div class="modal-backdrop" id="modalCheckout">
+        <div class="modal-sheet" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+            <div class="card-title-row" style="margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="shopping-cart" style="color: #f59e0b; width: 20px; height: 20px;"></i>
+                    <h3 class="card-title" style="font-size: 17px;">Form Checkout & Langganan</h3>
+                </div>
+                <button class="btn-icon" id="btnCloseCheckout">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+
+            <!-- Pilihan Paket -->
+            <label class="form-label">1. Pilih Paket Lisensi:</label>
+            <div class="co-plan-selector">
+                <div class="co-plan-card" data-plan="starter" data-price="0">
+                    <div class="co-plan-name">Starter</div>
+                    <div class="co-plan-price">Gratis</div>
+                    <small style="font-size: 10px; color: var(--text-tertiary);">1 Akun</small>
+                </div>
+                <div class="co-plan-card active" data-plan="pro" data-price="99000">
+                    <span class="co-plan-badge">POPULER</span>
+                    <div class="co-plan-name">Pro Studio</div>
+                    <div class="co-plan-price">Rp 99rb</div>
+                    <small style="font-size: 10px; color: var(--text-tertiary);">Maks 5 Akun</small>
+                </div>
+                <div class="co-plan-card" data-plan="agency" data-price="249000">
+                    <div class="co-plan-name">Agency</div>
+                    <div class="co-plan-price">Rp 249rb</div>
+                    <small style="font-size: 10px; color: var(--text-tertiary);">Unlimited</small>
+                </div>
+            </div>
+
+            <!-- Form Data Pemesan -->
+            <form id="formCheckoutOrder">
+                <label class="form-label">2. Data Pemesan / Akun:</label>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <input type="text" class="form-input" id="coCustomerName" placeholder="Nama Lengkap Pemesan" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <input type="tel" class="form-input" id="coCustomerPhone" placeholder="Nomor WhatsApp (Contoh: 08123456789)" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <input type="email" class="form-input" id="coCustomerEmail" placeholder="Alamat Email Aktif" required>
+                </div>
+
+                <!-- Metode Pembayaran -->
+                <label class="form-label">3. Pilih Metode Pembayaran:</label>
+                <div class="payment-method-grid">
+                    <div class="payment-method-item active" data-paymethod="qris">
+                        <i data-lucide="qr-code" style="width: 16px; height: 16px; margin-bottom: 4px; display: block; margin: 0 auto 4px;"></i>
+                        <span>QRIS Instan</span>
+                    </div>
+                    <div class="payment-method-item" data-paymethod="bank">
+                        <i data-lucide="landmark" style="width: 16px; height: 16px; margin-bottom: 4px; display: block; margin: 0 auto 4px;"></i>
+                        <span>Transfer Bank</span>
+                    </div>
+                    <div class="payment-method-item" data-paymethod="whatsapp">
+                        <i data-lucide="message-circle" style="width: 16px; height: 16px; margin-bottom: 4px; display: block; margin: 0 auto 4px;"></i>
+                        <span>WhatsApp</span>
+                    </div>
+                </div>
+
+                <!-- Pilihan Tampilan Pembayaran -->
+                <div id="payViewQris" class="qris-preview-box">
+                    <span style="font-size: 12px; font-weight: 700; color: #1e1b4b; text-transform: uppercase;">Scan QRIS VIDORA</span>
+                    <!-- Barcode Visual QRIS Generator -->
+                    <img class="qris-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020101021126570014ID.LINKAJA.WWW011893600911002123456702150000000000000000303UMI51440014ID.CO.QRIS.WWW0215ID10200000000005204549953033605802ID5914VIDORA%20STUDIO6007JAKARTA61051234062070703A016304" alt="QRIS Barcode">
+                    <span style="font-size: 12px; font-weight: 800; color: #1e1b4b;" id="qrisAmountText">Total: Rp 99.000</span>
+                    <span style="font-size: 11px; color: #64748b;">Mendukung: GoPay, OVO, Dana, ShopeePay, BCA Mobile, Livin Mandiri</span>
+                </div>
+
+                <div id="payViewBank" class="bank-info-box" style="display: none;">
+                    <div class="bank-row">
+                        <div>
+                            <div style="font-weight: 700; color: white;">Bank Central Asia (BCA)</div>
+                            <div style="color: var(--accent-cyan); font-family: monospace; font-size: 15px; font-weight: 700;" id="bankNumberBca">8012 3456 7890</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="btn-copy-account" onclick="navigator.clipboard.writeText('801234567890'); alert('Nomor Rekening BCA disalin!')">Salin</button>
+                    </div>
+                    <div class="bank-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
+                        <div>
+                            <div style="font-weight: 700; color: white;">Bank Mandiri</div>
+                            <div style="color: var(--accent-cyan); font-family: monospace; font-size: 15px; font-weight: 700;">137 00 9876543 2</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="btn-copy-account" onclick="navigator.clipboard.writeText('1370098765432'); alert('Nomor Rekening Mandiri disalin!')">Salin</button>
+                    </div>
+                </div>
+
+                <div id="payViewWhatsapp" style="display: none; padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); margin-bottom: 14px;">
+                    <p style="font-size: 12px; color: #a7f3d0; line-height: 1.5;">
+                        Pemesanan akan langsung dibuatkan invoice dan diarahkan ke WhatsApp Admin Official untuk verifikasi dan aktivasi instan tanpa ribet.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn-wa-checkout" id="btnSubmitCheckout">
+                    <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
+                    <span id="btnSubmitCheckoutText">Konfirmasi & Aktifkan Paket</span>
+                </button>
+            </form>
         </div>
     </div>
 
