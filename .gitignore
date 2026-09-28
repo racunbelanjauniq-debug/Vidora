@@ -1,0 +1,32 @@
+# Credentials & Secrets
+.env
+*.env
+*.pem
+*.key
+
+# Google Profiles & Session Data (Penting agar session Google tidak ter-push)
+worker/data/
+data/
+downloads/
+worker/downloads/
+output/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Logs
+*.log
+logs/
+
+# OS / Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

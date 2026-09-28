@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIDORA Studio — AI Video & Image Generator</title>
+    <meta name="description" content="Studio AI Video & Image Generator berbasis foto produk dan multi-akun Google.">
+    <link rel="stylesheet" href="css/app.css">
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <!-- App Header (Bersih tanpa tombol pengaturan/teknis) -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="index.html" class="header-brand" title="Ke Beranda">
+                <div class="app-logo-badge">V</div>
+                <div class="header-title">VID<span>ORA</span></div>
+            </a>
+            <div class="header-actions">
+                <div class="user-badge" id="userRoleBadge">
+                    <i data-lucide="user" style="width: 13px; height: 13px;"></i>
+                    <span>Member Pro</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="app-container">
+
+        <!-- TAB 1: STUDIO (Mirip 100% dengan Generate GAMA) -->
+        <section id="tab-studio" class="tab-pane active">
+
+            <!-- Sub-Tabs Generator Nav (Video, Image, Prompt Gen) -->
+            <div class="sub-tabs-bar">
+                <button type="button" class="sub-tab-btn active" data-sub="video">
+                    <i data-lucide="video" style="width: 16px; height: 16px;"></i>
+                    <span>Video Generator</span>
+                </button>
+                <button type="button" class="sub-tab-btn" data-sub="image">
+                    <i data-lucide="image" style="width: 16px; height: 16px;"></i>
+                    <span>Image Generator</span>
+                </button>
+                <button type="button" class="sub-tab-btn" data-sub="promptgen">
+                    <i data-lucide="lightbulb" style="width: 16px; height: 16px;"></i>
+                    <span>Prompt Generator</span>
+                </button>
+            </div>
+
+            <!-- SUB-VIEW 1: VIDEO GENERATOR -->
+            <div id="subview-video" class="sub-view-content">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">
+                            <i data-lucide="video" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                            <span>AI Video Generator</span>
+                        </h2>
+                        <span style="font-size: 11px; background: rgba(99, 102, 241, 0.15); color: #c7d2fe; padding: 3px 8px; border-radius: 6px; font-weight: 700;">HD 60fps</span>
+                    </div>
+
+                    <!-- Upload Foto Produk -->
+                    <div class="form-group">
+                        <label class="form-label">Foto Produk Referensi:</label>
+                        <div class="upload-dropzone" id="videoDropzone">
+                            <div class="dropzone-content">
+                                <div class="dropzone-icon">
+                                    <i data-lucide="upload-cloud"></i>
+                                </div>
+                                <div class="dropzone-title">Upload Foto Produk</div>
+                                <div class="dropzone-subtitle">Ketuk untuk pilih dari galeri / kamera</div>
+                            </div>
+                        </div>
+                        <input type="file" id="videoFileInput" accept="image/*" style="display: none;">
+                        
+                        <div class="image-preview-box" id="videoPreviewBox">
+                            <img id="videoPreviewImg" src="" alt="Pratinjau Foto Produk">
+                            <button type="button" class="btn-remove-preview" id="btnRemoveVideoPreview">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Akun Google -->
+                    <div class="form-group">
+                        <label class="form-label" for="videoAccountSelect">Pilih Akun Google:</label>
+                        <select class="form-select account-dropdown" id="videoAccountSelect">
+                            <option value="">-- Rotasi Otomatis Semua Akun Aktif --</option>
+                        </select>
+                    </div>
+
+                    <!-- Prompt Video -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0;" for="videoPromptInput">Prompt Video:</label>
+                            <button type="button" class="btn-auto-prompt" id="btnVideoAutoPrompt">
+                                <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
+                                <span>Auto Prompt dari Foto</span>
+                            </button>
+                        </div>
+                        <textarea class="form-textarea" id="videoPromptInput" placeholder="Deskripsi adegan video yang diinginkan (atau gunakan Auto Prompt dari foto produk)..."></textarea>
+                    </div>
+
+                    <!-- Rasio Video -->
+                    <div class="form-group">
+                        <label class="form-label">Aspek Rasio:</label>
+                        <div class="options-grid">
+                            <div class="option-btn video-ratio-btn active" data-ratio="9:16">
+                                <span>9:16</span>
+                                <small style="font-size: 10px; color: var(--text-tertiary);">Shorts/TikTok</small>
+                            </div>
+                            <div class="option-btn video-ratio-btn" data-ratio="16:9">
+                                <span>16:9</span>
+                                <small style="font-size: 10px; color: var(--text-tertiary);">Landscape</small>
+                            </div>
+                            <div class="option-btn video-ratio-btn" data-ratio="1:1">
+                                <span>1:1</span>
+                                <small style="font-size: 10px; color: var(--text-tertiary);">Square</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Durasi Video -->
+                    <div class="form-group">
+                        <label class="form-label">Durasi Video:</label>
+                        <div class="options-grid-4">
+                            <div class="option-btn video-dur-btn" data-duration="4s">4s</div>
+                            <div class="option-btn video-dur-btn" data-duration="6s">6s</div>
+                            <div class="option-btn video-dur-btn active" data-duration="8s">8s</div>
+                            <div class="option-btn video-dur-btn" data-duration="10s">10s</div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Tersembunyi (Invisible) -->
+                    <div class="switch-row">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Mode Tersembunyi (Invisible)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Browser otomasi berjalan di background</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="videoHiddenCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Tombol Generate Video -->
+                    <button class="btn-generate" id="btnGenerateVideo">
+                        <i data-lucide="play" style="width: 18px; height: 18px;"></i>
+                        <span>GENERATE VIDEO AI</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 2: IMAGE GENERATOR -->
+            <div id="subview-image" class="sub-view-content" style="display: none;">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">
+                            <i data-lucide="image" style="color: #10b981; width: 19px; height: 19px;"></i>
+                            <span>AI Image Generator</span>
+                        </h2>
+                        <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Foto Studio AI</span>
+                    </div>
+
+                    <!-- Upload Foto Produk Image Gen -->
+                    <div class="form-group">
+                        <label class="form-label">Foto Produk Referensi:</label>
+                        <div class="upload-dropzone" id="imageDropzone">
+                            <div class="dropzone-content">
+                                <div class="dropzone-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.12);">
+                                    <i data-lucide="image-plus"></i>
+                                </div>
+                                <div class="dropzone-title">Upload Foto Produk</div>
+                                <div class="dropzone-subtitle">Foto produk asli untuk diubah ke foto studio AI</div>
+                            </div>
+                        </div>
+                        <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+                        
+                        <div class="image-preview-box" id="imagePreviewBox">
+                            <img id="imagePreviewImg" src="" alt="Pratinjau Foto Produk">
+                            <button type="button" class="btn-remove-preview" id="btnRemoveImagePreview">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Akun Google -->
+                    <div class="form-group">
+                        <label class="form-label" for="imageAccountSelect">Pilih Akun Google:</label>
+                        <select class="form-select account-dropdown" id="imageAccountSelect">
+                            <option value="">-- Rotasi Otomatis Semua Akun Aktif --</option>
+                        </select>
+                    </div>
+
+                    <!-- Prompt Gambar -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0;" for="imagePromptInput">Prompt Gambar:</label>
+                            <button type="button" class="btn-auto-prompt" id="btnImageAutoPrompt">
+                                <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i>
+                                <span>Auto Prompt dari Foto</span>
+                            </button>
+                        </div>
+                        <textarea class="form-textarea" id="imagePromptInput" placeholder="Deskripsi konsep foto studio/katalog yang ingin dibuat..."></textarea>
+                    </div>
+
+                    <!-- Rasio Gambar -->
+                    <div class="form-group">
+                        <label class="form-label">Aspek Rasio Gambar:</label>
+                        <div class="options-grid-4">
+                            <div class="option-btn image-ratio-btn active" data-ratio="9:16">9:16</div>
+                            <div class="option-btn image-ratio-btn" data-ratio="1:1">1:1</div>
+                            <div class="option-btn image-ratio-btn" data-ratio="16:9">16:9</div>
+                            <div class="option-btn image-ratio-btn" data-ratio="4:3">4:3</div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Tersembunyi -->
+                    <div class="switch-row">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Mode Tersembunyi (Invisible)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Browser otomasi berjalan di background</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="imageHiddenCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Tombol Generate Gambar -->
+                    <button class="btn-generate" id="btnGenerateImage" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
+                        <span>GENERATE GAMBAR AI</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SUB-VIEW 3: PROMPT GENERATOR DARI FOTO (Persis GAMA PRO) -->
+            <div id="subview-promptgen" class="sub-view-content" style="display: none;">
+                <div class="card">
+                    <div class="card-title-row">
+                        <h2 class="card-title">
+                            <i data-lucide="lightbulb" style="color: #f59e0b; width: 19px; height: 19px;"></i>
+                            <span>Prompt Generator dari Gambar</span>
+                        </h2>
+                        <span style="font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #fde68a; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Analisa Visual</span>
+                    </div>
+
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                        Upload foto produk Anda ➔ AI menganalisa komposisi, warna, dan pencahayaan lalu menyusun prompt siap pakai untuk Video atau Gambar.
+                    </p>
+
+                    <!-- Upload Foto Produk Prompt Gen -->
+                    <div class="form-group">
+                        <label class="form-label">File Gambar Produk:</label>
+                        <div class="upload-dropzone" id="pgDropzone">
+                            <div class="dropzone-content">
+                                <div class="dropzone-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.12);">
+                                    <i data-lucide="sparkle"></i>
+                                </div>
+                                <div class="dropzone-title">Pilih / Upload Gambar Produk</div>
+                                <div class="dropzone-subtitle">AI akan mendeteksi objek produk secara otomatis</div>
+                            </div>
+                        </div>
+                        <input type="file" id="pgFileInput" accept="image/*" style="display: none;">
+                        
+                        <div class="image-preview-box" id="pgPreviewBox">
+                            <img id="pgPreviewImg" src="" alt="Pratinjau Gambar Produk">
+                            <button type="button" class="btn-remove-preview" id="btnRemovePgPreview">
+                                <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Jenis Prompt -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgModeSelect">Jenis Prompt:</label>
+                        <select class="form-select" id="pgModeSelect">
+                            <option value="video" selected>Prompt Video (Sinematik 9:16)</option>
+                            <option value="image">Prompt Image (Foto Studio Produk)</option>
+                        </select>
+                    </div>
+
+                    <!-- Gaya Konten (GAMA Style) -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgStyleSelect">Gaya Konten:</label>
+                        <select class="form-select" id="pgStyleSelect">
+                            <option value="cinematic" selected>Cinematic Luxury (Pencahayaan Megah & Eksklusif)</option>
+                            <option value="affiliate">Affiliate Jualan (Fokus Fitur & Keranjang Kuning)</option>
+                            <option value="storyboard">Storyboard Cerita (Rangkaian Adegan Emosional)</option>
+                            <option value="minimalist">Minimalist Studio (Background Bersih & Modern)</option>
+                            <option value="ugc">UGC Natural (Gaya Kamera HP Realistis)</option>
+                            <option value="kuliner">Food & Kuliner (Fokus Tekstur Lezat & Asap Hangat)</option>
+                        </select>
+                    </div>
+
+                    <!-- Platform Target -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgPlatformSelect">Platform Target:</label>
+                        <select class="form-select" id="pgPlatformSelect">
+                            <option value="tiktok" selected>TikTok & Shopee Video</option>
+                            <option value="instagram">Instagram Reels</option>
+                            <option value="youtube">YouTube Shorts</option>
+                            <option value="ads">Iklan Berbayar (Meta/TikTok Ads)</option>
+                        </select>
+                    </div>
+
+                    <!-- Catatan Tambahan -->
+                    <div class="form-group">
+                        <label class="form-label" for="pgExtraInput">Catatan Khusus (Opsional):</label>
+                        <input type="text" class="form-input" id="pgExtraInput" placeholder="Misal: ada model wanita Indonesia, latar pantai sore...">
+                    </div>
+
+                    <!-- Generate Prompt Button -->
+                    <button class="btn-generate" id="btnRunPromptGen" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
+                        <span>GENERATE PROMPT DARI GAMBAR</span>
+                    </button>
+
+                    <!-- Kotak Hasil Prompt -->
+                    <div class="prompt-result-card" id="pgResultCard">
+                        <label class="form-label" style="color: #fde68a;">Hasil Prompt Siap Pakai:</label>
+                        <textarea class="form-textarea" id="pgResultText" style="min-height: 120px;" readonly></textarea>
+                        
+                        <div class="prompt-result-actions">
+                            <button type="button" class="btn-secondary" id="btnPgCopy">
+                                <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                                <span>Salin</span>
+                            </button>
+                            <button type="button" class="btn-secondary" id="btnPgSendToVideo" style="border-color: var(--primary); color: #c7d2fe;">
+                                <i data-lucide="video" style="width: 14px; height: 14px;"></i>
+                                <span>Kirim ke Video Generator</span>
+                            </button>
+                            <button type="button" class="btn-secondary" id="btnPgSendToImage" style="border-color: #10b981; color: #6ee7b7;">
+                                <i data-lucide="image" style="width: 14px; height: 14px;"></i>
+                                <span>Kirim ke Image Generator</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- TAB 2: AKUN GOOGLE & API KEY (Setiap User Isi Milik Sendiri) -->
+        <section id="tab-accounts" class="tab-pane">
+            
+            <!-- Card 1: API Key Gemini User Sendiri -->
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="key" style="color: #f59e0b; width: 19px; height: 19px;"></i>
+                        <span>API Key Gemini Saya</span>
+                    </h2>
+                    <span id="geminiKeyStatusBadge" style="font-size: 11px; background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Belum Diisi</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Digunakan untuk fitur <strong>Auto Prompt</strong> dan analisa foto produk secara cerdas. 
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #818cf8; text-decoration: underline;">Dapatkan API Key gratis di Google AI Studio &rarr;</a>
+                </p>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="password" class="form-input" id="userGeminiKeyInput" placeholder="AIzaSy..." style="font-family: monospace;">
+                        <button type="button" class="btn-secondary" id="btnToggleShowGeminiKey" title="Lihat/Sembunyikan">
+                            <i data-lucide="eye" id="eyeIconGemini" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn-generate" id="btnSaveGeminiKey" style="padding: 11px; font-size: 13px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                    <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+                    <span>Simpan API Key Gemini</span>
+                </button>
+            </div>
+
+            <!-- Card 2: Multi-Akun Google User Sendiri -->
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="users" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                        <span>Profil Akun Google Saya</span>
+                    </h2>
+                    <button class="btn-icon" id="btnOpenAddAccount" title="Tambah Akun">
+                        <i data-lucide="plus" style="width: 18px; height: 18px; color: #818cf8;"></i>
+                    </button>
+                </div>
+
+                <!-- Limit Progress -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600;">
+                        <span>Kapasitas Akun Terpasang</span>
+                        <span id="accountLimitText" style="color: #a5b4fc;">0 / 5 Slot Terpakai</span>
+                    </div>
+                    <div class="limit-progress-bar">
+                        <div class="limit-fill" id="accountLimitFill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div id="accountsList" style="margin-top: 16px;">
+                    <!-- Akun ter-render otomatis oleh JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: ANTRIAN (Queue Realtime) -->
+        <section id="tab-queue" class="tab-pane">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="layers" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                        <span>Antrian Tugas Generate</span>
+                    </h2>
+                    <span style="font-size: 11px; color: var(--text-tertiary);">Realtime Auto-Sync</span>
+                </div>
+
+                <div id="queueList">
+                    <!-- Queue items ter-render otomatis -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: GALERI KONTEN -->
+        <section id="tab-gallery" class="tab-pane">
+            <div class="card">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="film" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                        <span>Galeri Konten Anda</span>
+                    </h2>
+                    <span style="font-size: 11px; color: #10b981; font-weight: 600;">Siap Download</span>
+                </div>
+
+                <div class="gallery-grid" id="galleryGrid">
+                    <!-- Video/Image cards ter-render otomatis -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Tab Navigation for Mobile & Desktop Shell -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-tab="studio">
+            <i data-lucide="clapperboard"></i>
+            <span>Studio</span>
+        </button>
+        <button class="nav-item" data-tab="accounts">
+            <i data-lucide="user-check"></i>
+            <span>Akun</span>
+        </button>
+        <button class="nav-item" data-tab="queue">
+            <i data-lucide="activity"></i>
+            <span>Antrian</span>
+        </button>
+        <button class="nav-item" data-tab="gallery">
+            <i data-lucide="grid"></i>
+            <span>Galeri</span>
+        </button>
+    </nav>
+
+    <!-- MODAL: TAMBAH AKUN GOOGLE -->
+    <div class="modal-backdrop" id="modalAddAccount">
+        <div class="modal-sheet">
+            <div class="card-title-row">
+                <h3 class="card-title">Tambah Akun Google</h3>
+                <button class="btn-icon" id="btnCloseAddAccount">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                Daftarkan alamat Gmail yang ingin Anda gunakan untuk generate video dan gambar.
+            </p>
+            <form id="formAddAccount">
+                <div class="form-group">
+                    <label class="form-label" for="newAccountEmail">Email Google (Gmail):</label>
+                    <input type="email" class="form-input" id="newAccountEmail" placeholder="namaakun@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newAccountLabel">Label / Keterangan (Opsional):</label>
+                    <input type="text" class="form-input" id="newAccountLabel" placeholder="Contoh: Akun Utama / Cadangan">
+                </div>
+                <button type="submit" class="btn-generate" style="margin-top: 10px;">
+                    <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+                    <span>Simpan Akun</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: MEDIA PLAYER (Video / Gambar) -->
+    <div class="modal-backdrop" id="modalVideoPlayer">
+        <div class="modal-sheet" style="max-width: 420px; padding: 18px;">
+            <div class="card-title-row" style="margin-bottom: 12px;">
+                <h3 class="card-title" id="playerModalTitle" style="font-size: 16px;">Pratinjau Hasil</h3>
+                <button class="btn-icon" id="btnClosePlayer">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <div style="background: black; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 14px;">
+                <video id="playerVideo" controls playsinline style="width: 100%; aspect-ratio: 9/16; max-height: 480px; display: block; object-fit: contain;"></video>
+                <img id="playerImage" src="" alt="Hasil Gambar" style="width: 100%; aspect-ratio: 9/16; max-height: 480px; display: none; object-fit: contain;">
+            </div>
+            <p id="playerPromptText" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-style: italic; max-height: 60px; overflow-y: auto;"></p>
+            <button class="btn-generate" id="btnDownloadVideo">
+                <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+                <span>Download File</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
