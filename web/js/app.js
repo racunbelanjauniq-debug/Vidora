@@ -27,7 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const subviews = {
         video: document.getElementById("subview-video"),
         image: document.getElementById("subview-image"),
-        promptgen: document.getElementById("subview-promptgen")
+        promptgen: document.getElementById("subview-promptgen"),
+        mixer: document.getElementById("subview-mixer")
     };
 
     // Elements - Video Generator
@@ -1111,8 +1112,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         return (localStorage.getItem("vidora_user_gemini_key") || "").trim();
     }
 
-    // Gemini Vision API Caller
-    async function analyzeProductImageWithGemini(base64Data, mode, style, platform, extra = "") {
+    // Gemini Vision API Caller (GAMA PRO Engine)
+    async function analyzeProductImageWithGemini(base64Data, mode, style, platform, extra = "", ctaType = "auto", customCta = "") {
         const apiKey = getUserGeminiKey();
         if (!apiKey) {
             alert("Perhatian: Anda belum memasukkan API Key Gemini!\n\nSilakan masukkan API Key Gemini Anda di tab 'Akun' terlebih dahulu agar AI bisa membaca foto produk Anda.");
@@ -1131,57 +1132,92 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         let platformInstruction = "General social media short-form video style.";
         if (platform === "tiktok") {
-            platformInstruction = "Target Platform: TikTok Shop video. Include subtle commercial hook, viral pacing, framing tailored for TikTok overlay, and a natural CTA indicating 'Check Keranjang Kuning di bawah!'";
+            platformInstruction = "Target Platform: TikTok Short Video (9:16). High energy hook in first 2 seconds, punchy visual rhythm, natural viral aesthetic.";
+        } else if (platform === "tiktok_aff") {
+            platformInstruction = "Target Platform: TikTok Shop Affiliate (9:16). Clear product feature demonstration, high-conversion visual framing, and cue: Cek Keranjang Kuning di bawah!";
+        } else if (platform === "tiktok_go_hotel") {
+            platformInstruction = "Target Platform: TikTok Go Hotel & Staycation. Inviting room tour, cozy bed textures, luxurious bathroom amenities, relaxing holiday vibes.";
+        } else if (platform === "tiktok_go_wisata") {
+            platformInstruction = "Target Platform: TikTok Go Wisata / Travel Destination. Spectacular wide panoramic shots, vibrant natural scenery, landmark highlights, travel inspiration.";
+        } else if (platform === "tiktok_go_kuliner") {
+            platformInstruction = "Target Platform: TikTok Go Kuliner / Food. Sizzling warm dishes, mouth-watering close-up of delicious textures, vibrant culinary appeal.";
         } else if (platform === "shopee") {
-            platformInstruction = "Target Platform: Shopee Video. Include bright commercial lighting, discount voucher callout feel, product detail focus, and a natural CTA indicating 'Klik Keranjang Oranye di bawah!'";
+            platformInstruction = "Target Platform: Shopee Video. Bright commercial lighting, discount voucher callout feel, product detail focus, and cue: Klik Keranjang Oranye di bawah!";
         } else if (platform === "instagram" || platform === "reels") {
-            platformInstruction = "Target Platform: Instagram Reels/Feed. Clean luxury modern aesthetic, seamless lifestyle loop, aesthetic color grading.";
+            platformInstruction = "Target Platform: Instagram Reels / Feed. Clean luxury modern aesthetic, seamless lifestyle loop, aesthetic color grading.";
         } else if (platform === "youtube") {
             platformInstruction = "Target Platform: YouTube Shorts. Dynamic pacing, clear value proposition in first 3 seconds, clean branding throughout.";
+        } else if (platform === "youtube_long") {
+            platformInstruction = "Target Platform: YouTube Long-Form (16:9 Landscape). Cinematic widescreen composition, steady camera motion, rich immersive atmosphere for deep engagement.";
         } else if (platform === "ads") {
-            platformInstruction = "Target Platform: Paid digital ads (Meta/TikTok Ads). High-impact first frame, immediate visual hook, strong CTA integration.";
+            platformInstruction = "Target Platform: Paid digital ads (Meta/TikTok Ads). High-impact first frame, immediate visual hook, strong commercial CTA.";
         } else if (platform === "marketplace") {
             platformInstruction = "Target Platform: Marketplace product listing (Shopee/Tokopedia). Crystal-clear product detail, clean background, professional studio lighting.";
         } else if (platform === "katalog") {
             platformInstruction = "Target Platform: Product catalog / print material. Ultra-sharp details, perfect color accuracy, premium editorial quality.";
         }
 
-        // Full style instruction map (GAMA-style)
+        let ctaInstruction = "";
+        if (ctaType === "tiktok_go") {
+            ctaInstruction = "Closing CTA Cue: Klaim promo langsung di lokasi / cek info maps sekarang.";
+        } else if (ctaType === "shopee_aff") {
+            ctaInstruction = "Closing CTA Cue: Klik Keranjang Oranye di bawah sebelum voucher habis!";
+        } else if (ctaType === "tiktok_aff") {
+            ctaInstruction = "Closing CTA Cue: Cek Keranjang Kuning di kiri bawah sekarang juga!";
+        } else if (ctaType === "tiktok") {
+            ctaInstruction = "Closing CTA Cue: Jangan lupa follow akun ini dan tulis pendapatmu di komentar!";
+        } else if (ctaType === "sosmed") {
+            ctaInstruction = "Closing CTA Cue: Like, simpan, dan share video ini ke teman-temanmu!";
+        } else if (ctaType === "custom" && customCta) {
+            ctaInstruction = `Closing CTA Cue: ${customCta}`;
+        }
+
+        // Full 17 GAMA PRO style instruction map
         const styleInstructions = {
-            cinematic: "Style: Cinematic Luxury. Use dramatic volumetric lighting, subtle lens flare, film grain, color grading (cinematic teal-orange), slow macro tracking shot, 4K 60fps quality feel.",
-            hardselling: "Style: Hard Selling Commercial. High-energy composition, bold product hero shot with exploding action energy, motion blur trails, bright saturated colors, urgency-focused framing with CTA cues.",
-            softselling: "Style: Soft Selling Lifestyle. Warm pastel tones, natural golden hour lighting, product integrated into a cozy aspirational scene, gentle camera movement, emotional atmosphere.",
-            storytelling: "Style: Storytelling Narrative. Build an emotional scene — a relatable character moment with the product as the hero solving a problem. Dramatic light transitions, warm color palette.",
-            ugc: "Style: UGC Authentic. Handheld shaky camera feel, natural home lighting, close-up texture shots, unboxing style framing, realistic everyday context, no professional studio feel.",
-            asmr: "Style: ASMR Sensory. Extreme macro close-up of product textures, surfaces, and materials. Soft-focus bokeh background, satisfying liquid/powder/cream interactions, near-silent intimate framing.",
-            tutorial: "Style: Tutorial/How-To Educational. Clear instructional framing with step-by-step shot progression, text overlay space at top/bottom, clean mid-shot composition, neutral bright lighting.",
-            kuliner: "Style: Food & Culinary. Steam wisps, golden caramelized textures, glistening sauce, macro cheese-pull or chocolate drizzle, warm amber kitchen lighting, appetite-triggering extreme close-ups.",
-            beauty: "Style: Beauty & Skincare. Dewy glass-skin aesthetic, model close-up with flawless complexion, pink/rose pastel lighting, product serum drop macro, luxury AR-filter look.",
-            minimalist: "Style: Minimalist Clean. Pure white or deep black studio background, single product hero shot, sharp shadows, negative space composition, editorial simplicity.",
-            luxury: "Style: Luxury Prestige. Dark moodboard, gold-black-marble textures, dramatic single-source light, slow rotating pedestal shot, ultra-shallow depth of field, Rolex-ad quality.",
-            lifestyle: "Style: Lifestyle Activity. Product in natural human activity context — outdoor scene, social gathering, or morning routine. Natural daylight, candid movement, real-world authenticity.",
-            studio: "Style: Clean Product Studio. Pure white/gradient studio background, professional 3-point lighting setup, sharp product detail, no distractions, catalog-ready quality.",
-            katalog: "Style: Catalog Photography. Multiple angles implied, precise product proportions, accurate color rendering, flat or minimal background, professional retouching aesthetic.",
-            flatlay: "Style: Flat Lay Composition. Top-down bird's-eye view, carefully arranged product with complementary props, color-coordinated styling, even diffused lighting.",
-            detail: "Style: Close-Up Detail. Extreme macro photography highlighting product texture, material quality, stitching, or surface finish. Shallow depth of field, sharp focus on key detail.",
-            editorial: "Style: Editorial Art Photography. Creative avant-garde composition, dramatic lighting contrast, artistic backdrop, concept-driven styling, high-fashion magazine quality.",
-            outdoor: "Style: Outdoor Natural. Natural environment context — forest, beach, garden, or urban setting. Product harmonized with nature, golden hour or blue hour lighting."
+            hard_selling: "Style: Hard Selling Commercial (Iklan TV). High-energy composition, bold product hero shot with exploding dynamic action, motion blur trails, bright saturated colors, urgency-focused commercial framing with direct purchasing cues.",
+            hardselling: "Style: Hard Selling Commercial (Iklan TV). High-energy composition, bold product hero shot with exploding dynamic action, motion blur trails, bright saturated colors, urgency-focused commercial framing.",
+            soft_selling: "Style: Soft Selling Lifestyle & Storytelling. Warm pastel tones, natural golden hour lighting, product integrated into a cozy aspirational scene, gentle camera movement, deep emotional connection without hard sales pressure.",
+            softselling: "Style: Soft Selling Lifestyle & Storytelling. Warm pastel tones, natural golden hour lighting, product integrated into a cozy aspirational scene, gentle camera movement, deep emotional connection.",
+            storyboard: "Style: Storyboard Multi-Scene. Structured sequential cinematic shots (Scene 1: Establishing contextual atmosphere; Scene 2: Close-up product interaction; Scene 3: High-impact transformation result), fluid cinematic transitions.",
+            unboxing: "Style: Unboxing & Haul. First-person or tabletop perspective unwrapping premium packaging, tactile peeling of protective film, revealing pristine product, authentic excitement and crisp detail.",
+            before_after: "Style: Before-After Transformation. Dramatic contrast split or smooth wipe transition showing dull/problematic state transformed into a glowing, flawless, highly satisfying finished state.",
+            comparison_vs: "Style: Comparison / VS Battle. Side-by-side or split visual comparison clearly illustrating the superior texture, finish, and premium feel of the featured subject compared to ordinary alternatives.",
+            trend_challenge: "Style: Trend & Viral Challenge. Trendy fast-paced visual hooks, modern TikTok transition snaps, vibrant neon or natural pop lighting, meme/relatable pacing, dynamic beats.",
+            vlog_bts: "Style: Behind The Scenes / Casual Daily Vlog. Authentic creator POV, candid handheld camera movement, genuine production or preparation moments, welcoming warm ambient lighting.",
+            musik_playlist: "Style: Musik Playlist / Penyanyi. Static tripod framing, gentle ambient micro-motion (soft breeze, flickering subtle neon, slow atmospheric dust particles, gentle singer sway), ultra-relaxed cozy aesthetic.",
+            vlog_alam: "Style: Nature & Landscape Cinematic Drone. Grand expansive drone aerial tracking shot over misty mountain ridges, turquoise ocean waves crashing on cliffs, sunbeams cutting through forest canopy, 4K 60fps IMAX scope.",
+            aesthetic: "Style: Aesthetic Cinematic (Non-Commercial). Moody color grading, artistic negative space, poetic slow motion, evocative rim lighting, indie film festival visual masterpiece.",
+            cinematic: "Style: Aesthetic Cinematic. Moody volumetric lighting, subtle lens flare, film grain, cinematic teal-orange color grading, smooth slow tracking shot.",
+            edukasi: "Style: Educational & Tips. Clean instructional framing, crisp focal subject, balanced composition leaving headroom/side space for graphics or captions, bright clear neutral lighting.",
+            tutorial: "Style: Educational & Tutorial. Step-by-step instructional framing, clear product usage demonstration, neat studio background.",
+            pov: "Style: POV (Point of View Relatable). First-person perspective looking down at hands using the product, authentic everyday situation, relatable domestic or travel environment.",
+            asmr: "Style: ASMR & Satisfying Sensory. Extreme macro close-up of product textures, surfaces, and tactile interactions (creamy lather, crisp cutting, bubbling fizz, glossy liquid drizzle), intimate calming visuals.",
+            tiktok_go_wisata: "Style: TikTok Go - Tempat Wisata. Sun-drenched panoramic vacation spot, happy travelers enjoying scenic viewpoints, crystal-clear water, vibrant tropical or alpine destination allure.",
+            tiktok_go_kuliner: "Style: TikTok Go - Kuliner & Makanan. Sizzling skillet, rising aromatic steam, glistening sauces, macro cheese pulls, warm appetizing amber restaurant lighting.",
+            tiktok_go_hotel: "Style: TikTok Go - Hotel & Penginapan. Chic hotel lobby, serene resort balcony view, fluffy pristine king-size bedding, warm ambient luxury interior hospitality lighting.",
+            ugc: "Style: UGC Authentic. Handheld smartphone camera feel, natural ambient lighting, genuine unedited texture, realistic everyday context.",
+            beauty: "Style: Beauty & Skincare. Dewy glass-skin aesthetic, model close-up with flawless complexion, soft rose/peachy studio lights, glistening serum droplet.",
+            minimalist: "Style: Minimalist Clean. Pure white or deep dark studio backdrop, single hero subject, sharp sculptural shadows, high-end design aesthetic.",
+            luxury: "Style: Luxury Prestige. Dark moodboard, gold-black-marble textures, dramatic single-source spotlight, slow rotating pedestal, ultra-shallow depth of field.",
+            lifestyle: "Style: Lifestyle Activity. Product in natural human activity context, natural daylight, candid movement, real-world authenticity.",
+            studio: "Style: Clean Product Studio. Pure white/gradient studio background, professional 3-point lighting setup, sharp product detail, catalog-ready quality."
         };
         const styleInstruction = styleInstructions[style] || styleInstructions.cinematic;
 
-        const systemPrompt = `You are VIDORA Smart Prompt Generator, an expert commercial director, product photographer, and AI video specialist.
-Your task: Analyze the provided product photo and generate an extremely rich, cinematic, photorealistic prompt optimized for Google Flow AI (Omni Flash) and Imagen image generation.
+        const systemPrompt = `You are VIDORA Smart Prompt Generator (powered by GAMA PRO Engine), an elite commercial director, cinematographer, and prompt engineer.
+Your task: Analyze the provided image/details and generate an extremely rich, cinematic, photorealistic prompt optimized for AI video generation (Google Flow / Omni Flash) or studio photography (Imagen / Nano Banana).
 Mode: ${mode}
 ${styleInstruction}
 ${platformInstruction}
-Additional details: ${extra || "None"}
+${ctaInstruction ? `Call to Action Instruction: ${ctaInstruction}` : ""}
+Additional Creator Notes: ${extra || "None"}
 
 Requirements for the generated prompt:
-1. Describe the product clearly based on visual features (color, bottle shape, texture, material, packaging).
-2. Specify cinematic lighting (e.g. rim lighting, golden hour reflection, soft volumetric haze, dramatic shadows).
-3. Specify dynamic camera motion (e.g. smooth macro slow tracking shot, rotating pedestal 360, gentle push-in).
-4. Specify ultra-high resolution keywords (e.g. 4k 60fps vertical 9:16, unreal engine 5 aesthetic, photorealistic texture).
-5. Output ONLY the finalized prompt text. No introductory remarks, no explanations, no quotes.`;
+1. Accurately describe the subject based on visible features (colors, textures, materials, packaging, proportions).
+2. Specify cinematic lighting (e.g. dramatic rim lighting, soft volumetric golden hour, diffused studio softbox).
+3. Specify camera movement (e.g. smooth macro slow tracking shot, rotating pedestal 360, gentle push-in, static serene framing).
+4. Specify ultra-high resolution keywords (e.g. 4k 60fps, photorealistic texture, octane render quality, film grain).
+5. Output ONLY the finalized prompt text in English for maximum AI model fidelity. No introductory remarks, no quotes.`;
 
         const requestBody = {
             contents: [
@@ -1243,11 +1279,23 @@ Requirements for the generated prompt:
         btnVideoAutoPrompt.innerHTML = `<i data-lucide="loader" class="spin" style="width:13px;height:13px;"></i> <span>Menganalisa Foto...</span>`;
         lucide.createIcons();
 
-        const platform = document.getElementById("videoPlatformSelect")?.value || "tiktok";
-        const prompt = await analyzeProductImageWithGemini(uploadedProductImage, "Commercial Product Video", selectedVideoStyle || "cinematic", platform);
+        const platform = document.getElementById("videoPlatformSelect")?.value || "youtube_long";
+        const style = document.getElementById("videoApStyleSelect")?.value || "musik_playlist";
+        const ctaType = document.getElementById("videoCtaSelect")?.value || "auto";
+        const customCta = document.getElementById("videoCustomCta")?.value.trim() || "";
+
+        const prompt = await analyzeProductImageWithGemini(
+            uploadedProductImage, 
+            "Commercial & Cinematic Video", 
+            style, 
+            platform, 
+            "", 
+            ctaType, 
+            customCta
+        );
         
         btnVideoAutoPrompt.disabled = false;
-        btnVideoAutoPrompt.innerHTML = `<i data-lucide="sparkles" style="width:13px;height:13px;"></i> <span>Auto Prompt dari Foto</span>`;
+        btnVideoAutoPrompt.innerHTML = `<i data-lucide="sparkles" style="width:13px;height:13px;"></i> <span>Auto Prompt AI</span>`;
         lucide.createIcons();
 
         if (prompt) {
@@ -1296,14 +1344,16 @@ Requirements for the generated prompt:
         lucide.createIcons();
 
         const mode = pgModeHidden ? pgModeHidden.value : "video";
-        const style = pgStyleHidden ? pgStyleHidden.value : "cinematic";
-        const platform = pgPlatformSelect.value;
-        const extra = pgExtraInput.value.trim();
+        const style = pgStyleHidden ? pgStyleHidden.value : "hard_selling";
+        const platform = pgPlatformSelect?.value || "youtube_long";
+        const ctaType = document.getElementById("pgCtaSelect")?.value || "auto";
+        const customCta = document.getElementById("pgCustomCta")?.value.trim() || "";
+        const extra = pgExtraInput?.value.trim() || "";
 
-        const prompt = await analyzeProductImageWithGemini(uploadedProductImage, mode, style, platform, extra);
+        const prompt = await analyzeProductImageWithGemini(uploadedProductImage, mode, style, platform, extra, ctaType, customCta);
 
         btnRunPromptGen.disabled = false;
-        btnRunPromptGen.innerHTML = `<i data-lucide="sparkles" style="width:18px;height:18px;"></i> <span>Generate Smart Prompt Sekarang</span>`;
+        btnRunPromptGen.innerHTML = `<i data-lucide="sparkles" style="width:18px;height:18px;"></i> <span>GENERATE SMART PROMPT (GAMA PRO ENGINE)</span>`;
         lucide.createIcons();
 
         if (prompt) {
@@ -1606,10 +1656,32 @@ Requirements for the generated prompt:
                     }
                     <div class="video-overlay">
                         <div class="video-prompt">${job.prompt}</div>
+                        ${!isImg ? `
+                            <button type="button" class="btn-send-to-mixer" data-url="${job.video_url}" data-prompt="${encodeURIComponent(job.prompt)}" style="margin-top: 6px; padding: 5px 9px; font-size: 11px; background: linear-gradient(135deg, #ec4899, #be185d); color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">
+                                <i data-lucide="film" style="width: 12px; height: 12px;"></i>
+                                <span>Kirim ke Video Mixer</span>
+                            </button>
+                        ` : ''}
                     </div>
                 `;
-                card.addEventListener("click", () => openMediaModal(job));
+                card.addEventListener("click", (e) => {
+                    if (e.target.closest(".btn-send-to-mixer")) return;
+                    openMediaModal(job);
+                });
                 galleryGrid.appendChild(card);
+            });
+
+            // Wire Kirim ke Mixer buttons
+            galleryGrid.querySelectorAll(".btn-send-to-mixer").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const url = btn.getAttribute("data-url");
+                    const title = decodeURIComponent(btn.getAttribute("data-prompt") || "Klip Video");
+                    addClipToMixer(url, title);
+                    switchTab("studio");
+                    switchSubTab("mixer");
+                    alert("Klip berhasil dikirim ke Video Mixer! Anda dapat menambahkan klip lain dan menggabungkannya.");
+                });
             });
         }
         lucide.createIcons();
@@ -1648,6 +1720,422 @@ Requirements for the generated prompt:
         modalVideoPlayer.classList.remove("open");
     });
 
+    // =========================================================================
+    // 12. Client-Side Video Mixer Engine
+    // =========================================================================
+    let mixerClips = []; // [{ id, url, name, duration, thumb }]
+    let mixerAudioFile = null;
+    let isMixing = false;
+
+    const mixerDropzone = document.getElementById("mixerDropzone");
+    const mixerFileInput = document.getElementById("mixerFileInput");
+    const mixerClipsList = document.getElementById("mixerClipsList");
+    const mixerEmptyHint = document.getElementById("mixerEmptyHint");
+    const mixerClipCount = document.getElementById("mixerClipCount");
+    const btnClearMixerClips = document.getElementById("btnClearMixerClips");
+    const mixerRatioSelect = document.getElementById("mixerRatioSelect");
+    const mixerTransitionSelect = document.getElementById("mixerTransitionSelect");
+    const mixerAudioInput = document.getElementById("mixerAudioInput");
+    const btnRemoveMixerAudio = document.getElementById("btnRemoveMixerAudio");
+    const mixerAudioName = document.getElementById("mixerAudioName");
+    const btnRunMixer = document.getElementById("btnRunMixer");
+    const btnRunMixerText = document.getElementById("btnRunMixerText");
+    const mixerProgressBox = document.getElementById("mixerProgressBox");
+    const mixerStatusText = document.getElementById("mixerStatusText");
+    const mixerProgressPct = document.getElementById("mixerProgressPct");
+    const mixerProgressFill = document.getElementById("mixerProgressFill");
+    const mixerResultBox = document.getElementById("mixerResultBox");
+    const mixerResultVideo = document.getElementById("mixerResultVideo");
+    const btnDownloadMixerResult = document.getElementById("btnDownloadMixerResult");
+    const btnResetMixer = document.getElementById("btnResetMixer");
+
+    async function addClipToMixer(source, name = "Klip Video") {
+        const id = "clip_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+        let url = "";
+
+        if (source instanceof File) {
+            url = URL.createObjectURL(source);
+        } else if (typeof source === "string") {
+            url = source;
+        }
+
+        // Get metadata & generate thumbnail
+        const v = document.createElement("video");
+        v.crossOrigin = "anonymous";
+        v.preload = "metadata";
+        v.src = url;
+
+        await new Promise(resolve => {
+            v.onloadedmetadata = () => resolve();
+            v.onerror = () => resolve();
+            setTimeout(resolve, 3000);
+        });
+
+        const duration = isFinite(v.duration) && v.duration > 0 ? v.duration : 8;
+
+        // Capture quick thumb
+        let thumb = "";
+        try {
+            v.currentTime = Math.min(1, duration / 2);
+            await new Promise(r => { v.onseeked = r; setTimeout(r, 600); });
+            const c = document.createElement("canvas");
+            c.width = 160;
+            c.height = 160;
+            const ctx = c.getContext("2d");
+            ctx.drawImage(v, 0, 0, 160, 160);
+            thumb = c.toDataURL("image/jpeg", 0.7);
+        } catch (_) {
+            thumb = "";
+        }
+
+        mixerClips.push({
+            id,
+            url,
+            name: name || `Klip ${mixerClips.length + 1}`,
+            duration: Math.round(duration * 10) / 10,
+            thumb
+        });
+
+        renderMixerClips();
+    }
+
+    function renderMixerClips() {
+        if (!mixerClipsList) return;
+        mixerClipCount.textContent = mixerClips.length;
+
+        if (mixerClips.length === 0) {
+            mixerClipsList.innerHTML = `
+                <div id="mixerEmptyHint" style="text-align: center; padding: 24px; border: 1px dashed rgba(255,255,255,0.08); border-radius: 12px; color: var(--text-tertiary); font-size: 12px;">
+                    Belum ada video yang dimasukkan. Tambahkan file di atas atau klik tombol <strong>"Kirim ke Video Mixer"</strong> pada galeri video.
+                </div>
+            `;
+            return;
+        }
+
+        mixerClipsList.innerHTML = "";
+        mixerClips.forEach((clip, index) => {
+            const item = document.createElement("div");
+            item.className = "account-item";
+            item.style.alignItems = "center";
+            item.style.gap = "10px";
+            item.style.padding = "8px 12px";
+
+            item.innerHTML = `
+                <div style="font-size: 12px; font-weight: 800; color: #ec4899; width: 22px;">#${index + 1}</div>
+                <div style="width: 44px; height: 44px; border-radius: 8px; background: black; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    ${clip.thumb ? `<img src="${clip.thumb}" style="width: 100%; height: 100%; object-fit: cover;">` : `<i data-lucide="video" style="width: 18px; height: 18px; color: #64748b;"></i>`}
+                </div>
+                <div style="flex: 1; overflow: hidden;">
+                    <div style="font-size: 12.5px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${clip.name}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-tertiary);">
+                        Durasi: <strong>${clip.duration} detik</strong>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <button type="button" class="btn-icon btn-clip-up" data-idx="${index}" title="Naikkan" ${index === 0 ? 'disabled style="opacity:0.3"' : ''}>
+                        <i data-lucide="arrow-up" style="width: 14px; height: 14px;"></i>
+                    </button>
+                    <button type="button" class="btn-icon btn-clip-down" data-idx="${index}" title="Turunkan" ${index === mixerClips.length - 1 ? 'disabled style="opacity:0.3"' : ''}>
+                        <i data-lucide="arrow-down" style="width: 14px; height: 14px;"></i>
+                    </button>
+                    <button type="button" class="btn-icon btn-clip-delete" data-idx="${index}" title="Hapus" style="color: #f87171;">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
+            `;
+            mixerClipsList.appendChild(item);
+        });
+
+        // Reorder buttons
+        mixerClipsList.querySelectorAll(".btn-clip-up").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const idx = parseInt(btn.getAttribute("data-idx"));
+                if (idx > 0) {
+                    const temp = mixerClips[idx];
+                    mixerClips[idx] = mixerClips[idx - 1];
+                    mixerClips[idx - 1] = temp;
+                    renderMixerClips();
+                }
+            });
+        });
+
+        mixerClipsList.querySelectorAll(".btn-clip-down").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const idx = parseInt(btn.getAttribute("data-idx"));
+                if (idx < mixerClips.length - 1) {
+                    const temp = mixerClips[idx];
+                    mixerClips[idx] = mixerClips[idx + 1];
+                    mixerClips[idx + 1] = temp;
+                    renderMixerClips();
+                }
+            });
+        });
+
+        mixerClipsList.querySelectorAll(".btn-clip-delete").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const idx = parseInt(btn.getAttribute("data-idx"));
+                mixerClips.splice(idx, 1);
+                renderMixerClips();
+            });
+        });
+
+        lucide.createIcons();
+    }
+
+    // Mixer Dropzone & File Input
+    if (mixerDropzone && mixerFileInput) {
+        mixerDropzone.addEventListener("click", () => mixerFileInput.click());
+        mixerDropzone.addEventListener("dragover", (e) => { e.preventDefault(); mixerDropzone.style.borderColor = "#ec4899"; });
+        mixerDropzone.addEventListener("dragleave", () => { mixerDropzone.style.borderColor = "rgba(236,72,153,0.35)"; });
+        mixerDropzone.addEventListener("drop", async (e) => {
+            e.preventDefault();
+            mixerDropzone.style.borderColor = "rgba(236,72,153,0.35)";
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("video/"));
+            for (const file of files) {
+                await addClipToMixer(file, file.name);
+            }
+        });
+
+        mixerFileInput.addEventListener("change", async (e) => {
+            const files = Array.from(e.target.files);
+            for (const file of files) {
+                await addClipToMixer(file, file.name);
+            }
+            mixerFileInput.value = "";
+        });
+    }
+
+    if (btnClearMixerClips) {
+        btnClearMixerClips.addEventListener("click", () => {
+            if (mixerClips.length > 0 && confirm("Kosongkan semua klip di mixer?")) {
+                mixerClips = [];
+                renderMixerClips();
+            }
+        });
+    }
+
+    // Mixer Audio Input
+    if (mixerAudioInput) {
+        mixerAudioInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                mixerAudioFile = file;
+                mixerAudioName.textContent = `🎵 Backsound: ${file.name}`;
+                mixerAudioName.style.display = "block";
+                btnRemoveMixerAudio.style.display = "inline-flex";
+            }
+        });
+    }
+
+    if (btnRemoveMixerAudio) {
+        btnRemoveMixerAudio.addEventListener("click", () => {
+            mixerAudioFile = null;
+            mixerAudioInput.value = "";
+            mixerAudioName.style.display = "none";
+            btnRemoveMixerAudio.style.display = "none";
+        });
+    }
+
+    if (btnResetMixer) {
+        btnResetMixer.addEventListener("click", () => {
+            mixerResultBox.style.display = "none";
+            mixerProgressBox.style.display = "none";
+            if (mixerResultVideo) mixerResultVideo.src = "";
+        });
+    }
+
+    // Execute Video Mixer Concatenation
+    if (btnRunMixer) {
+        btnRunMixer.addEventListener("click", async () => {
+            if (isMixing) return;
+            if (mixerClips.length < 2) {
+                alert("Masukkan minimal 2 klip video untuk digabungkan!");
+                return;
+            }
+
+            isMixing = true;
+            btnRunMixer.disabled = true;
+            btnRunMixerText.textContent = "SEDANG MENGGABUNGKAN...";
+            mixerProgressBox.style.display = "block";
+            mixerResultBox.style.display = "none";
+
+            // Resolution according to ratio
+            const ratio = mixerRatioSelect?.value || "9:16";
+            let outW = 720;
+            let outH = 1280;
+            if (ratio === "16:9") { outW = 1280; outH = 720; }
+            if (ratio === "1:1") { outW = 720; outH = 720; }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = outW;
+            canvas.height = outH;
+            const ctx = canvas.getContext("2d");
+
+            // Audio Context & Destination
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            const audioCtx = new AudioCtx();
+            const audioDest = audioCtx.createMediaStreamDestination();
+
+            // Background Audio if provided
+            let bgmElem = null;
+            if (mixerAudioFile) {
+                bgmElem = document.createElement("audio");
+                bgmElem.src = URL.createObjectURL(mixerAudioFile);
+                bgmElem.loop = true;
+                const bgmSource = audioCtx.createMediaElementSource(bgmElem);
+                const bgmGain = audioCtx.createGain();
+                bgmGain.gain.value = 0.6; // 60% volume
+                bgmSource.connect(bgmGain).connect(audioDest);
+                bgmElem.play().catch(() => {});
+            }
+
+            // Stream & MediaRecorder
+            const canvasStream = canvas.captureStream(30);
+            const combinedTracks = [
+                ...canvasStream.getVideoTracks(),
+                ...audioDest.stream.getAudioTracks()
+            ];
+            const mixedStream = new MediaStream(combinedTracks);
+
+            const mimeTypes = [
+                "video/webm;codecs=vp9,opus",
+                "video/webm;codecs=vp8,opus",
+                "video/webm"
+            ];
+            let supportedMime = "video/webm";
+            for (const m of mimeTypes) {
+                if (MediaRecorder.isTypeSupported(m)) {
+                    supportedMime = m;
+                    break;
+                }
+            }
+
+            const recorder = new MediaRecorder(mixedStream, { mimeType: supportedMime });
+            const recordedChunks = [];
+            recorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            recorder.start(100);
+
+            const totalDuration = mixerClips.reduce((sum, c) => sum + (c.duration || 5), 0);
+            let elapsedTotal = 0;
+            const transitionType = mixerTransitionSelect?.value || "cut";
+
+            // Process each clip sequentially
+            for (let i = 0; i < mixerClips.length; i++) {
+                const clip = mixerClips[i];
+                mixerStatusText.textContent = `Memproses klip ${i + 1} dari ${mixerClips.length}: "${clip.name}"...`;
+
+                const v = document.createElement("video");
+                v.crossOrigin = "anonymous";
+                v.src = clip.url;
+                v.muted = false;
+
+                // Connect video audio to destination
+                try {
+                    const vSource = audioCtx.createMediaElementSource(v);
+                    vSource.connect(audioDest);
+                } catch (_) {}
+
+                await new Promise(resolve => {
+                    v.oncanplay = () => resolve();
+                    v.onerror = () => resolve();
+                    setTimeout(resolve, 4000);
+                });
+
+                await v.play().catch(() => {});
+
+                // Play clip and draw to canvas
+                await new Promise(resolve => {
+                    const clipDuration = v.duration || clip.duration || 5;
+
+                    const renderFrame = () => {
+                        if (!isMixing) { resolve(); return; }
+
+                        ctx.fillStyle = "#000000";
+                        ctx.fillRect(0, 0, outW, outH);
+
+                        // Letterbox / contain scaling
+                        const vw = v.videoWidth || outW;
+                        const vh = v.videoHeight || outH;
+                        const scale = Math.min(outW / vw, outH / vh);
+                        const dw = vw * scale;
+                        const dh = vh * scale;
+                        const dx = (outW - dw) / 2;
+                        const dy = (outH - dh) / 2;
+
+                        // Optional fade transition at start/end
+                        let alpha = 1;
+                        if (transitionType === "fade") {
+                            if (v.currentTime < 0.4) {
+                                alpha = Math.min(1, v.currentTime / 0.4);
+                            } else if (clipDuration - v.currentTime < 0.4) {
+                                alpha = Math.min(1, (clipDuration - v.currentTime) / 0.4);
+                            }
+                        }
+                        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+                        ctx.drawImage(v, dx, dy, dw, dh);
+                        ctx.globalAlpha = 1.0;
+
+                        // Progress
+                        const currentGlobal = elapsedTotal + v.currentTime;
+                        const pct = Math.min(99, Math.round((currentGlobal / totalDuration) * 100));
+                        mixerProgressPct.textContent = `${pct}%`;
+                        mixerProgressFill.style.width = `${pct}%`;
+
+                        if (v.ended || v.currentTime >= clipDuration) {
+                            elapsedTotal += clipDuration;
+                            resolve();
+                        } else {
+                            requestAnimationFrame(renderFrame);
+                        }
+                    };
+
+                    requestAnimationFrame(renderFrame);
+                });
+
+                v.pause();
+                v.src = "";
+            }
+
+            // Stop BGM if running
+            if (bgmElem) {
+                bgmElem.pause();
+                bgmElem.src = "";
+            }
+
+            // Finish Recording
+            mixerStatusText.textContent = "Menyelesaikan penyatuan file video...";
+            mixerProgressPct.textContent = "100%";
+            mixerProgressFill.style.width = "100%";
+
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            recorder.onstop = () => {
+                const finalBlob = new Blob(recordedChunks, { type: supportedMime });
+                const finalUrl = URL.createObjectURL(finalBlob);
+
+                mixerResultVideo.src = finalUrl;
+                btnDownloadMixerResult.href = finalUrl;
+                btnDownloadMixerResult.download = `vidora-mixed-${ratio.replace(':', 'x')}-${Date.now()}.webm`;
+
+                mixerProgressBox.style.display = "none";
+                mixerResultBox.style.display = "block";
+                mixerResultBox.scrollIntoView({ behavior: "smooth" });
+
+                btnRunMixer.disabled = false;
+                btnRunMixerText.textContent = "GABUNGKAN SEMUA VIDEO";
+                isMixing = false;
+                lucide.createIcons();
+            };
+
+            recorder.stop();
+        });
+    }
+
     window.vidoraData.subscribeJobs(() => {
         refreshJobs();
     });
@@ -1659,7 +2147,7 @@ Requirements for the generated prompt:
     const urlParams = new URLSearchParams(window.location.search);
     const planParam = urlParams.get("plan");
     const tabParam = urlParams.get("tab");
-
+    const subParam = urlParams.get("sub");
     const authParam = urlParams.get("auth");
 
     if (authParam === "login" || authParam === "signup") {
@@ -1675,6 +2163,12 @@ Requirements for the generated prompt:
     }
     if (tabParam) {
         switchTab(tabParam);
+    }
+    if (subParam && subviews[subParam]) {
+        switchSubTab(subParam);
+    } else if (window.location.hash === "#mixer") {
+        switchTab("studio");
+        switchSubTab("mixer");
     }
 });
 

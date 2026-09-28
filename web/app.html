@@ -64,19 +64,23 @@
                 </button>
             </div>
 
-            <!-- Sub-Tabs Generator Nav (Video, Image, Prompt Gen) -->
-            <div class="sub-tabs-bar">
+            <!-- Sub-Tabs Generator Nav (Video, Image, Prompt Gen, Video Mixer) -->
+            <div class="sub-tabs-bar" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;">
                 <button type="button" class="sub-tab-btn active" data-sub="video">
-                    <i data-lucide="video" style="width: 16px; height: 16px;"></i>
-                    <span>Video Generator</span>
+                    <i data-lucide="video" style="width: 15px; height: 15px;"></i>
+                    <span>Video</span>
                 </button>
                 <button type="button" class="sub-tab-btn" data-sub="image">
-                    <i data-lucide="image" style="width: 16px; height: 16px;"></i>
-                    <span>Image Generator</span>
+                    <i data-lucide="image" style="width: 15px; height: 15px;"></i>
+                    <span>Gambar</span>
                 </button>
                 <button type="button" class="sub-tab-btn" data-sub="promptgen">
-                    <i data-lucide="lightbulb" style="width: 16px; height: 16px;"></i>
-                    <span>Prompt Generator</span>
+                    <i data-lucide="lightbulb" style="width: 15px; height: 15px;"></i>
+                    <span>Prompt</span>
+                </button>
+                <button type="button" class="sub-tab-btn" data-sub="mixer">
+                    <i data-lucide="film" style="width: 15px; height: 15px;"></i>
+                    <span>Mixer</span>
                 </button>
             </div>
 
@@ -121,33 +125,66 @@
                         </select>
                     </div>
 
-                    <!-- Gaya Video / Mood Preset (GAMA Style) -->
+                    <!-- Gaya Auto Prompt (17 Gaya Lengkap GAMA PRO) -->
                     <div class="form-group">
-                        <label class="form-label">Gaya Konten:</label>
-                        <div class="style-chips" id="videoStyleChips">
-                            <div class="style-chip active" data-style="cinematic">🎬 Cinematic</div>
-                            <div class="style-chip" data-style="hardselling">🔥 Hard Selling</div>
-                            <div class="style-chip" data-style="softselling">💝 Soft Selling</div>
-                            <div class="style-chip" data-style="storytelling">📖 Storytelling</div>
-                            <div class="style-chip" data-style="ugc">📱 UGC Viral</div>
-                            <div class="style-chip" data-style="asmr">🎧 ASMR</div>
-                            <div class="style-chip" data-style="tutorial">🎓 Tutorial</div>
-                            <div class="style-chip" data-style="kuliner">🍽️ Kuliner</div>
-                            <div class="style-chip" data-style="beauty">💄 Beauty</div>
-                            <div class="style-chip" data-style="minimalist">✨ Minimalist</div>
+                        <label class="form-label" for="videoApStyleSelect">Gaya Auto Prompt (17 Pilihan GAMA PRO):</label>
+                        <select class="form-select" id="videoApStyleSelect">
+                            <option value="hard_selling">Hard Selling (Iklan TV)</option>
+                            <option value="soft_selling">Soft Selling / Storytelling</option>
+                            <option value="storyboard">Storyboard (Multi-Adegan)</option>
+                            <option value="unboxing">Unboxing / Haul</option>
+                            <option value="before_after">Before-After / Transformasi</option>
+                            <option value="comparison_vs">Perbandingan / VS</option>
+                            <option value="trend_challenge">Trend / Challenge Viral</option>
+                            <option value="vlog_bts">Vlog Harian / Behind The Scenes</option>
+                            <option value="musik_playlist">Musik Playlist / Penyanyi (Kamera Statis, Gerakan Halus)</option>
+                            <option value="vlog_alam">Vlog Alam &amp; Lanskap (Gunung, Laut, Lembah - Drone Sinematik)</option>
+                            <option value="aesthetic" selected>Aesthetic / Cinematic (Non-Jualan)</option>
+                            <option value="edukasi">Edukasi / Tips (Non-Jualan)</option>
+                            <option value="pov">POV / Relatable (Non-Jualan)</option>
+                            <option value="asmr">ASMR / Satisfying (Non-Jualan)</option>
+                            <option value="tiktok_go_wisata">TikTok Go - Tempat Wisata</option>
+                            <option value="tiktok_go_kuliner">TikTok Go - Kuliner</option>
+                            <option value="tiktok_go_hotel">TikTok Go - Hotel / Penginapan</option>
+                        </select>
+                    </div>
+
+                    <!-- Platform & Jenis CTA (GAMA PRO Style) -->
+                    <div class="form-group">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div>
+                                <label class="form-label" for="videoPlatformSelect">Platform Target:</label>
+                                <select class="form-select" id="videoPlatformSelect">
+                                    <option value="tiktok" selected>TikTok</option>
+                                    <option value="tiktok_aff">TikTok Affiliate</option>
+                                    <option value="tiktok_go_hotel">TikTok Go - Hotel</option>
+                                    <option value="tiktok_go_wisata">TikTok Go - Wisata</option>
+                                    <option value="tiktok_go_kuliner">TikTok Go - Kuliner</option>
+                                    <option value="shopee">Shopee Video</option>
+                                    <option value="instagram">Instagram Reels</option>
+                                    <option value="youtube">YouTube Shorts</option>
+                                    <option value="youtube_long">YouTube (16:9 Panjang)</option>
+                                    <option value="umum">Umum</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="form-label" for="videoCtaSelect">Jenis CTA Akhir:</label>
+                                <select class="form-select" id="videoCtaSelect">
+                                    <option value="auto" selected>Auto sesuai konten</option>
+                                    <option value="tiktok_go">TikTok Go / tag lokasi</option>
+                                    <option value="shopee_aff">Affiliate Shopee</option>
+                                    <option value="tiktok_aff">Affiliate TikTok</option>
+                                    <option value="tiktok">TikTok engagement</option>
+                                    <option value="sosmed">Like / simpan / share</option>
+                                    <option value="custom">Custom teks</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Platform Target Video -->
-                    <div class="form-group">
-                        <label class="form-label" for="videoPlatformSelect">Platform Target:</label>
-                        <select class="form-select" id="videoPlatformSelect">
-                            <option value="tiktok" selected>TikTok (Keranjang Kuning)</option>
-                            <option value="shopee">Shopee Video (Keranjang Oranye)</option>
-                            <option value="instagram">Instagram Reels</option>
-                            <option value="youtube">YouTube Shorts</option>
-                            <option value="ads">Iklan Berbayar (Meta/TikTok Ads)</option>
-                        </select>
+                    <div class="form-group" id="videoCustomCtaWrap" style="display: none;">
+                        <label class="form-label" for="videoCustomCta">Teks CTA Custom:</label>
+                        <input type="text" class="form-input" id="videoCustomCta" placeholder="Contoh: Klik keranjang kuning di bawah untuk promo hari ini!">
                     </div>
 
                     <!-- Prompt Video -->
@@ -373,85 +410,133 @@
                         <input type="hidden" id="pgModeSelect" value="video">
                     </div>
 
-                    <!-- Gaya Konten — GAMA Style Full Grid -->
+                    <!-- Gaya Konten — GAMA Style 17 Pilihan -->
                     <div class="form-group">
-                        <label class="form-label">Gaya Konten / Mood:</label>
+                        <label class="form-label">Gaya Konten (17 Gaya GAMA PRO Engine):</label>
                         <div class="style-grid" id="pgStyleGrid">
-                            <div class="style-card active" data-pgstyle="cinematic">
-                                <div class="style-card-icon">&#x1F3AC;</div>
-                                <div class="style-card-name">Cinematic</div>
-                                <div class="style-card-desc">Megah &amp; eksklusif</div>
-                            </div>
-                            <div class="style-card" data-pgstyle="hardselling">
+                            <div class="style-card active" data-pgstyle="hard_selling">
                                 <div class="style-card-icon">&#x1F525;</div>
                                 <div class="style-card-name">Hard Selling</div>
-                                <div class="style-card-desc">CTA agresif, keranjang</div>
+                                <div class="style-card-desc">Iklan TV agresif</div>
                             </div>
-                            <div class="style-card" data-pgstyle="softselling">
+                            <div class="style-card" data-pgstyle="soft_selling">
                                 <div class="style-card-icon">&#x1F49D;</div>
                                 <div class="style-card-name">Soft Selling</div>
-                                <div class="style-card-desc">Emosi &amp; kebutuhan</div>
+                                <div class="style-card-desc">Storytelling emosional</div>
                             </div>
-                            <div class="style-card" data-pgstyle="storytelling">
-                                <div class="style-card-icon">&#x1F4D6;</div>
-                                <div class="style-card-name">Storytelling</div>
-                                <div class="style-card-desc">Narasi emosional</div>
+                            <div class="style-card" data-pgstyle="storyboard">
+                                <div class="style-card-icon">&#x1F3AC;</div>
+                                <div class="style-card-name">Storyboard</div>
+                                <div class="style-card-desc">Multi-adegan runtut</div>
                             </div>
-                            <div class="style-card" data-pgstyle="ugc">
-                                <div class="style-card-icon">&#x1F4F1;</div>
-                                <div class="style-card-name">UGC Viral</div>
-                                <div class="style-card-desc">Kamera HP realistis</div>
+                            <div class="style-card" data-pgstyle="unboxing">
+                                <div class="style-card-icon">&#x1F4E6;</div>
+                                <div class="style-card-name">Unboxing / Haul</div>
+                                <div class="style-card-desc">Buka paket realistis</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="before_after">
+                                <div class="style-card-icon">&#x26A1;</div>
+                                <div class="style-card-name">Before-After</div>
+                                <div class="style-card-desc">Transformasi produk</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="comparison_vs">
+                                <div class="style-card-icon">&#x2694;&#xFE0F;</div>
+                                <div class="style-card-name">Perbandingan / VS</div>
+                                <div class="style-card-desc">Komparasi keunggulan</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="trend_challenge">
+                                <div class="style-card-icon">&#x1F3AF;</div>
+                                <div class="style-card-name">Trend / Challenge</div>
+                                <div class="style-card-desc">Konsep viral medsos</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="vlog_bts">
+                                <div class="style-card-icon">&#x1F373;</div>
+                                <div class="style-card-name">Vlog BTS</div>
+                                <div class="style-card-desc">Behind the scenes</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="musik_playlist">
+                                <div class="style-card-icon">&#x1F3A7;</div>
+                                <div class="style-card-name">Musik Playlist</div>
+                                <div class="style-card-desc">Kamera statis halus</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="vlog_alam">
+                                <div class="style-card-icon">&#x1F3D4;&#xFE0F;</div>
+                                <div class="style-card-name">Vlog Alam &amp; Lanskap</div>
+                                <div class="style-card-desc">Drone sinematik 4K</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="aesthetic">
+                                <div class="style-card-icon">&#x2728;</div>
+                                <div class="style-card-name">Aesthetic Cinematic</div>
+                                <div class="style-card-desc">Non-jualan estetik</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="edukasi">
+                                <div class="style-card-icon">&#x1F4DA;</div>
+                                <div class="style-card-name">Edukasi / Tips</div>
+                                <div class="style-card-desc">Wawasan &amp; trik cepat</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="pov">
+                                <div class="style-card-icon">&#x1F440;</div>
+                                <div class="style-card-name">POV / Relatable</div>
+                                <div class="style-card-desc">Kacamata orang pertama</div>
                             </div>
                             <div class="style-card" data-pgstyle="asmr">
-                                <div class="style-card-icon">&#x1F3A7;</div>
-                                <div class="style-card-name">ASMR</div>
-                                <div class="style-card-desc">Tekstur &amp; detail</div>
-                            </div>
-                            <div class="style-card" data-pgstyle="tutorial">
-                                <div class="style-card-icon">&#x1F393;</div>
-                                <div class="style-card-name">Tutorial</div>
-                                <div class="style-card-desc">How-to &amp; edukasi</div>
-                            </div>
-                            <div class="style-card" data-pgstyle="kuliner">
-                                <div class="style-card-icon">&#x1F37D;</div>
-                                <div class="style-card-name">Kuliner</div>
-                                <div class="style-card-desc">Food &amp; tekstur lezat</div>
-                            </div>
-                            <div class="style-card" data-pgstyle="beauty">
-                                <div class="style-card-icon">&#x1F484;</div>
-                                <div class="style-card-name">Beauty</div>
-                                <div class="style-card-desc">Kecantikan &amp; skincare</div>
-                            </div>
-                            <div class="style-card" data-pgstyle="minimalist">
                                 <div class="style-card-icon">&#x2728;</div>
-                                <div class="style-card-name">Minimalist</div>
-                                <div class="style-card-desc">Clean &amp; modern</div>
+                                <div class="style-card-name">ASMR / Satisfying</div>
+                                <div class="style-card-desc">Detail suara &amp; tekstur</div>
                             </div>
-                            <div class="style-card" data-pgstyle="luxury">
-                                <div class="style-card-icon">&#x1F451;</div>
-                                <div class="style-card-name">Luxury</div>
-                                <div class="style-card-desc">Premium &amp; prestige</div>
+                            <div class="style-card" data-pgstyle="tiktok_go_wisata">
+                                <div class="style-card-icon">&#x1F5FA;&#xFE0F;</div>
+                                <div class="style-card-name">TikTok Go Wisata</div>
+                                <div class="style-card-desc">Spot liburan menarik</div>
                             </div>
-                            <div class="style-card" data-pgstyle="lifestyle">
-                                <div class="style-card-icon">&#x1F33F;</div>
-                                <div class="style-card-name">Lifestyle</div>
-                                <div class="style-card-desc">Aktivitas &amp; gaya hidup</div>
+                            <div class="style-card" data-pgstyle="tiktok_go_kuliner">
+                                <div class="style-card-icon">&#x1F37D;&#xFE0F;</div>
+                                <div class="style-card-name">TikTok Go Kuliner</div>
+                                <div class="style-card-desc">Review makanan sedap</div>
+                            </div>
+                            <div class="style-card" data-pgstyle="tiktok_go_hotel">
+                                <div class="style-card-icon">&#x1F3E8;</div>
+                                <div class="style-card-name">TikTok Go Hotel</div>
+                                <div class="style-card-desc">Room tour &amp; fasilitas</div>
                             </div>
                         </div>
-                        <input type="hidden" id="pgStyleSelect" value="cinematic">
+                        <input type="hidden" id="pgStyleSelect" value="hard_selling">
                     </div>
 
-                    <!-- Platform Target -->
-                    <div class="form-group">
-                        <label class="form-label" for="pgPlatformSelect">Platform Target:</label>
-                        <select class="form-select" id="pgPlatformSelect">
-                            <option value="tiktok" selected>TikTok (Keranjang Kuning)</option>
-                            <option value="shopee">Shopee Video (Keranjang Oranye)</option>
-                            <option value="instagram">Instagram Reels / Feed</option>
-                            <option value="youtube">YouTube Shorts</option>
-                            <option value="ads">Iklan Berbayar (Meta/TikTok Ads)</option>
-                            <option value="general">Konten Umum (Multi-Platform)</option>
-                        </select>
+                    <!-- Platform Target (10 Platform GAMA PRO) -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label class="form-label" for="pgPlatformSelect">Platform Target:</label>
+                            <select class="form-select" id="pgPlatformSelect">
+                                <option value="tiktok">TikTok (Video Pendek)</option>
+                                <option value="tiktok_aff">TikTok Affiliate (Keranjang Kuning)</option>
+                                <option value="tiktok_go_hotel">TikTok Go Hotel</option>
+                                <option value="tiktok_go_wisata">TikTok Go Tempat Wisata</option>
+                                <option value="tiktok_go_kuliner">TikTok Go Kuliner</option>
+                                <option value="shopee">Shopee Video (Keranjang Oranye)</option>
+                                <option value="instagram">Instagram Reels</option>
+                                <option value="youtube">YouTube Shorts</option>
+                                <option value="youtube_long" selected>YouTube (Video Panjang)</option>
+                                <option value="umum">Multi-Platform (Umum)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="pgCtaSelect">Jenis CTA (Scene Terakhir):</label>
+                            <select class="form-select" id="pgCtaSelect">
+                                <option value="auto" selected>Auto sesuai konten</option>
+                                <option value="tiktok_go">TikTok Go (Klaim promo)</option>
+                                <option value="shopee_aff">Affiliate Shopee</option>
+                                <option value="tiktok_aff">Affiliate TikTok</option>
+                                <option value="tiktok">TikTok engagement</option>
+                                <option value="sosmed">Like / simpan / share</option>
+                                <option value="custom">Custom teks</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="pgCustomCtaWrap" style="display: none;">
+                        <label class="form-label" for="pgCustomCta">Teks CTA Custom:</label>
+                        <input type="text" class="form-input" id="pgCustomCta" placeholder="Tulis instruksi penutup...">
                     </div>
 
                     <!-- Catatan Tambahan -->
@@ -463,7 +548,7 @@
                     <!-- Generate Prompt Button -->
                     <button class="btn-generate" id="btnRunPromptGen" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                         <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
-                        <span>GENERATE SMART PROMPT</span>
+                        <span>GENERATE SMART PROMPT (GAMA PRO ENGINE)</span>
                     </button>
 
                     <!-- Kotak Hasil Prompt -->
@@ -489,6 +574,119 @@
                 </div>
             </div>
 
+            <!-- ==========================================
+                 SUB-VIEW 4: VIDEO MIXER (GABUNG BANYAK VIDEO)
+                 ========================================== -->
+            <div id="subview-mixer" class="subview-content" style="display: none;">
+                <div class="card">
+                    <div class="card-title-row">
+                        <div>
+                            <h2 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="film" style="color: #ec4899; width: 20px; height: 20px;"></i>
+                                <span>Video Mixer — Gabung Klip Jadi Satu</span>
+                            </h2>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                                Rangkai beberapa klip video (hasil generate AI atau file Anda) menjadi 1 video utuh tanpa batasan.
+                            </p>
+                        </div>
+                        <span style="font-size: 11px; background: rgba(236,72,153,0.15); color: #f472b6; padding: 4px 10px; border-radius: 999px; font-weight: 700;">Mixer Engine</span>
+                    </div>
+
+                    <!-- Upload / Add Clips Area -->
+                    <div class="form-group">
+                        <label class="form-label">Tambahkan Klip Video:</label>
+                        <div class="dropzone" id="mixerDropzone" style="min-height: 110px; border: 2px dashed rgba(236,72,153,0.35);">
+                            <i data-lucide="folder-plus" style="width: 32px; height: 32px; color: #f472b6; margin-bottom: 8px;"></i>
+                            <div style="font-size: 13px; font-weight: 600; color: white;">Ketuk untuk Tambah Video (Bisa Pilih Banyak)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Mendukung format MP4, WebM (dari Galeri atau File Lokal)</div>
+                            <input type="file" id="mixerFileInput" accept="video/mp4,video/webm" multiple style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Clips Queue List -->
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label class="form-label" style="margin-bottom: 0;">Urutan Klip Video (<span id="mixerClipCount">0</span> klip):</label>
+                            <button type="button" class="btn-secondary" id="btnClearMixerClips" style="padding: 4px 8px; font-size: 11px; color: #f87171; border-color: rgba(248,113,113,0.3);">
+                                <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i> Kosongkan
+                            </button>
+                        </div>
+                        
+                        <div id="mixerClipsList" style="display: flex; flex-direction: column; gap: 8px; min-height: 50px;">
+                            <div id="mixerEmptyHint" style="text-align: center; padding: 24px; border: 1px dashed rgba(255,255,255,0.08); border-radius: 12px; color: var(--text-tertiary); font-size: 12px;">
+                                Belum ada video yang dimasukkan. Tambahkan file di atas atau klik tombol <strong>"Kirim ke Mixer"</strong> pada galeri video.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Output Settings Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Aspek Rasio Output:</label>
+                            <select class="form-select" id="mixerRatioSelect">
+                                <option value="9:16" selected>9:16 (Vertikal Siap FYP)</option>
+                                <option value="16:9">16:9 (Landscape YouTube)</option>
+                                <option value="1:1">1:1 (Square Feed)</option>
+                                <option value="auto">Sesuai Klip Pertama</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Efek Transisi:</label>
+                            <select class="form-select" id="mixerTransitionSelect">
+                                <option value="cut" selected>Cut Langsung (Cepat)</option>
+                                <option value="fade">Fade Hitam Halus</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Optional Background Audio -->
+                    <div class="form-group">
+                        <label class="form-label">Musik Latar / Backsound (Opsional):</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="file" id="mixerAudioInput" accept="audio/*" class="form-input" style="padding: 6px 10px; font-size: 11px;">
+                            <button type="button" class="btn-secondary" id="btnRemoveMixerAudio" style="padding: 8px 10px; font-size: 11px; display: none;">
+                                <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                            </button>
+                        </div>
+                        <div id="mixerAudioName" style="font-size: 11px; color: #38ef7d; margin-top: 4px; display: none;"></div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button class="btn-generate" id="btnRunMixer" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);">
+                        <i data-lucide="film" style="width: 18px; height: 18px;"></i>
+                        <span id="btnRunMixerText">GABUNGKAN SEMUA VIDEO</span>
+                    </button>
+
+                    <!-- Progress Indicator -->
+                    <div id="mixerProgressBox" style="display: none; margin-top: 14px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 6px;">
+                            <span id="mixerStatusText" style="color: #f472b6;">Menyiapkan video...</span>
+                            <span id="mixerProgressPct" style="color: white; font-weight: 700;">0%</span>
+                        </div>
+                        <div class="limit-progress-bar">
+                            <div class="limit-fill" id="mixerProgressFill" style="width: 0%; background: linear-gradient(90deg, #ec4899, #8b5cf6);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Result Box -->
+                    <div id="mixerResultBox" style="display: none; margin-top: 16px; background: rgba(236,72,153,0.05); border: 1px solid rgba(236,72,153,0.25); border-radius: 14px; padding: 14px;">
+                        <div style="font-size: 13px; font-weight: 700; color: #f472b6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+                            <span>Video Gabungan Siap!</span>
+                        </div>
+                        <video id="mixerResultVideo" controls playsinline style="width: 100%; border-radius: 10px; max-height: 380px; background: black; margin-bottom: 10px;"></video>
+                        <div style="display: flex; gap: 8px;">
+                            <a id="btnDownloadMixerResult" href="#" download="vidora-mixed-video.webm" class="btn-generate" style="flex: 2; padding: 11px; font-size: 13px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); text-align: center; text-decoration: none; justify-content: center;">
+                                <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+                                <span>Unduh Video Gabungan</span>
+                            </a>
+                            <button type="button" class="btn-secondary" id="btnResetMixer" style="flex: 1; justify-content: center; font-size: 12px;">
+                                <i data-lucide="rotate-ccw" style="width: 14px; height: 14px;"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- TAB 2: AKUN GOOGLE & API KEY (Setiap User Isi Milik Sendiri) -->
