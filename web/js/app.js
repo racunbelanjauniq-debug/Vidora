@@ -370,10 +370,11 @@ Balas HANYA JSON valid tanpa markdown format berikut:
         const mood = analysis.mood || "elegant and modern";
 
         const platformGuides = {
-            tiktok: "9:16 vertical commercial format for TikTok & Shopee Video, high-converting visual hook, crisp details",
-            instagram: "aesthetic 9:16 format for Instagram Reels, warm golden luxury color grading, clean reflection",
-            youtube: "cinematic YouTube Shorts with shallow depth of field, sharp 4k focus, dramatic studio atmosphere",
-            ads: "high-end commercial advertising visual, ultra-sharp product branding, professional lighting"
+            tiktok: "format vertikal 9:16 untuk TikTok Affiliate, hook visual memikat dalam 2 detik pertama, diakhiri ajakan membeli dengan mengarahkan ke keranjang kuning (yellow basket) di pojok kiri bawah",
+            shopee: "format vertikal 9:16 untuk Shopee Video Affiliate, penonjolan detail keunggulan produk secara atraktif, diakhiri ajakan membeli dengan mengarahkan ke keranjang oranye (orange basket) Shopee",
+            instagram: "format estetis 9:16 untuk Instagram Reels, color grading hangat dan mewah, diakhiri ajakan cek link di bio",
+            youtube: "format sinematik 9:16 untuk YouTube Shorts, ketajaman depth of field 4k, diakhiri ajakan cek link di deskripsi",
+            ads: "format iklan berbayar (Meta/TikTok Ads), pencahayaan studio tingkat tinggi, direct response call to action"
         };
 
         const platNote = platformGuides[platform] || platformGuides.tiktok;
