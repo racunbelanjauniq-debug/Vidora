@@ -1,0 +1,8 @@
+{
+  "outputDirectory": "web",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/studio", "destination": "/app.html" }
+  ]
+}
