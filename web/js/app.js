@@ -104,9 +104,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentUser = session?.user || null;
         activeProfile = session?.profile || { role: "user", max_google_accounts: 5 };
 
+        const btnCloseAuth = document.getElementById("btnCloseAuth");
+
+        if (!currentUser) {
+            // Tampilkan form autentikasi (Masuk / Daftar) secara wajib
+            modalAuth.classList.add("open");
+            if (btnCloseAuth) btnCloseAuth.style.display = "none";
+        } else {
+            modalAuth.classList.remove("open");
+            if (btnCloseAuth) btnCloseAuth.style.display = "flex";
+        }
+
         updateHeaderUI();
-        await refreshAccounts();
-        await refreshJobs();
+        if (currentUser) {
+            await refreshAccounts();
+            await refreshJobs();
+        }
 
         // Check connection pill in admin tab
         updateConnectionStatusPill();

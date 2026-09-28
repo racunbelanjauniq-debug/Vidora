@@ -43,10 +43,12 @@ class VidoraDataBridge {
                 this.currentUser = parsed.user;
                 this.currentProfile = parsed.profile;
             } catch (e) {
-                this.resetDemoUser();
+                this.currentUser = null;
+                this.currentProfile = null;
             }
         } else {
-            this.resetDemoUser();
+            this.currentUser = null;
+            this.currentProfile = null;
         }
 
         if (!localStorage.getItem("vidora_demo_accounts")) {
@@ -166,11 +168,16 @@ class VidoraDataBridge {
     // Authentication Methods
     async getSession() {
         if (!this.isLive) {
+            if (!this.currentUser) return null;
             return { user: this.currentUser, profile: this.currentProfile };
         }
         try {
             const { data: { session }, error } = await this.client.auth.getSession();
-            if (error || !session) return null;
+            if (error || !session) {
+                this.currentUser = null;
+                this.currentProfile = null;
+                return null;
+            }
             this.currentUser = session.user;
             
             // Fetch Profile
