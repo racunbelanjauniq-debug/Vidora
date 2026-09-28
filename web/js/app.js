@@ -355,9 +355,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     // 4. Form Checkout (CO) & Upgrade Subscription Modal
     // =========================================================================
-    function openCheckoutModal(defaultPlan = "pro") {
-        selectedPlan = defaultPlan;
-        updatePlanCards();
+    function openCheckoutModal() {
+        selectedPlan = "creator";
+        selectedPlanPrice = 75000;
+        
+        const qrisAmountText = document.getElementById("qrisAmountText");
+        const submitBtnText = document.getElementById("btnSubmitCheckoutText");
+        if (qrisAmountText) qrisAmountText.textContent = "Total: Rp 75.000";
+        if (submitBtnText) submitBtnText.textContent = "Bayar Sekarang (Rp 75.000)";
+
         modalUserProfile.classList.remove("open");
         modalCheckout.classList.add("open");
 
@@ -368,46 +374,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    btnHeaderUpgrade.addEventListener("click", () => openCheckoutModal("pro"));
-    document.getElementById("btnProfileUpgrade").addEventListener("click", () => openCheckoutModal("pro"));
+    btnHeaderUpgrade.addEventListener("click", () => openCheckoutModal());
+    document.getElementById("btnProfileUpgrade").addEventListener("click", () => openCheckoutModal());
     document.getElementById("btnCloseCheckout").addEventListener("click", () => modalCheckout.classList.remove("open"));
-
-    // Plan selection cards
-    const planCards = document.querySelectorAll(".co-plan-card");
-    planCards.forEach(card => {
-        card.addEventListener("click", () => {
-            selectedPlan = card.getAttribute("data-plan");
-            selectedPlanPrice = parseInt(card.getAttribute("data-price") || 0);
-            updatePlanCards();
-        });
-    });
-
-    function updatePlanCards() {
-        planCards.forEach(card => {
-            if (card.getAttribute("data-plan") === selectedPlan) {
-                card.classList.add("active");
-            } else {
-                card.classList.remove("active");
-            }
-        });
-
-        const qrisAmountText = document.getElementById("qrisAmountText");
-        const submitBtnText = document.getElementById("btnSubmitCheckoutText");
-
-        if (selectedPlan === "starter") {
-            selectedPlanPrice = 0;
-            qrisAmountText.textContent = "Total: Rp 0 (Gratis Coba)";
-            submitBtnText.textContent = "Aktifkan Paket Starter (Gratis)";
-        } else if (selectedPlan === "pro") {
-            selectedPlanPrice = 99000;
-            qrisAmountText.textContent = "Total: Rp 99.000";
-            submitBtnText.textContent = "Bayar Sekarang (Rp 99.000)";
-        } else if (selectedPlan === "agency") {
-            selectedPlanPrice = 249000;
-            qrisAmountText.textContent = "Total: Rp 249.000";
-            submitBtnText.textContent = "Bayar Sekarang (Rp 249.000)";
-        }
-    }
 
     // Payment methods toggle
     const payMethodItems = document.querySelectorAll(".payment-method-item");
@@ -434,13 +403,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         const phone = document.getElementById("coCustomerPhone").value.trim();
         const email = document.getElementById("coCustomerEmail").value.trim();
 
-        const planNames = { starter: "Creator Starter", pro: "Pro Studio", agency: "Agency Super Admin" };
-        const planTitle = planNames[selectedPlan] || "Pro Studio";
+        const planTitle = "VIDORA Creator Pass (5 Profil)";
+        const planPrice = 75000;
 
         try {
             const order = await window.vidoraData.createOrder({
                 plan: planTitle,
-                price: selectedPlanPrice,
+                price: planPrice,
                 name,
                 phone,
                 email,
@@ -452,25 +421,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                     `Halo Admin VIDORA, saya ingin konfirmasi pemesanan lisensi:\n\n` +
                     `📋 *No Invoice:* ${order.id}\n` +
                     `📦 *Paket:* ${planTitle}\n` +
-                    `💰 *Total:* Rp ${selectedPlanPrice.toLocaleString("id-ID")}\n` +
+                    `💰 *Total:* Rp ${planPrice.toLocaleString("id-ID")}\n` +
                     `👤 *Nama:* ${name}\n` +
                     `📱 *WhatsApp:* ${phone}\n` +
                     `✉️ *Email:* ${email}\n\n` +
-                    `Mohon dibantu aktivasi akunnya ya min. Terima kasih!`
+                    `Mohon dibantu aktivasi akun 5 Profil Google saya. Terima kasih!`
                 );
                 window.open(`https://wa.me/6281234567890?text=${message}`, "_blank");
             }
 
             modalCheckout.classList.remove("open");
-            alert(`Pemesanan Berhasil!\n\nNomor Invoice: ${order.id}\nPaket: ${planTitle}\nTotal: Rp ${selectedPlanPrice.toLocaleString("id-ID")}\n\nStatus: Menunggu Pembayaran/Verifikasi.`);
+            alert(`Pemesanan Berhasil!\n\nNomor Invoice: ${order.id}\nPaket: ${planTitle}\nTotal: Rp ${planPrice.toLocaleString("id-ID")}\n\nStatus: Menunggu Pembayaran/Verifikasi.`);
             
-            // Auto-upgrade for testing ease
+            // Activate Creator Pass with strictly 5 accounts max
             if (activeProfile) {
-                if (selectedPlan === "agency") {
-                    activeProfile.role = "superadmin";
-                    activeProfile.max_google_accounts = 99999;
-                } else if (selectedPlan === "pro") {
-                    activeProfile.max_google_accounts = 15;
+                if (activeProfile.role !== "superadmin") {
+                    activeProfile.role = "user";
+                    activeProfile.max_google_accounts = 5;
                 }
                 updateHeaderUI();
             }

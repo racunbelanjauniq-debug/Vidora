@@ -547,8 +547,8 @@ class VidoraDataBridge {
                 target.status = "paid";
                 localStorage.setItem("vidora_demo_orders", JSON.stringify(orders));
                 if (this.currentProfile) {
-                    this.currentProfile.role = target.plan_name === "Agency" ? "superadmin" : "user";
-                    this.currentProfile.max_google_accounts = target.plan_name === "Agency" ? 99999 : 15;
+                    this.currentProfile.role = this.currentProfile.role === "superadmin" ? "superadmin" : "user";
+                    this.currentProfile.max_google_accounts = this.currentProfile.role === "superadmin" ? 99999 : 5;
                     localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
                 }
             }
