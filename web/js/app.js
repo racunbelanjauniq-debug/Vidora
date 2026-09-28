@@ -259,9 +259,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         modalUserProfile.classList.remove("open");
     });
 
+    if (btnHeaderAuth) {
+        btnHeaderAuth.addEventListener("click", () => {
+            modalAuth.classList.add("open");
+        });
+    }
+
     document.getElementById("btnCloseAuth").addEventListener("click", () => {
         modalAuth.classList.remove("open");
     });
+
 
     // Toggle Role Quick in Demo
     document.getElementById("btnToggleRoleQuick").addEventListener("click", () => {
@@ -433,6 +440,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             modalCheckout.classList.remove("open");
             alert(`Pemesanan Berhasil!\n\nNomor Invoice: ${order.id}\nPaket: ${planTitle}\nTotal: Rp ${planPrice.toLocaleString("id-ID")}\n\nStatus: Menunggu Pembayaran/Verifikasi.`);
             
+            // Trigger automatic WhatsApp notification via xsender.id
+            if (window.xsender) {
+                window.xsender.notifyOrderPlaced(order).catch(err => console.warn("[Xsender] Gagal kirim notif order:", err));
+            }
+
             // Activate Creator Pass with strictly 5 accounts max
             if (activeProfile) {
                 if (activeProfile.role !== "superadmin") {
@@ -454,7 +466,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         connection: document.getElementById("adminsub-connection"),
         users: document.getElementById("adminsub-users"),
         queue: document.getElementById("adminsub-queue"),
-        orders: document.getElementById("adminsub-orders")
+        orders: document.getElementById("adminsub-orders"),
+        whatsapp: document.getElementById("adminsub-whatsapp")
     };
 
     adminSubTabBtns.forEach(btn => {
@@ -465,15 +478,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             Object.keys(adminSubviews).forEach(k => {
                 if (k === sub) {
-                    adminSubviews[k].style.display = "block";
+                    if (adminSubviews[k]) adminSubviews[k].style.display = "block";
                 } else {
-                    adminSubviews[k].style.display = "none";
+                    if (adminSubviews[k]) adminSubviews[k].style.display = "none";
                 }
             });
 
             if (sub === "users") renderAdminUsers();
             if (sub === "queue") renderAdminQueue();
             if (sub === "orders") renderAdminOrders();
+            if (sub === "whatsapp") renderAdminWhatsapp();
         });
     });
 
@@ -691,14 +705,115 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         document.querySelectorAll(".btn-approve-order").forEach(b => {
             b.addEventListener("click", async () => {
-                await window.vidoraData.approveOrder(b.getAttribute("data-oid"));
+                const oid = b.getAttribute("data-oid");
+                const targetOrder = orders.find(o => o.id === oid);
+                await window.vidoraData.approveOrder(oid);
                 renderAdminOrders();
-                alert("Pesanan berhasil disetujui & paket pengguna diaktifkan!");
+
+                // Trigger WhatsApp Notification via xsender.id
+                if (window.xsender && targetOrder) {
+                    window.xsender.notifyOrderApproved(targetOrder).then(res => {
+                        if (res && res.success) {
+                            alert(`Pesanan ${oid} disetujui!\nNotifikasi WhatsApp aktivasi paket telah dikirim ke ${targetOrder.customer_phone || targetOrder.customer_name}.`);
+                        } else {
+                            alert("Pesanan berhasil disetujui & paket 5 profil Google pengguna telah aktif!");
+                        }
+                    }).catch(() => {
+                        alert("Pesanan berhasil disetujui & paket pengguna diaktifkan!");
+                    });
+                } else {
+                    alert("Pesanan berhasil disetujui & paket pengguna diaktifkan!");
+                }
             });
         });
     }
 
     document.getElementById("btnRefreshAdminOrders").addEventListener("click", renderAdminOrders);
+
+    // =========================================================================
+    // 5.1 Super Admin WhatsApp Gateway Controller (xsender.id)
+    // =========================================================================
+    function renderAdminWhatsapp() {
+        if (!window.xsender) return;
+        const cfg = window.xsender.config;
+
+        const urlInput = document.getElementById("xsenderApiUrl");
+        const tokenInput = document.getElementById("xsenderApiToken");
+        const deviceInput = document.getElementById("xsenderDeviceId");
+        const adminPhoneInput = document.getElementById("xsenderAdminPhone");
+        const chkOrder = document.getElementById("checkNotifyOrder");
+        const chkApproval = document.getElementById("checkNotifyApproval");
+        const chkRender = document.getElementById("checkNotifyRender");
+        const tplApproval = document.getElementById("xsenderTemplateApproval");
+
+        if (urlInput) urlInput.value = cfg.apiUrl || "https://api.xsender.id/v1/messages";
+        if (tokenInput) tokenInput.value = cfg.apiToken || "";
+        if (deviceInput) deviceInput.value = cfg.deviceId || "";
+        if (adminPhoneInput) adminPhoneInput.value = cfg.adminPhone || "";
+        if (chkOrder) chkOrder.checked = cfg.notifyOnOrder !== false;
+        if (chkApproval) chkApproval.checked = cfg.notifyOnApproval !== false;
+        if (chkRender) chkRender.checked = cfg.notifyOnRender !== false;
+        if (tplApproval) tplApproval.value = cfg.templateApproval || "";
+    }
+
+    const formAdminXsender = document.getElementById("formAdminXsenderConfig");
+    if (formAdminXsender) {
+        formAdminXsender.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const newCfg = {
+                apiUrl: document.getElementById("xsenderApiUrl").value.trim(),
+                apiToken: document.getElementById("xsenderApiToken").value.trim(),
+                deviceId: document.getElementById("xsenderDeviceId").value.trim(),
+                adminPhone: document.getElementById("xsenderAdminPhone").value.trim(),
+                notifyOnOrder: document.getElementById("checkNotifyOrder").checked,
+                notifyOnApproval: document.getElementById("checkNotifyApproval").checked,
+                notifyOnRender: document.getElementById("checkNotifyRender").checked,
+                templateApproval: document.getElementById("xsenderTemplateApproval").value.trim()
+            };
+            if (window.xsender) {
+                await window.xsender.saveConfig(newCfg);
+            }
+            alert("Pengaturan WhatsApp Gateway (xsender.id) berhasil disimpan!");
+        });
+    }
+
+    const btnSendTestWa = document.getElementById("btnSendTestWa");
+    if (btnSendTestWa) {
+        btnSendTestWa.addEventListener("click", async () => {
+            const phone = document.getElementById("testWaTargetPhone").value.trim();
+            const resElem = document.getElementById("testWaResult");
+            if (!phone) {
+                alert("Harap masukkan nomor WhatsApp tujuan untuk uji coba!");
+                return;
+            }
+
+            btnSendTestWa.disabled = true;
+            btnSendTestWa.innerHTML = `<span>Mengirim...</span>`;
+            resElem.style.display = "block";
+            resElem.style.background = "rgba(99, 102, 241, 0.1)";
+            resElem.style.color = "#a5b4fc";
+            resElem.textContent = "Sedang mengirim pesan tes ke " + phone + "...";
+
+            const result = await window.xsender.sendWhatsApp(
+                phone,
+                "🔔 *Uji Coba Notifikasi VIDORA AI Studio via xsender.id*\n\nSelamat! Koneksi WhatsApp Gateway VIDORA Anda berhasil terhubung dan siap digunakan untuk produksi."
+            );
+
+            btnSendTestWa.disabled = false;
+            btnSendTestWa.innerHTML = `<i data-lucide="send" style="width: 14px; height: 14px;"></i> <span>Kirim Pesan Tes</span>`;
+            lucide.createIcons();
+
+            if (result.success) {
+                resElem.style.background = "rgba(16, 185, 129, 0.15)";
+                resElem.style.color = "#6ee7b7";
+                resElem.innerHTML = `✅ <strong>Berhasil!</strong> ${result.message}`;
+            } else {
+                resElem.style.background = "rgba(244, 63, 94, 0.15)";
+                resElem.style.color = "#fda4af";
+                resElem.innerHTML = `❌ <strong>Gagal:</strong> ${result.message}`;
+            }
+        });
+    }
 
     // =========================================================================
     // 6. File Upload Handlers (Foto Produk)
@@ -1328,6 +1443,16 @@ Requirements for the generated prompt:
     const urlParams = new URLSearchParams(window.location.search);
     const planParam = urlParams.get("plan");
     const tabParam = urlParams.get("tab");
+
+    const authParam = urlParams.get("auth");
+
+    if (authParam === "login" || authParam === "signup") {
+        modalAuth.classList.add("open");
+        if (authParam === "signup") {
+            const btnSignUpTab = document.getElementById("btnTabSignUp");
+            if (btnSignUpTab) btnSignUpTab.click();
+        }
+    }
 
     if (planParam) {
         openCheckoutModal(planParam);

@@ -1,6 +1,6 @@
 -- =========================================================================
--- VIDORA SaaS Database Schema (Supabase PostgreSQL)
--- Multi-Profile Google Flow Video Generator
+-- VIDORA Production Database Schema (Supabase PostgreSQL)
+-- Multi-Profile Google Studio with Admin Dashboard & xsender.id WA
 -- =========================================================================
 
 -- 1. EXTENSIONS
@@ -13,13 +13,27 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     full_name TEXT,
     avatar_url TEXT,
     role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
-    max_google_accounts INT DEFAULT 5, -- 5 akun untuk user biasa, 99999 untuk admin
+    max_google_accounts INT DEFAULT 5, -- Maksimal 5 akun untuk user, 99999 untuk superadmin
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Trigger auto-insert profile saat user baru daftar di Supabase Auth
+-- Helper function to check if current user is admin without recursion
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+DECLARE
+    current_role TEXT;
+BEGIN
+    SELECT role INTO current_role 
+    FROM public.profiles 
+    WHERE id = auth.uid();
+    
+    RETURN current_role IN ('admin', 'superadmin');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Trigger auto-insert profile saat user baru register di Supabase Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -30,17 +44,21 @@ BEGIN
         COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
         'user',
         5
-    );
+    )
+    ON CONFLICT (id) DO UPDATE 
+    SET email = EXCLUDED.email,
+        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name);
+        
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 3. GOOGLE PROFILES TABLE (Multi-Profile Chrome)
+-- 3. GOOGLE PROFILES TABLE (Multi-Profile Vault, Max 5 Akun)
 CREATE TABLE IF NOT EXISTS public.google_accounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -56,7 +74,7 @@ CREATE TABLE IF NOT EXISTS public.google_accounts (
     CONSTRAINT unique_user_google_email UNIQUE(user_id, email)
 );
 
--- Validasi Kuota Maksimal Akun Google per User (Max 5 Akun)
+-- Enforce Strict Limit: Maksimal 5 Profil Akun Google per User (Kecuali Admin)
 CREATE OR REPLACE FUNCTION public.check_max_google_accounts()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -68,7 +86,7 @@ BEGIN
     FROM public.profiles 
     WHERE id = NEW.user_id;
 
-    -- Admin bebas tanpa batas
+    -- Super Admin bebas tanpa batas
     IF user_role IN ('admin', 'superadmin') THEN
         RETURN NEW;
     END IF;
@@ -78,28 +96,66 @@ BEGIN
     WHERE user_id = NEW.user_id;
 
     IF current_count >= COALESCE(max_limit, 5) THEN
-        RAISE EXCEPTION 'Batas kuota akun Google (% akun) sudah tercapai untuk paket Anda.', max_limit;
+        RAISE EXCEPTION 'Batas kuota akun Google (% akun) sudah tercapai untuk paket Creator Anda.', COALESCE(max_limit, 5);
     END IF;
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP TRIGGER IF EXISTS validate_google_accounts_limit ON public.google_accounts;
 CREATE TRIGGER validate_google_accounts_limit
     BEFORE INSERT ON public.google_accounts
     FOR EACH ROW EXECUTE FUNCTION public.check_max_google_accounts();
 
--- 4. GENERATE JOBS TABLE (Task Queue)
+-- 4. ORDERS & SUBSCRIPTIONS (Checkout Rp 75.000 / bln)
+CREATE TABLE IF NOT EXISTS public.orders (
+    id TEXT PRIMARY KEY, -- Format: INV-VID-XXXX
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    customer_name TEXT NOT NULL,
+    customer_phone TEXT NOT NULL,
+    customer_email TEXT,
+    plan_name TEXT DEFAULT 'VIDORA Creator Pass' NOT NULL,
+    price INT DEFAULT 75000 NOT NULL,
+    payment_method TEXT DEFAULT 'QRIS' CHECK (payment_method IN ('QRIS', 'BANK', 'WHATSAPP')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'rejected', 'expired')),
+    payment_proof_url TEXT,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Trigger auto-upgrade profile saat order status diubah jadi 'paid'
+CREATE OR REPLACE FUNCTION public.handle_order_paid()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'paid' AND (OLD.status IS DISTINCT FROM 'paid') THEN
+        IF NEW.user_id IS NOT NULL THEN
+            UPDATE public.profiles
+            SET max_google_accounts = 5,
+                updated_at = now()
+            WHERE id = NEW.user_id;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS on_order_paid_update_profile ON public.orders;
+CREATE TRIGGER on_order_paid_update_profile
+    AFTER UPDATE ON public.orders
+    FOR EACH ROW EXECUTE FUNCTION public.handle_order_paid();
+
+-- 5. GENERATE JOBS TABLE (Task Queue Video & Image)
 CREATE TABLE IF NOT EXISTS public.generate_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     google_account_id UUID REFERENCES public.google_accounts(id) ON DELETE SET NULL,
     prompt TEXT NOT NULL,
-    model TEXT DEFAULT 'Omni Flash' CHECK (model IN ('Omni Flash', 'Veo', 'Nano Banana')),
-    ratio TEXT DEFAULT '9:16' CHECK (ratio IN ('9:16', '16:9', '1:1')),
+    model TEXT DEFAULT 'Omni Flash',
+    ratio TEXT DEFAULT '9:16',
     duration TEXT DEFAULT '8s',
-    count INT DEFAULT 1 CHECK (count >= 1 AND count <= 4),
+    count INT DEFAULT 1,
     hidden_browser BOOLEAN DEFAULT TRUE,
     
     -- Status Eksekusi Job
@@ -107,78 +163,130 @@ CREATE TABLE IF NOT EXISTS public.generate_jobs (
     progress INT DEFAULT 0,
     status_message TEXT DEFAULT 'Menunggu antrian server...',
     
-    -- Hasil Generate & Cloudflare R2
+    -- Hasil Render & Cloudflare R2
     video_url TEXT,
     thumbnail_url TEXT,
     r2_key TEXT,
     error_message TEXT,
     
-    worker_id TEXT, -- ID Worker (Local/VPS/Oracle) yang mengambil job
+    worker_id TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE
 );
 
--- Index performa untuk antrian worker
 CREATE INDEX IF NOT EXISTS idx_generate_jobs_status ON public.generate_jobs(status, created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_generate_jobs_user ON public.generate_jobs(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status, created_at DESC);
 
--- 5. ROW LEVEL SECURITY (RLS)
+-- 6. SYSTEM SETTINGS (Untuk integrasi xsender.id, Cloudflare R2, WhatsApp Templates)
+CREATE TABLE IF NOT EXISTS public.system_settings (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Seed Default Konfigurasi xsender.id WhatsApp Gateway
+INSERT INTO public.system_settings (key, value)
+VALUES (
+    'xsender_config',
+    '{
+        "api_url": "https://api.xsender.id/v1/messages",
+        "api_token": "",
+        "device_id": "",
+        "admin_phone": "081234567890",
+        "notify_on_order": true,
+        "notify_on_approval": true,
+        "notify_on_render": true,
+        "template_order": "Halo {nama}, terima kasih! Pesanan {paket} ({invoice}) sebesar Rp {total} telah kami terima. Silakan selesaikan pembayaran untuk aktivasi akun.",
+        "template_approval": "Selamat {nama}! Pembayaran Anda untuk {paket} ({invoice}) telah disetujui. Akun 5 Profil Google Anda kini telah AKTIF. Silakan buka studio di https://vidora.biz.id/app.html",
+        "template_render": "Halo {nama}, render video AI produk Anda telah SELESAI! Unduh video Anda di galeri: {link_video}"
+    }'::jsonb
+)
+ON CONFLICT (key) DO NOTHING;
+
+-- 7. ROW LEVEL SECURITY (RLS) POLICIES
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.google_accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.generate_jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.system_settings ENABLE ROW LEVEL SECURITY;
 
--- Policy Profiles
-CREATE POLICY "Users can view own profile" 
-    ON public.profiles FOR SELECT 
-    USING (auth.uid() = id);
+-- Profiles Policies
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
+CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile" 
-    ON public.profiles FOR UPDATE 
-    USING (auth.uid() = id);
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Policy Google Accounts
-CREATE POLICY "Users can view own google accounts" 
-    ON public.google_accounts FOR SELECT 
-    USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admin view all profiles" ON public.profiles;
+CREATE POLICY "Admin view all profiles" ON public.profiles FOR ALL USING (public.is_admin());
 
-CREATE POLICY "Users can insert own google accounts" 
-    ON public.google_accounts FOR INSERT 
-    WITH CHECK (auth.uid() = user_id);
+-- Google Accounts Policies
+DROP POLICY IF EXISTS "Users can view own google accounts" ON public.google_accounts;
+CREATE POLICY "Users can view own google accounts" ON public.google_accounts FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own google accounts" 
-    ON public.google_accounts FOR UPDATE 
-    USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can insert own google accounts" ON public.google_accounts;
+CREATE POLICY "Users can insert own google accounts" ON public.google_accounts FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own google accounts" 
-    ON public.google_accounts FOR DELETE 
-    USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can update own google accounts" ON public.google_accounts;
+CREATE POLICY "Users can update own google accounts" ON public.google_accounts FOR UPDATE USING (auth.uid() = user_id);
 
--- Policy Generate Jobs
-CREATE POLICY "Users can view own jobs" 
-    ON public.generate_jobs FOR SELECT 
-    USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Users can delete own google accounts" ON public.google_accounts;
+CREATE POLICY "Users can delete own google accounts" ON public.google_accounts FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own jobs" 
-    ON public.generate_jobs FOR INSERT 
-    WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Admin view all accounts" ON public.google_accounts;
+CREATE POLICY "Admin view all accounts" ON public.google_accounts FOR ALL USING (public.is_admin());
 
-CREATE POLICY "Users can update own jobs" 
-    ON public.generate_jobs FOR UPDATE 
-    USING (auth.uid() = user_id);
+-- Orders Policies
+DROP POLICY IF EXISTS "Users can view own orders" ON public.orders;
+CREATE POLICY "Users can view own orders" ON public.orders FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
 
--- Admin Global Policy (Bisa lihat & atur semua)
-CREATE POLICY "Admin view all profiles" 
-    ON public.profiles FOR ALL 
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
+DROP POLICY IF EXISTS "Anyone can insert orders" ON public.orders;
+CREATE POLICY "Anyone can insert orders" ON public.orders FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Admin view all accounts" 
-    ON public.google_accounts FOR ALL 
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
+DROP POLICY IF EXISTS "Admin manage all orders" ON public.orders;
+CREATE POLICY "Admin manage all orders" ON public.orders FOR ALL USING (public.is_admin());
 
-CREATE POLICY "Admin view all jobs" 
-    ON public.generate_jobs FOR ALL 
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'superadmin')));
+-- Generate Jobs Policies
+DROP POLICY IF EXISTS "Users can view own jobs" ON public.generate_jobs;
+CREATE POLICY "Users can view own jobs" ON public.generate_jobs FOR SELECT USING (auth.uid() = user_id);
 
--- Enable Realtime for generate_jobs
+DROP POLICY IF EXISTS "Users can insert own jobs" ON public.generate_jobs;
+CREATE POLICY "Users can insert own jobs" ON public.generate_jobs FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own jobs" ON public.generate_jobs;
+CREATE POLICY "Users can update own jobs" ON public.generate_jobs FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Admin view all jobs" ON public.generate_jobs;
+CREATE POLICY "Admin view all jobs" ON public.generate_jobs FOR ALL USING (public.is_admin());
+
+-- System Settings Policies
+DROP POLICY IF EXISTS "Admin manage system settings" ON public.system_settings;
+CREATE POLICY "Admin manage system settings" ON public.system_settings FOR ALL USING (public.is_admin());
+
+-- 8. HELPER FUNCTION: PROMOTE USER TO SUPER ADMIN
+-- Owner cukup jalankan: SELECT public.promote_to_admin('email_anda@gmail.com');
+CREATE OR REPLACE FUNCTION public.promote_to_admin(target_email TEXT)
+RETURNS TEXT AS $$
+DECLARE
+    matched_id UUID;
+BEGIN
+    SELECT id INTO matched_id FROM public.profiles WHERE email = target_email;
+    IF matched_id IS NULL THEN
+        RETURN 'User dengan email tersebut belum terdaftar di profiles.';
+    END IF;
+    
+    UPDATE public.profiles
+    SET role = 'superadmin',
+        max_google_accounts = 99999,
+        updated_at = now()
+    WHERE id = matched_id;
+    
+    RETURN 'Sukses! ' || target_email || ' kini adalah SUPER ADMIN dengan akses penuh.';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Enable Supabase Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE public.generate_jobs;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;

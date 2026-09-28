@@ -506,6 +506,10 @@
                         <i data-lucide="credit-card" style="width: 15px; height: 15px;"></i>
                         <span>Pesanan Masuk (CO)</span>
                     </button>
+                    <button type="button" class="admin-sub-tab-btn" data-adminsub="whatsapp">
+                        <i data-lucide="message-square" style="width: 15px; height: 15px;"></i>
+                        <span>WhatsApp (xsender.id)</span>
+                    </button>
                 </div>
 
                 <!-- SUB-PANE 1: KONEKSI SUPABASE & CLOUDFLARE R2 -->
@@ -638,6 +642,116 @@
                                 <!-- Ter-render dinamis -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- SUB-PANE 5: WHATSAPP GATEWAY (xsender.id) -->
+                <div id="adminsub-whatsapp" class="admin-sub-content" style="display: none;">
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 18px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="font-size: 15px; font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="message-circle" style="width: 17px; height: 17px;"></i>
+                                <span>Integrasi WhatsApp Gateway (xsender.id)</span>
+                            </h3>
+                            <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 2px 8px; border-radius: 6px; font-weight: 700;">Otomasi Pesan</span>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">
+                            Kirim notifikasi otomatis langsung ke WhatsApp pelanggan dan admin saat order checkout Rp 75.000 masuk, saat aktivasi 5 profil disetujui, dan ketika video hasil render selesai.
+                        </p>
+
+                        <form id="formAdminXsenderConfig">
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderApiUrl">API Endpoint URL (xsender.id):</label>
+                                <input type="url" class="form-input" id="xsenderApiUrl" placeholder="https://api.xsender.id/v1/messages" required>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Default: <code>https://api.xsender.id/v1/messages</code></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderApiToken">API Token / Secret Key:</label>
+                                <input type="password" class="form-input" id="xsenderApiToken" placeholder="Masukkan token API xsender.id Anda...">
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Dapatkan dari dashboard akun Anda di xsender.id</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderDeviceId">Device ID / Sender ID (Opsional):</label>
+                                <input type="text" class="form-input" id="xsenderDeviceId" placeholder="Contoh: dev_xxxx atau kosongkan jika default">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderAdminPhone">Nomor WhatsApp Admin (Penerima Laporan Order):</label>
+                                <input type="tel" class="form-input" id="xsenderAdminPhone" placeholder="Contoh: 081234567890">
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Nomor WA yang akan menerima notifikasi setiap ada user memesan paket</small>
+                            </div>
+
+                            <div style="height: 1px; background: rgba(255,255,255,0.06); margin: 18px 0;"></div>
+
+                            <h4 style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 12px;">Trigger Notifikasi Otomatis:</h4>
+
+                            <div class="switch-row" style="margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 600;">Notifikasi Order Masuk</div>
+                                    <div style="font-size: 11px; color: var(--text-tertiary);">Kirim invoice ke pelanggan & kirim alert ke admin</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="checkNotifyOrder" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-row" style="margin-bottom: 10px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 600;">Notifikasi Aktivasi Akun (5 Profil Aktif)</div>
+                                    <div style="font-size: 11px; color: var(--text-tertiary);">Kirim pesan selamat saat admin klik Setujui Pembayaran</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="checkNotifyApproval" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="switch-row" style="margin-bottom: 16px;">
+                                <div>
+                                    <div style="font-size: 12.5px; font-weight: 600;">Notifikasi Video Selesai Render</div>
+                                    <div style="font-size: 11px; color: var(--text-tertiary);">Kirim link video ke WhatsApp user saat generate selesai</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="checkNotifyRender" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Template Editor -->
+                            <div class="form-group">
+                                <label class="form-label" for="xsenderTemplateApproval">Template Pesan Aktivasi Akun Sukses:</label>
+                                <textarea class="form-textarea" id="xsenderTemplateApproval" rows="3" style="font-size: 12px;"></textarea>
+                                <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Variabel: <code>{nama}</code>, <code>{paket}</code>, <code>{invoice}</code>, <code>{total}</code></small>
+                            </div>
+
+                            <button type="submit" class="btn-generate" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); width: 100%; margin-top: 10px;">
+                                <i data-lucide="save" style="width: 17px; height: 17px;"></i>
+                                <span>Simpan Pengaturan WhatsApp</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Uji Coba Kirim Pesan WhatsApp -->
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--card-border); border-radius: var(--radius-md); padding: 18px;">
+                        <h4 style="font-size: 13.5px; font-weight: 700; color: #fbbf24; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="send" style="width: 15px; height: 15px;"></i>
+                            <span>Uji Coba Kirim Pesan WhatsApp (Test Ping)</span>
+                        </h4>
+                        <p style="font-size: 11.5px; color: var(--text-secondary); margin-bottom: 14px;">
+                            Kirim pesan uji coba ke nomor WhatsApp Anda untuk memastikan token API dan endpoint xsender.id sudah terhubung.
+                        </p>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="tel" class="form-input" id="testWaTargetPhone" placeholder="Nomor WhatsApp (misal: 081234567890)" style="flex: 2; min-width: 180px;">
+                            <button type="button" class="btn-apple-primary" id="btnSendTestWa" style="flex: 1; min-width: 140px; justify-content: center; font-size: 13px;">
+                                <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+                                <span>Kirim Pesan Tes</span>
+                            </button>
+                        </div>
+                        <div id="testWaResult" style="margin-top: 10px; font-size: 12px; display: none; padding: 10px; border-radius: var(--radius-sm);"></div>
                     </div>
                 </div>
 
@@ -943,6 +1057,7 @@
     <!-- Scripts -->
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
+    <script src="js/xsender-service.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
