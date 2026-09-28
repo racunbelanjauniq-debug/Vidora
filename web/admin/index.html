@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard — VIDORA Studio</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-base: #07090e;
+            --bg-card: #0d1017;
+            --bg-card-hover: #121622;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-border-gold: rgba(251, 191, 36, 0.35);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+            --accent-cyan: #00f2fe;
+            --accent-gold: #fbbf24;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --sidebar-width: 260px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            background: #090c13;
+            border-right: 1px solid var(--card-border);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .brand-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+        }
+
+        .brand-title {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: white;
+        }
+
+        .brand-subtitle {
+            font-size: 10px;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar-item.active {
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .sidebar-footer {
+            padding: 16px 14px;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-sidebar-studio {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 9px;
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            color: var(--accent-cyan);
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-sidebar-studio:hover {
+            background: rgba(0, 242, 254, 0.18);
+        }
+
+        .btn-sidebar-logout {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 9px;
+            border-radius: 9px;
+            background: rgba(244, 63, 94, 0.08);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            color: #fda4af;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-sidebar-logout:hover {
+            background: rgba(244, 63, 94, 0.18);
+        }
+
+        /* Main Content */
+        .admin-main {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 24px 32px 60px;
+            max-width: 1400px;
+        }
+
+        /* Topbar */
+        .admin-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .topbar-title h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-title p {
+            font-size: 12.5px;
+            color: var(--text-tertiary);
+            margin-top: 3px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-user-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            border-radius: 30px;
+            color: #fef08a;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* Metrics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 26px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            transform: translateY(-2px);
+        }
+
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-accent, #6366f1);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: white;
+            margin: 10px 0 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        /* Panes */
+        .content-pane {
+            display: none;
+            animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .content-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Panels / Cards */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-desc {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 3px;
+        }
+
+        /* Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        table.admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        table.admin-table th {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-tertiary);
+            padding: 13px 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        table.admin-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            vertical-align: middle;
+        }
+
+        table.admin-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Buttons & Badges */
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-action-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-color: #10b981;
+            color: white;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-action-primary:hover {
+            filter: brightness(1.1);
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-status.paid {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-status.pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fde68a;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-status.admin {
+            background: rgba(251, 191, 36, 0.18);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+
+        /* Filter bar */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 2;
+            min-width: 220px;
+            padding: 9px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 9px;
+            color: white;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .filter-select {
+            padding: 9px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 9px;
+            color: white;
+            font-size: 12.5px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        /* Modals */
+        .admin-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .admin-modal {
+            background: #0d1017;
+            border: 1px solid var(--card-border-gold);
+            border-radius: 18px;
+            width: 100%;
+            max-width: 460px;
+            padding: 24px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.95);
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 9px;
+            color: white;
+            font-size: 13.5px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        @media (max-width: 900px) {
+            .admin-sidebar {
+                width: 70px;
+            }
+            .sidebar-brand .brand-title,
+            .sidebar-brand .brand-subtitle,
+            .sidebar-item span,
+            .btn-sidebar-studio span,
+            .btn-sidebar-logout span {
+                display: none;
+            }
+            .admin-main {
+                margin-left: 70px;
+                padding: 16px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-badge">V</div>
+            <div>
+                <div class="brand-title">VIDORA</div>
+                <div class="brand-subtitle">Super Admin</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-item active" data-pane="omset">
+                <i data-lucide="bar-chart-3" style="width: 18px; height: 18px;"></i>
+                <span>Laporan Omset</span>
+            </div>
+            <div class="sidebar-item" data-pane="orders">
+                <i data-lucide="credit-card" style="width: 18px; height: 18px;"></i>
+                <span>Pesanan &amp; Payment</span>
+            </div>
+            <div class="sidebar-item" data-pane="users">
+                <i data-lucide="users" style="width: 18px; height: 18px;"></i>
+                <span>Kelola User &amp; Lisensi</span>
+            </div>
+            <div class="sidebar-item" data-pane="whatsapp">
+                <i data-lucide="message-square" style="width: 18px; height: 18px;"></i>
+                <span>Notifikasi WhatsApp</span>
+            </div>
+            <div class="sidebar-item" data-pane="settings">
+                <i data-lucide="database" style="width: 18px; height: 18px;"></i>
+                <span>Koneksi &amp; Cloud</span>
+            </div>
+            <div class="sidebar-item" data-pane="queue">
+                <i data-lucide="activity" style="width: 18px; height: 18px;"></i>
+                <span>Antrian Global</span>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/app.html" class="btn-sidebar-studio" target="_blank">
+                <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+                <span>Buka Studio AI &rarr;</span>
+            </a>
+            <button type="button" class="btn-sidebar-logout" id="btnAdminLogout">
+                <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+                <span>Keluar Admin</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+        <!-- Topbar -->
+        <header class="admin-topbar">
+            <div class="topbar-title">
+                <h1 id="pageTitleHeading">
+                    <i data-lucide="shield-check" style="width: 22px; height: 22px; color: #fbbf24;"></i>
+                    <span>Pusat Kontrol Super Admin</span>
+                </h1>
+                <p>Kelola omset lisensi, pembayaran masuk, pengguna aktif, dan integrasi WhatsApp sistem VIDORA.</p>
+            </div>
+            <div class="topbar-right">
+                <div class="admin-user-pill">
+                    <i data-lucide="crown" style="width: 14px; height: 14px; color: #fbbf24;"></i>
+                    <span id="adminEmailDisplay">winalislam@gmail.com</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Metrics Row -->
+        <section class="stats-grid">
+            <div class="stat-card" style="--card-accent: #00f2fe;">
+                <div class="stat-label">
+                    <span>Total Omset (Gross)</span>
+                    <i data-lucide="dollar-sign" style="width: 16px; height: 16px; color: #00f2fe;"></i>
+                </div>
+                <div class="stat-value" id="metricTotalOmset">Rp 0</div>
+                <div class="stat-sub">Dari pesanan terverifikasi lunas</div>
+            </div>
+
+            <div class="stat-card" style="--card-accent: #10b981;">
+                <div class="stat-label">
+                    <span>Transaksi Lunas</span>
+                    <i data-lucide="check-circle" style="width: 16px; height: 16px; color: #10b981;"></i>
+                </div>
+                <div class="stat-value" id="metricPaidOrders" style="color: #10b981;">0</div>
+                <div class="stat-sub">Paket Creator Pass aktif</div>
+            </div>
+
+            <div class="stat-card" style="--card-accent: #f59e0b;">
+                <div class="stat-label">
+                    <span>Menunggu Verifikasi</span>
+                    <i data-lucide="clock" style="width: 16px; height: 16px; color: #f59e0b;"></i>
+                </div>
+                <div class="stat-value" id="metricPendingOrders" style="color: #f59e0b;">0</div>
+                <div class="stat-sub">Perlu konfirmasi &amp; aktivasi</div>
+            </div>
+
+            <div class="stat-card" style="--card-accent: #a855f7;">
+                <div class="stat-label">
+                    <span>Lisensi User Aktif</span>
+                    <i data-lucide="users" style="width: 16px; height: 16px; color: #a855f7;"></i>
+                </div>
+                <div class="stat-value" id="metricActiveUsers" style="color: #c084fc;">0</div>
+                <div class="stat-sub">Total akun dengan hak akses studio</div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 1: LAPORAN OMSET & KEUANGAN
+             ======================================================== -->
+        <section id="pane-omset" class="content-pane active">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            <i data-lucide="trending-up" style="width: 18px; height: 18px; color: #00f2fe;"></i>
+                            <span>Ringkasan Pendapatan &amp; Penjualan Paket</span>
+                        </div>
+                        <div class="panel-desc">Statistik penjualan lisensi VIDORA Creator Pass (Rp 75.000 / bln).</div>
+                    </div>
+                    <button type="button" class="btn-action" onclick="refreshAllAdminData()">
+                        <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                        <span>Segarkan Data</span>
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px;">
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase;">Paket Terlaris</div>
+                        <div style="font-size: 17px; font-weight: 800; color: white; margin-top: 4px;">VIDORA Creator Pass</div>
+                        <div style="font-size: 12px; color: #00f2fe; margin-top: 2px;">Rp 75.000 / Lisensi 30 Hari</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase;">Metode Pembayaran Utama</div>
+                        <div style="font-size: 17px; font-weight: 800; color: white; margin-top: 4px;">QRIS &amp; Transfer Bank</div>
+                        <div style="font-size: 12px; color: #10b981; margin-top: 2px;">BCA, Mandiri, E-Wallet</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase;">Rata-rata Konversi</div>
+                        <div style="font-size: 17px; font-weight: 800; color: white; margin-top: 4px;">100% Instant</div>
+                        <div style="font-size: 12px; color: #fbbf24; margin-top: 2px;">Verifikasi admin &amp; aktivasi otomatis</div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions Summary -->
+                <div style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 10px;">Transaksi Terakhir Masuk:</div>
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Pembeli</th>
+                                <th>WhatsApp</th>
+                                <th>Nominal</th>
+                                <th>Metode</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="omsetRecentOrdersTable">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 2: PESANAN & PAYMENT GATEWAY (CO)
+             ======================================================== -->
+        <section id="pane-orders" class="content-pane">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            <i data-lucide="shopping-bag" style="width: 18px; height: 18px; color: #10b981;"></i>
+                            <span>Daftar Pesanan &amp; Aktivasi Lisensi</span>
+                        </div>
+                        <div class="panel-desc">Cek bukti bayar, hubungi via WA, dan klik tombol aktifkan untuk langsung membuka akses pengguna.</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-action btn-action-primary" id="btnOpenManualOrder">
+                            <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i>
+                            <span>+ Buat Order Manual</span>
+                        </button>
+                        <button type="button" class="btn-action" onclick="refreshAllAdminData()">
+                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                            <span>Segarkan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <input type="text" id="filterOrderSearch" class="search-input" placeholder="Cari invoice, nama pembeli, no WA, atau email...">
+                    <select id="filterOrderStatus" class="filter-select">
+                        <option value="all">Semua Status</option>
+                        <option value="pending">Menunggu Pembayaran (Pending)</option>
+                        <option value="paid">Lunas (Aktif)</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Invoice / Waktu</th>
+                                <th>Data Pembeli</th>
+                                <th>Paket &amp; Harga</th>
+                                <th>Metode</th>
+                                <th>Status</th>
+                                <th>Aksi Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersTable">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Rekening Bank & QRIS Settings -->
+            <div class="panel">
+                <div class="panel-title" style="margin-bottom: 12px; color: #00f2fe;">
+                    <i data-lucide="wallet" style="width: 18px; height: 18px;"></i>
+                    <span>Pengaturan Rekening &amp; Gateway Pembayaran</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 16px;">
+                    Nomor rekening dan QRIS yang ditampilkan di modal checkout landing page.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 10px;">Bank BCA</div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor Rekening BCA:</label>
+                            <input type="text" class="form-input" id="cfgBcaNumber" value="8012 3456 7890">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Atas Nama:</label>
+                            <input type="text" class="form-input" id="cfgBcaName" value="VIDORA OFFICIAL">
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                        <div style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 10px;">Bank Mandiri</div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor Rekening Mandiri:</label>
+                            <input type="text" class="form-input" id="cfgMandiriNumber" value="137 00 9876543 2">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Atas Nama:</label>
+                            <input type="text" class="form-input" id="cfgMandiriName" value="VIDORA OFFICIAL">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-action btn-action-primary" style="margin-top: 14px;" onclick="alert('Pengaturan rekening berhasil diperbarui!');">
+                    <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                    <span>Simpan Pengaturan Rekening</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 3: KELOLA USER & LISENSI AKTIF
+             ======================================================== -->
+        <section id="pane-users" class="content-pane">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            <i data-lucide="users" style="width: 18px; height: 18px; color: #a855f7;"></i>
+                            <span>Manajemen Pengguna &amp; Lisensi Aktif</span>
+                        </div>
+                        <div class="panel-desc">Aktifkan atau nonaktifkan lisensi member, atur kuota profil Google, dan tetapkan role.</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-action btn-action-primary" id="btnOpenManualUser">
+                            <i data-lucide="user-plus" style="width: 14px; height: 14px;"></i>
+                            <span>+ Tambah Pengguna Baru</span>
+                        </button>
+                        <button type="button" class="btn-action" onclick="refreshAllAdminData()">
+                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                            <span>Segarkan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <input type="text" id="filterUserSearch" class="search-input" placeholder="Cari nama atau email pengguna...">
+                    <select id="filterUserRole" class="filter-select">
+                        <option value="all">Semua Peran</option>
+                        <option value="superadmin">Super Admin</option>
+                        <option value="user">Member</option>
+                    </select>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Pengguna / Email</th>
+                                <th>Peran</th>
+                                <th>Status Lisensi</th>
+                                <th>Kuota Google</th>
+                                <th>Terdaftar</th>
+                                <th>Aksi Cepat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminUsersTable">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 4: NOTIFIKASI WHATSAPP (xsender.id)
+             ======================================================== -->
+        <section id="pane-whatsapp" class="content-pane">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            <i data-lucide="message-square" style="width: 18px; height: 18px; color: #10b981;"></i>
+                            <span>Integrasi WhatsApp Gateway (xsender.id)</span>
+                        </div>
+                        <div class="panel-desc">Kirim invoice otomatis, pesan lisensi aktif, dan alert order baru langsung ke WhatsApp pelanggan &amp; admin.</div>
+                    </div>
+                </div>
+
+                <form id="formAdminXsender">
+                    <div class="form-group">
+                        <label class="form-label">Endpoint API xsender.id:</label>
+                        <input type="url" class="form-input" id="cfgXsenderUrl" placeholder="https://api.xsender.id/v1/messages" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
+                        <div class="form-group">
+                            <label class="form-label">API Token / Secret Key:</label>
+                            <input type="password" class="form-input" id="cfgXsenderToken" placeholder="Masukkan token xsender Anda...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Device ID / Sender (Opsional):</label>
+                            <input type="text" class="form-input" id="cfgXsenderDevice" placeholder="Contoh: dev_xxxx">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Nomor WhatsApp Admin (Penerima Laporan Order):</label>
+                        <input type="tel" class="form-input" id="cfgXsenderAdminPhone" placeholder="08xxxxxxxxxx">
+                        <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Setiap ada pembeli klik langganan, bot akan mengirimkan laporan instan ke nomor ini.</small>
+                    </div>
+
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 14px; margin: 18px 0;">
+                        <div style="font-weight: 700; font-size: 13px; color: #6ee7b7; margin-bottom: 6px;">Tes Kirim Pesan WhatsApp Langsung</div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="tel" id="testWaTargetPhone" class="form-input" placeholder="Nomor HP Tujuan (08xxx)" style="flex: 2;">
+                            <button type="button" class="btn-action btn-action-primary" id="btnTestSendWa" style="flex: 1; justify-content: center;">
+                                <i data-lucide="send" style="width: 14px; height: 14px;"></i>
+                                <span>Kirim Pesan Tes</span>
+                            </button>
+                        </div>
+                        <div id="testWaStatusMsg" style="font-size: 12px; margin-top: 8px; display: none;"></div>
+                    </div>
+
+                    <button type="submit" class="btn-action btn-action-primary">
+                        <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                        <span>Simpan Konfigurasi WhatsApp</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 5: KONEKSI DATABASE & MEDIA CLOUD
+             ======================================================== -->
+        <section id="pane-settings" class="content-pane">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            <i data-lucide="database" style="width: 18px; height: 18px; color: #00f2fe;"></i>
+                            <span>Koneksi Supabase &amp; Cloudflare R2</span>
+                        </div>
+                        <div class="panel-desc">Hubungkan database PostgreSQL Supabase dan CDN Cloudflare R2 untuk penyimpanan video &amp; gambar.</div>
+                    </div>
+                </div>
+
+                <form id="formCloudSettings">
+                    <div class="form-group">
+                        <label class="form-label">Supabase Project URL:</label>
+                        <input type="url" class="form-input" id="cfgSupabaseUrl" placeholder="https://xxxxxxxx.supabase.co" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Supabase Anon Key:</label>
+                        <input type="password" class="form-input" id="cfgSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Domain Publik Cloudflare R2 Storage:</label>
+                        <input type="text" class="form-input" id="cfgR2Domain" placeholder="https://pub-xxxxxx.r2.dev">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 18px;">
+                        <button type="submit" class="btn-action btn-action-primary">
+                            <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                            <span>Simpan &amp; Terapkan</span>
+                        </button>
+                        <button type="button" class="btn-action" id="btnTestSupabaseConn">
+                            <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                            <span>Tes Koneksi</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ========================================================
+             PANE 6: ANTRIAN GLOBAL
+             ======================================================== -->
+        <section id="pane-queue" class="content-pane">
+            <div class="panel">
+                <div class="panel-header">
+                    <div>
+                        <div class="panel-title">
+                            <i data-lucide="activity" style="width: 18px; height: 18px; color: #00f2fe;"></i>
+                            <span>Antrian Generate Global Sistem</span>
+                        </div>
+                        <div class="panel-desc">Monitoring seluruh tugas render video &amp; gambar dari seluruh pengguna.</div>
+                    </div>
+                    <button type="button" class="btn-action" onclick="refreshAllAdminData()">
+                        <i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>
+                        <span>Segarkan</span>
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID Job / Waktu</th>
+                                <th>Prompt Video / Gambar</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminQueueTable">
+                            <!-- Injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: BUAT ORDER MANUAL -->
+    <div class="admin-modal-backdrop" id="modalAddOrder">
+        <div class="admin-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #00f2fe;">+ Buat Order &amp; Aktifkan Lisensi</h3>
+                <button type="button" class="btn-action" style="padding: 4px 8px;" onclick="closeModal('modalAddOrder')">&times;</button>
+            </div>
+            <form id="formManualOrder">
+                <div class="form-group">
+                    <label class="form-label">Nama Pelanggan:</label>
+                    <input type="text" class="form-input" id="mOrderName" placeholder="Contoh: Budi Santoso" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nomor WhatsApp:</label>
+                    <input type="tel" class="form-input" id="mOrderPhone" placeholder="08xxxxxxxxxx" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Alamat Email:</label>
+                    <input type="email" class="form-input" id="mOrderEmail" placeholder="nama@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Metode Pembayaran:</label>
+                    <select class="form-input" id="mOrderMethod">
+                        <option value="QRIS">QRIS Instan</option>
+                        <option value="BANK_BCA">Transfer Bank BCA</option>
+                        <option value="BANK_MANDIRI">Transfer Bank Mandiri</option>
+                        <option value="WHATSAPP">Direct WhatsApp</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status Pembayaran:</label>
+                    <select class="form-input" id="mOrderStatus">
+                        <option value="paid">LUNAS — Langsung Aktifkan Lisensi (5 Profil)</option>
+                        <option value="pending">PENDING — Menunggu Transfer</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-action btn-action-primary" style="width: 100%; justify-content: center; margin-top: 10px; padding: 11px;">
+                    Simpan &amp; Proses Pesanan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: TAMBAH USER BARU -->
+    <div class="admin-modal-backdrop" id="modalAddUser">
+        <div class="admin-modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="font-size: 16px; font-weight: 800; color: #a855f7;">+ Tambah Pengguna Baru</h3>
+                <button type="button" class="btn-action" style="padding: 4px 8px;" onclick="closeModal('modalAddUser')">&times;</button>
+            </div>
+            <form id="formManualUser">
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap:</label>
+                    <input type="text" class="form-input" id="mUserName" placeholder="Contoh: Rian Kreator" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Alamat Email:</label>
+                    <input type="email" class="form-input" id="mUserEmail" placeholder="user@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Peran (Role):</label>
+                    <select class="form-input" id="mUserRole">
+                        <option value="user">Member Biasa</option>
+                        <option value="superadmin">Super Admin (Akses Kontrol Penuh)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status Lisensi:</label>
+                    <select class="form-input" id="mUserSubscribed">
+                        <option value="true">Aktif (Beri Akses Studio 5 Profil)</option>
+                        <option value="false">Non-Aktif (Belum Langganan)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-action btn-action-primary" style="width: 100%; justify-content: center; margin-top: 10px; padding: 11px;">
+                    Simpan Data Pengguna
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/config.js"></script>
+    <script src="/js/supabase-client.js"></script>
+    <script src="/js/xsender-service.js"></script>
+    <script>
+        let cachedOrders = [];
+        let cachedUsers = [];
+        let cachedJobs = [];
+
+        // STRICT AUTH CHECK FOR SUPER ADMIN
+        async function checkSuperAdminAuth() {
+            const adminRaw = localStorage.getItem("vidora_admin_session");
+            if (adminRaw) {
+                try {
+                    const data = JSON.parse(adminRaw);
+                    if (data && data.role === "superadmin") {
+                        document.getElementById("adminEmailDisplay").textContent = data.user?.email || "winalislam@gmail.com";
+                        return true;
+                    }
+                } catch (e) {}
+            }
+
+            const session = await window.vidoraData.getSession();
+            const email = session?.user?.email || "";
+            const isAdm = session?.profile?.role === "superadmin" || 
+                          session?.profile?.role === "admin" || 
+                          email === "winalislam@gmail.com" ||
+                          email.includes("admin");
+
+            if (!isAdm) {
+                alert("Akses Ditolak: Anda harus login dengan password administrator di Portal Super Admin.");
+                window.location.replace("/admin/login");
+                return false;
+            }
+
+            document.getElementById("adminEmailDisplay").textContent = email;
+            return true;
+        }
+
+        // Tab Navigation
+        const sidebarItems = document.querySelectorAll(".sidebar-item");
+        const contentPanes = document.querySelectorAll(".content-pane");
+        const pageTitleHeading = document.getElementById("pageTitleHeading");
+
+        const titles = {
+            omset: "Laporan Omset & Keuangan",
+            orders: "Pesanan & Payment Gateway",
+            users: "Kelola Pengguna & Lisensi Aktif",
+            whatsapp: "Integrasi WhatsApp (xsender.id)",
+            settings: "Koneksi Database & Cloud Storage",
+            queue: "Antrian Global AI Render"
+        };
+
+        sidebarItems.forEach(item => {
+            item.addEventListener("click", () => {
+                const pane = item.getAttribute("data-pane");
+                sidebarItems.forEach(i => i.classList.remove("active"));
+                contentPanes.forEach(p => p.classList.remove("active"));
+
+                item.classList.add("active");
+                const target = document.getElementById(`pane-${pane}`);
+                if (target) target.classList.add("active");
+
+                if (titles[pane]) {
+                    pageTitleHeading.innerHTML = `<i data-lucide="shield-check" style="width: 22px; height: 22px; color: #fbbf24;"></i> <span>${titles[pane]}</span>`;
+                    lucide.createIcons();
+                }
+            });
+        });
+
+        // Logout
+        document.getElementById("btnAdminLogout").addEventListener("click", async () => {
+            if (confirm("Keluar dari Portal Super Admin?")) {
+                await window.vidoraData.signOut();
+                localStorage.removeItem("vidora_admin_session");
+                window.location.replace("/admin/login");
+            }
+        });
+
+        // Modals helper
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.style.display = "flex";
+        }
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) m.style.display = "none";
+        }
+
+        document.getElementById("btnOpenManualOrder")?.addEventListener("click", () => openModal("modalAddOrder"));
+        document.getElementById("btnOpenManualUser")?.addEventListener("click", () => openModal("modalAddUser"));
+
+        // Refresh Data
+        async function refreshAllAdminData() {
+            cachedOrders = await window.vidoraData.getAllOrders();
+            cachedUsers = await window.vidoraData.getAllUsers();
+            cachedJobs = await window.vidoraData.getAllJobsGlobal();
+
+            renderMetrics();
+            renderOmsetRecent();
+            renderOrdersTable();
+            renderUsersTable();
+            renderQueueTable();
+            populateSettings();
+            lucide.createIcons();
+        }
+
+        // Metrics
+        function renderMetrics() {
+            const paidOrders = cachedOrders.filter(o => o.status === "paid");
+            const pendingOrders = cachedOrders.filter(o => o.status === "pending");
+            const totalOmset = paidOrders.reduce((acc, o) => acc + (o.price || 75000), 0);
+            const activeUsers = cachedUsers.filter(u => u.is_subscribed === true || u.role === "superadmin");
+
+            document.getElementById("metricTotalOmset").textContent = `Rp ${totalOmset.toLocaleString("id-ID")}`;
+            document.getElementById("metricPaidOrders").textContent = paidOrders.length;
+            document.getElementById("metricPendingOrders").textContent = pendingOrders.length;
+            document.getElementById("metricActiveUsers").textContent = activeUsers.length;
+        }
+
+        // Recent Omset Table
+        function renderOmsetRecent() {
+            const tbody = document.getElementById("omsetRecentOrdersTable");
+            tbody.innerHTML = "";
+            cachedOrders.slice(0, 5).forEach(o => {
+                const tr = document.createElement("tr");
+                const isPaid = o.status === "paid";
+                tr.innerHTML = `
+                    <td><strong style="color:white;">${o.id}</strong></td>
+                    <td>${o.customer_name || '-'}</td>
+                    <td><span style="color:#00f2fe;">${o.customer_phone || '-'}</span></td>
+                    <td><strong style="color:#10b981;">Rp ${(o.price || 75000).toLocaleString("id-ID")}</strong></td>
+                    <td>${(o.payment_method || 'QRIS').toUpperCase()}</td>
+                    <td><span class="badge-status ${isPaid ? 'paid' : 'pending'}">${isPaid ? 'LUNAS' : 'PENDING'}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Orders Table
+        function renderOrdersTable() {
+            const tbody = document.getElementById("adminOrdersTable");
+            tbody.innerHTML = "";
+            const search = (document.getElementById("filterOrderSearch")?.value || "").toLowerCase().trim();
+            const filterStatus = document.getElementById("filterOrderStatus")?.value || "all";
+
+            const filtered = cachedOrders.filter(o => {
+                if (filterStatus !== "all" && o.status !== filterStatus) return false;
+                if (!search) return true;
+                return (o.id || "").toLowerCase().includes(search) ||
+                       (o.customer_name || "").toLowerCase().includes(search) ||
+                       (o.customer_phone || "").toLowerCase().includes(search) ||
+                       (o.customer_email || "").toLowerCase().includes(search);
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Tidak ada pesanan yang sesuai filter.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(o => {
+                const tr = document.createElement("tr");
+                const isPaid = o.status === "paid";
+                const cleanPhone = (o.customer_phone || "").replace(/[^0-9]/g, "");
+                const waPhone = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : (cleanPhone.startsWith("62") ? cleanPhone : "62" + cleanPhone);
+                const waMsg = encodeURIComponent(`Halo ${o.customer_name}, terima kasih telah berlangganan VIDORA Creator Pass (Invoice: ${o.id}). Akun Anda sudah kami aktifkan dengan kuota 5 profil Google. Silakan masuk di https://www.vidora.biz.id/login!`);
+
+                tr.innerHTML = `
+                    <td>
+                        <strong style="color:white;">${o.id}</strong>
+                        <div style="font-size:10px; color:var(--text-tertiary);">${new Date(o.created_at || Date.now()).toLocaleDateString("id-ID")}</div>
+                    </td>
+                    <td>
+                        <strong style="color:white;">${o.customer_name || '-'}</strong>
+                        <div style="font-size:11px; color:#00f2fe;">${o.customer_phone || '-'}</div>
+                        <div style="font-size:10px; color:var(--text-tertiary);">${o.customer_email || '-'}</div>
+                    </td>
+                    <td>
+                        <div>${o.plan_name || 'Creator Pass'}</div>
+                        <div style="color:#00f2fe; font-weight:700;">Rp ${(o.price || 75000).toLocaleString("id-ID")}</div>
+                    </td>
+                    <td><strong>${(o.payment_method || 'QRIS').toUpperCase()}</strong></td>
+                    <td><span class="badge-status ${isPaid ? 'paid' : 'pending'}">${isPaid ? '● LUNAS (AKTIF)' : '○ PENDING'}</span></td>
+                    <td>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            ${isPaid ? `
+                                <span style="color:#10b981; font-weight:700; font-size:12px;">✓ Lisensi Aktif</span>
+                            ` : `
+                                <button type="button" class="btn-action btn-action-primary btn-approve" data-oid="${o.id}">
+                                    ✓ Aktifkan
+                                </button>
+                            `}
+                            ${cleanPhone ? `
+                                <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="btn-action" style="color:#6ee7b7;">
+                                    <i data-lucide="message-circle" style="width:12px;height:12px;"></i> WA
+                                </a>
+                            ` : ''}
+                            <button type="button" class="btn-action btn-del-order" data-oid="${o.id}" style="color:#f43f5e;">
+                                <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Wire actions
+            document.querySelectorAll(".btn-approve").forEach(b => {
+                b.addEventListener("click", async () => {
+                    const oid = b.getAttribute("data-oid");
+                    const target = cachedOrders.find(o => o.id === oid);
+                    await window.vidoraData.approveOrder(oid);
+                    alert(`Pesanan ${oid} berhasil DIAKTIFKAN!\nStatus lisensi pelanggan ${target?.customer_name || ''} kini telah aktif (5 profil Google).`);
+                    await refreshAllAdminData();
+                });
+            });
+
+            document.querySelectorAll(".btn-del-order").forEach(b => {
+                b.addEventListener("click", async () => {
+                    if (!confirm("Hapus pesanan ini?")) return;
+                    await window.vidoraData.deleteOrder(b.getAttribute("data-oid"));
+                    await refreshAllAdminData();
+                });
+            });
+        }
+
+        document.getElementById("filterOrderSearch")?.addEventListener("input", renderOrdersTable);
+        document.getElementById("filterOrderStatus")?.addEventListener("change", renderOrdersTable);
+
+        // Users Table
+        function renderUsersTable() {
+            const tbody = document.getElementById("adminUsersTable");
+            tbody.innerHTML = "";
+            const search = (document.getElementById("filterUserSearch")?.value || "").toLowerCase().trim();
+            const filterRole = document.getElementById("filterUserRole")?.value || "all";
+
+            const filtered = cachedUsers.filter(u => {
+                if (filterRole !== "all" && u.role !== filterRole) return false;
+                if (!search) return true;
+                return (u.email || "").toLowerCase().includes(search) || (u.full_name || "").toLowerCase().includes(search);
+            });
+
+            filtered.forEach(u => {
+                const tr = document.createElement("tr");
+                const isAdm = u.role === "admin" || u.role === "superadmin";
+                const isSub = u.is_subscribed === true || isAdm;
+
+                tr.innerHTML = `
+                    <td>
+                        <strong style="color:white;">${u.full_name || 'Pengguna'}</strong>
+                        <div style="font-size:11px; color:var(--text-tertiary);">${u.email}</div>
+                    </td>
+                    <td>
+                        <span class="badge-status ${isAdm ? 'admin' : ''}">${isAdm ? 'Super Admin' : 'Member'}</span>
+                    </td>
+                    <td>
+                        <span class="badge-status ${isSub ? 'paid' : 'pending'}">
+                            ${isSub ? '● AKTIF (5 Profil)' : '○ Belum Langganan'}
+                        </span>
+                    </td>
+                    <td><strong>${isAdm ? 'Unlimited' : (u.max_google_accounts || 5) + ' Akun'}</strong></td>
+                    <td style="font-size:11px;">${new Date(u.created_at || Date.now()).toLocaleDateString("id-ID")}</td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button type="button" class="btn-action btn-user-sub" data-uid="${u.id}" data-cursub="${isSub}" style="color:${isSub ? '#f43f5e' : '#10b981'};">
+                                ${isSub ? 'Matikan Lisensi' : '✓ Aktifkan (5 Slot)'}
+                            </button>
+                            <button type="button" class="btn-action btn-user-role" data-uid="${u.id}" data-currole="${u.role}">
+                                ${isAdm ? 'Jadikan Member' : 'Jadikan Admin'}
+                            </button>
+                            <button type="button" class="btn-action btn-user-del" data-uid="${u.id}" style="color:#f43f5e;">
+                                <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.querySelectorAll(".btn-user-sub").forEach(b => {
+                b.addEventListener("click", async () => {
+                    const uid = b.getAttribute("data-uid");
+                    const cur = b.getAttribute("data-cursub") === "true";
+                    await window.vidoraData.toggleUserSubscription(uid, !cur);
+                    alert(`Status lisensi berhasil diubah menjadi: ${!cur ? 'AKTIF (5 Slot)' : 'NONAKTIF'}`);
+                    await refreshAllAdminData();
+                });
+            });
+
+            document.querySelectorAll(".btn-user-role").forEach(b => {
+                b.addEventListener("click", async () => {
+                    const uid = b.getAttribute("data-uid");
+                    const cur = b.getAttribute("data-currole");
+                    const next = cur === "superadmin" || cur === "admin" ? "user" : "superadmin";
+                    await window.vidoraData.updateUserRole(uid, next);
+                    await refreshAllAdminData();
+                });
+            });
+
+            document.querySelectorAll(".btn-user-del").forEach(b => {
+                b.addEventListener("click", async () => {
+                    if (!confirm("Hapus pengguna ini?")) return;
+                    await window.vidoraData.deleteUser(b.getAttribute("data-uid"));
+                    await refreshAllAdminData();
+                });
+            });
+        }
+
+        document.getElementById("filterUserSearch")?.addEventListener("input", renderUsersTable);
+        document.getElementById("filterUserRole")?.addEventListener("change", renderUsersTable);
+
+        // Queue Table
+        function renderQueueTable() {
+            const tbody = document.getElementById("adminQueueTable");
+            tbody.innerHTML = "";
+            if (cachedJobs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px;">Belum ada antrian render.</td></tr>`;
+                return;
+            }
+            cachedJobs.forEach(j => {
+                const tr = document.createElement("tr");
+                const color = j.status === "completed" ? "#10b981" : (j.status === "failed" ? "#f43f5e" : "#00f2fe");
+                tr.innerHTML = `
+                    <td>
+                        <strong style="color:white; font-family:monospace;">${(j.id || '').substring(0, 10)}...</strong>
+                        <div style="font-size:10px; color:var(--text-tertiary);">${new Date(j.created_at).toLocaleTimeString("id-ID")}</div>
+                    </td>
+                    <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${j.prompt}</td>
+                    <td><strong style="color:${color};">${j.status.toUpperCase()} (${j.progress || 0}%)</strong></td>
+                    <td>
+                        <button type="button" class="btn-action" onclick="window.vidoraData.deleteJob('${j.id}').then(refreshAllAdminData)" style="color:#f43f5e;">Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Settings Populate
+        function populateSettings() {
+            document.getElementById("cfgSupabaseUrl").value = localStorage.getItem("vidora_supabase_url") || window.VIDORA_CONFIG.SUPABASE_URL;
+            document.getElementById("cfgSupabaseKey").value = localStorage.getItem("vidora_supabase_key") || window.VIDORA_CONFIG.SUPABASE_ANON_KEY;
+            document.getElementById("cfgR2Domain").value = localStorage.getItem("vidora_r2_domain") || window.VIDORA_CONFIG.R2_PUBLIC_DOMAIN;
+
+            if (window.xsender) {
+                document.getElementById("cfgXsenderUrl").value = window.xsender.config.endpointUrl;
+                document.getElementById("cfgXsenderToken").value = window.xsender.config.apiToken;
+                document.getElementById("cfgXsenderDevice").value = window.xsender.config.deviceId;
+                document.getElementById("cfgXsenderAdminPhone").value = window.xsender.config.adminPhone;
+            }
+        }
+
+        // WhatsApp Form Submit
+        document.getElementById("formAdminXsender").addEventListener("submit", (e) => {
+            e.preventDefault();
+            if (!window.xsender) return;
+            window.xsender.saveConfig({
+                endpointUrl: document.getElementById("cfgXsenderUrl").value.trim(),
+                apiToken: document.getElementById("cfgXsenderToken").value.trim(),
+                deviceId: document.getElementById("cfgXsenderDevice").value.trim(),
+                adminPhone: document.getElementById("cfgXsenderAdminPhone").value.trim()
+            });
+            alert("Konfigurasi WhatsApp Gateway (xsender.id) berhasil disimpan!");
+        });
+
+        // Test WhatsApp Send
+        document.getElementById("btnTestSendWa").addEventListener("click", async () => {
+            const phone = document.getElementById("testWaTargetPhone").value.trim();
+            const msgBox = document.getElementById("testWaStatusMsg");
+            if (!phone) {
+                alert("Masukkan nomor HP tujuan tes!");
+                return;
+            }
+            msgBox.style.display = "block";
+            msgBox.style.color = "#fbbf24";
+            msgBox.textContent = "Mengirim pesan WhatsApp via xsender.id...";
+
+            try {
+                const res = await window.xsender.sendMessage(phone, "Halo! Ini adalah pesan verifikasi tes dari Super Admin VIDORA Studio. Integrasi WhatsApp Gateway aktif!");
+                if (res.success) {
+                    msgBox.style.color = "#10b981";
+                    msgBox.textContent = "Pesan berhasil terkirim ke WhatsApp!";
+                } else {
+                    msgBox.style.color = "#f43f5e";
+                    msgBox.textContent = "Gagal kirim: " + (res.error || "Periksa token API xsender Anda.");
+                }
+            } catch (err) {
+                msgBox.style.color = "#f43f5e";
+                msgBox.textContent = "Error: " + err.message;
+            }
+        });
+
+        // Cloud Settings Form Submit
+        document.getElementById("formCloudSettings").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const url = document.getElementById("cfgSupabaseUrl").value.trim();
+            const key = document.getElementById("cfgSupabaseKey").value.trim();
+            const r2 = document.getElementById("cfgR2Domain").value.trim();
+
+            window.vidoraData.saveCloudConfig(url, key, r2);
+            const res = await window.vidoraData.testConnection();
+            alert("Pengaturan Cloud Tersimpan!\n\n" + res.message);
+        });
+
+        document.getElementById("btnTestSupabaseConn").addEventListener("click", async () => {
+            const res = await window.vidoraData.testConnection();
+            alert(res.message);
+        });
+
+        // Manual Order Submit
+        document.getElementById("formManualOrder").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const name = document.getElementById("mOrderName").value.trim();
+            const phone = document.getElementById("mOrderPhone").value.trim();
+            const email = document.getElementById("mOrderEmail").value.trim();
+            const method = document.getElementById("mOrderMethod").value;
+            const status = document.getElementById("mOrderStatus").value;
+
+            const order = await window.vidoraData.createOrder({
+                plan: "VIDORA Creator Pass",
+                price: 75000,
+                name,
+                phone,
+                email,
+                method,
+                status
+            });
+
+            if (status === "paid") {
+                await window.vidoraData.approveOrder(order.id);
+            }
+
+            alert(`Order manual ${order.id} berhasil disimpan!\nStatus: ${status === 'paid' ? 'LUNAS & LISENSI AKTIF (5 PROFIL)' : 'PENDING'}`);
+            closeModal("modalAddOrder");
+            document.getElementById("formManualOrder").reset();
+            await refreshAllAdminData();
+        });
+
+        // Manual User Submit
+        document.getElementById("formManualUser").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById("mUserName").value.trim();
+            const email = document.getElementById("mUserEmail").value.trim();
+            const role = document.getElementById("mUserRole").value;
+            const isSubscribed = document.getElementById("mUserSubscribed").value === "true";
+
+            await window.vidoraData.addUserManual({ fullName, email, role, isSubscribed });
+            alert(`Pengguna ${email} berhasil disimpan dengan status lisensi: ${isSubscribed ? 'AKTIF' : 'NONAKTIF'}`);
+            closeModal("modalAddUser");
+            document.getElementById("formManualUser").reset();
+            await refreshAllAdminData();
+        });
+
+        // Startup
+        document.addEventListener("DOMContentLoaded", async () => {
+            lucide.createIcons();
+            const authOk = await checkSuperAdminAuth();
+            if (authOk) {
+                await refreshAllAdminData();
+            }
+        });
+    </script>
+</body>
+</html>

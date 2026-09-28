@@ -240,8 +240,8 @@
 
                 try {
                     await window.vidoraData.adminSignIn(email, password);
-                    // Success! Redirect to Admin Tab in Studio
-                    window.location.href = "/app.html?tab=admin";
+                    // Success! Redirect to Dedicated Super Admin Dashboard
+                    window.location.href = "/admin";
                 } catch (err) {
                     showError(err.message || "Gagal masuk. Periksa kembali kredensial.");
                     btnSubmit.disabled = false;

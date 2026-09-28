@@ -153,12 +153,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        // Proteksi Tab Admin
+        // Proteksi Tab Admin -> Alihkan langsung ke Dedicated Super Admin Portal
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("tab") === "admin" && activeProfile.role !== "superadmin" && activeProfile.role !== "admin") {
-            alert("Akses Terbatas: Hanya Super Admin yang dapat mengakses panel ini.");
-            window.location.replace("admin/login");
-            return;
+        if (urlParams.get("tab") === "admin") {
+            if (activeProfile.role === "superadmin" || activeProfile.role === "admin") {
+                window.location.replace("/admin");
+                return;
+            } else {
+                alert("Akses Terbatas: Hanya Super Admin yang dapat mengakses panel ini.");
+                window.location.replace("/admin/login");
+                return;
+            }
         }
 
         updateHeaderUI();
@@ -196,7 +201,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 userRoleBadge.style.borderColor = "rgba(251, 191, 36, 0.4)";
                 userRoleBadge.style.color = "#fef08a";
                 userRoleBadge.style.background = "rgba(251, 191, 36, 0.15)";
+                userRoleBadge.style.cursor = "pointer";
+                userRoleBadge.title = "Buka Portal Super Admin";
+                userRoleBadge.onclick = () => { window.location.href = "/admin"; };
                 navItemAdmin.style.display = "flex";
+                navItemAdmin.onclick = (e) => {
+                    e.preventDefault();
+                    window.location.href = "/admin";
+                };
             } else if (isUserSubscribed()) {
                 userRoleBadge.innerHTML = `<i data-lucide="check-circle" style="width:13px;height:13px;color:#10b981;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Aktif)</span>`;
                 userRoleBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
