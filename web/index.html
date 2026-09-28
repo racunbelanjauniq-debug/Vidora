@@ -90,13 +90,13 @@
                 </p>
 
                 <div class="hero-cta">
-                    <a href="app.html" class="btn-apple-primary">
-                        <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
-                        <span>Mulai Buat Video Sekarang</span>
-                    </a>
-                    <a href="#fitur" class="btn-apple-secondary">
-                        <i data-lucide="compass" style="width: 15px; height: 15px;"></i>
-                        <span>Jelajahi Fitur</span>
+                    <button type="button" class="btn-apple-primary" id="btnHeroCheckout">
+                        <i data-lucide="crown" style="width: 16px; height: 16px;"></i>
+                        <span>Mulai Berlangganan — Rp 75.000 / bln</span>
+                    </button>
+                    <a href="app.html" class="btn-apple-secondary">
+                        <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
+                        <span>Buka Studio AI</span>
                     </a>
                 </div>
 
@@ -172,15 +172,15 @@
             <div class="promo-action-card">
                 <div>
                     <div class="promo-badge">
-                        <i data-lucide="layers" style="width: 11px; height: 11px;"></i>
-                        <span>Studio Kreator Lengkap</span>
+                        <i data-lucide="crown" style="width: 11px; height: 11px;"></i>
+                        <span>Akses Penuh Kreator</span>
                     </div>
-                    <div class="promo-title">17+ Gaya Prompt &amp; Video Mixer</div>
-                    <div class="promo-desc">Rangkai beberapa klip jadi 1 video utuh di semua rasio</div>
+                    <div class="promo-title">VIDORA Creator Pass</div>
+                    <div class="promo-desc">Hanya Rp 75.000 / bln &bull; Akses Studio Lengkap &bull; Semua Rasio &amp; Mixer</div>
                 </div>
-                <a href="app.html" class="btn-promo-action">
-                    Buka Studio
-                </a>
+                <button type="button" class="btn-promo-action" id="btnPromoCheckout">
+                    Langganan Sekarang
+                </button>
             </div>
 
             <!-- Alur Kerja 3 Langkah -->
@@ -321,8 +321,8 @@
                 <i data-lucide="zap" style="width: 18px; height: 18px;"></i>
                 <span>Fitur</span>
             </a>
-            <a href="app.html" class="landing-nav-item center-btn" title="Buka Studio AI">
-                <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i>
+            <a href="#checkout" class="landing-nav-item center-btn" id="btnBottomNavCheckout" title="Langganan">
+                <i data-lucide="crown" style="width: 20px; height: 20px;"></i>
             </a>
             <a href="#cara-kerja" class="landing-nav-item">
                 <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i>
@@ -341,13 +341,313 @@
 
     </div>
 
+    <!-- =====================================================
+         LANDING PAGE CHECKOUT MODAL
+         ===================================================== -->
+    <style>
+        #lpCheckoutModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.84);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow-y: auto;
+            padding: 16px 12px;
+            align-items: center;
+            justify-content: center;
+        }
+        .lp-modal-sheet {
+            background: #0d0f17;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            max-width: 440px;
+            width: 100%;
+            padding: 22px 18px 28px;
+            max-height: 92vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9);
+            margin: auto;
+            animation: lpModalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes lpModalPop {
+            from { opacity: 0; transform: scale(0.95) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @media (max-width: 480px) {
+            #lpCheckoutModal {
+                align-items: flex-end;
+                padding: 0;
+            }
+            .lp-modal-sheet {
+                border-radius: 20px 20px 0 0;
+                max-height: 94vh;
+                margin-bottom: 0;
+                padding: 20px 16px 32px;
+            }
+        }
+        .lp-pay-method {
+            padding: 10px 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #94a3b8;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .lp-pay-method.active {
+            background: rgba(0, 242, 254, 0.12);
+            border-color: #00f2fe;
+            color: #00f2fe;
+        }
+        .lp-btn-copy {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11px;
+            color: #00f2fe;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+    </style>
 
+    <div id="lpCheckoutModal">
+        <div class="lp-modal-sheet">
+            <!-- Header -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                    <div style="width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#ea580c); display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="shopping-cart" style="width:17px;height:17px;color:white;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:16px; font-weight:800; color:white; letter-spacing:-0.3px;">Form Checkout &amp; Langganan</div>
+                        <div style="font-size:11px; color:#64748b;">Aktivasi instan via QRIS, Bank, atau WhatsApp</div>
+                    </div>
+                </div>
+                <button type="button" id="btnCloseLpCheckout" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white;">
+                    <i data-lucide="x" style="width:15px;height:15px;"></i>
+                </button>
+            </div>
 
+            <!-- Plan Card -->
+            <div style="background:rgba(99,102,241,0.1); border:1.5px solid #6366f1; border-radius:14px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:700; font-size:14.5px; color:white;">VIDORA Creator Pass</div>
+                    <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">Maks 5 Profil Akun Google &bull; Akses Penuh Studio</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:18px; font-weight:800; color:#00f2fe;">Rp 75.000</div>
+                    <div style="font-size:10.5px; color:#64748b;">/ bulan</div>
+                </div>
+            </div>
 
+            <form id="formLpCheckout">
+                <!-- Buyer Data -->
+                <div style="font-size:11.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Data Pemesan</div>
+                <input type="text" id="lpCoName" placeholder="Nama Lengkap" required style="width:100%; background:rgba(11,13,20,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:11px 13px; color:white; font-size:13.5px; margin-bottom:9px; outline:none; box-sizing:border-box; font-family:inherit;">
+                <input type="tel" id="lpCoPhone" placeholder="Nomor WhatsApp (08xxx...)" required style="width:100%; background:rgba(11,13,20,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:11px 13px; color:white; font-size:13.5px; margin-bottom:9px; outline:none; box-sizing:border-box; font-family:inherit;">
+                <input type="email" id="lpCoEmail" placeholder="Alamat Email Aktif" required style="width:100%; background:rgba(11,13,20,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:11px 13px; color:white; font-size:13.5px; margin-bottom:16px; outline:none; box-sizing:border-box; font-family:inherit;">
+
+                <!-- Payment Method -->
+                <div style="font-size:11.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Metode Pembayaran</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:14px;">
+                    <button type="button" class="lp-pay-method active" data-method="qris">
+                        <i data-lucide="qr-code" style="width:15px;height:15px;display:block;margin:0 auto 3px;"></i>
+                        QRIS Instan
+                    </button>
+                    <button type="button" class="lp-pay-method" data-method="bank">
+                        <i data-lucide="landmark" style="width:15px;height:15px;display:block;margin:0 auto 3px;"></i>
+                        Transfer Bank
+                    </button>
+                    <button type="button" class="lp-pay-method" data-method="whatsapp">
+                        <i data-lucide="message-circle" style="width:15px;height:15px;display:block;margin:0 auto 3px;"></i>
+                        WhatsApp
+                    </button>
+                </div>
+
+                <!-- QRIS View -->
+                <div id="lpPay_qris" class="lp-pay-view" style="background:#ffffff; border-radius:13px; padding:14px; text-align:center; margin-bottom:14px;">
+                    <div style="font-size:11.5px; font-weight:800; color:#1e1b4b; text-transform:uppercase; margin-bottom:8px;">Scan QRIS VIDORA</div>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&amp;data=00020101021126570014ID.LINKAJA.WWW011893600911002123456702150000000000000000303UMI51440014ID.CO.QRIS.WWW0215ID10200000000005204549953033605802ID5914VIDORA%20STUDIO6007JAKARTA61051234062070703A016304" alt="QRIS VIDORA" style="width:160px; height:160px; display:block; margin:0 auto 8px;">
+                    <div style="font-size:13px; font-weight:800; color:#1e1b4b;">Total: Rp 75.000</div>
+                    <div style="font-size:10.5px; color:#64748b; margin-top:3px;">GoPay, OVO, Dana, ShopeePay, BCA Mobile, Mandiri</div>
+                </div>
+
+                <!-- Bank View -->
+                <div id="lpPay_bank" class="lp-pay-view" style="display:none; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:13px; padding:12px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div>
+                            <div style="font-weight:700; color:white; font-size:12.5px;">Bank Central Asia (BCA)</div>
+                            <div style="color:#00f2fe; font-family:monospace; font-size:14px; font-weight:800; margin:2px 0;">8012 3456 7890</div>
+                            <div style="font-size:10.5px; color:#64748b;">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="lp-btn-copy" onclick="navigator.clipboard.writeText('801234567890'); alert('Nomor Rekening BCA disalin!');">Salin</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;">
+                        <div>
+                            <div style="font-weight:700; color:white; font-size:12.5px;">Bank Mandiri</div>
+                            <div style="color:#00f2fe; font-family:monospace; font-size:14px; font-weight:800; margin:2px 0;">137 00 9876543 2</div>
+                            <div style="font-size:10.5px; color:#64748b;">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="lp-btn-copy" onclick="navigator.clipboard.writeText('1370098765432'); alert('Nomor Rekening Mandiri disalin!');">Salin</button>
+                    </div>
+                    <div style="background:rgba(99,102,241,0.1); border-radius:9px; padding:9px; margin-top:10px; font-size:11px; color:#a5b4fc; line-height:1.4;">
+                        ⚡ Setelah transfer, konfirmasi via WhatsApp agar akun langsung diaktifkan.
+                    </div>
+                </div>
+
+                <!-- WhatsApp View -->
+                <div id="lpPay_whatsapp" class="lp-pay-view" style="display:none; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:13px; padding:12px; margin-bottom:14px;">
+                    <div style="font-size:12px; color:#a7f3d0; line-height:1.5;">
+                        ✅ Form ini akan membuat invoice otomatis dan mengarahkan ke WhatsApp Admin VIDORA. Admin kami akan langsung membantu proses aktivasi paket akun Anda.
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" style="width:100%; padding:13px 18px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); border:none; border-radius:12px; color:white; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 18px rgba(16,185,129,0.4); transition:all 0.2s; font-family:inherit;">
+                    <i data-lucide="check-circle" style="width:17px;height:17px;"></i>
+                    <span id="btnLpSubmitText">Bayar Sekarang (Rp 75.000)</span>
+                </button>
+
+                <p style="text-align:center; font-size:10.5px; color:#64748b; margin-top:10px; line-height:1.4;">
+                    🔒 Data Anda aman &bull; Aktivasi langsung setelah verifikasi &bull; Masa berlaku 30 hari
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/xsender-service.js"></script>
 
     <!-- Lucide Icons initialization & active nav scroll -->
     <script>
         lucide.createIcons();
+
+        // --- Landing Page Checkout Modal Logic ---
+        const lpCheckoutModal = document.getElementById('lpCheckoutModal');
+        const btnHeroCheckout = document.getElementById('btnHeroCheckout');
+        const btnPromoCheckout = document.getElementById('btnPromoCheckout');
+        const btnBottomNavCheckout = document.getElementById('btnBottomNavCheckout');
+        const btnCloseLpCheckout = document.getElementById('btnCloseLpCheckout');
+
+        function openLpModal(e) {
+            if (e) e.preventDefault();
+            lpCheckoutModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeLpModal() {
+            lpCheckoutModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        [btnHeroCheckout, btnPromoCheckout, btnBottomNavCheckout].forEach(btn => {
+            if (btn) btn.addEventListener('click', openLpModal);
+        });
+
+        if (btnCloseLpCheckout) {
+            btnCloseLpCheckout.addEventListener('click', closeLpModal);
+        }
+
+        lpCheckoutModal.addEventListener('click', function(e) {
+            if (e.target === lpCheckoutModal) closeLpModal();
+        });
+
+        // Payment method toggle
+        const payMethods = document.querySelectorAll('.lp-pay-method');
+        payMethods.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                payMethods.forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                const method = btn.getAttribute('data-method');
+                document.querySelectorAll('.lp-pay-view').forEach(function(v) { v.style.display = 'none'; });
+                const view = document.getElementById('lpPay_' + method);
+                if (view) view.style.display = 'block';
+
+                const submitText = document.getElementById('btnLpSubmitText');
+                if (method === 'whatsapp') {
+                    submitText.textContent = 'Hubungi Admin via WhatsApp';
+                } else {
+                    submitText.textContent = 'Bayar Sekarang (Rp 75.000)';
+                }
+            });
+        });
+
+        // Form submit
+        document.getElementById('formLpCheckout').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('lpCoName').value.trim();
+            const phone = document.getElementById('lpCoPhone').value.trim();
+            const email = document.getElementById('lpCoEmail').value.trim();
+            const method = document.querySelector('.lp-pay-method.active')?.getAttribute('data-method') || 'qris';
+
+            if (!name || !phone || !email) {
+                alert('Harap lengkapi semua data pemesan terlebih dahulu.');
+                return;
+            }
+
+            const planTitle = "VIDORA Creator Pass (5 Profil)";
+            const planPrice = 75000;
+            let orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
+
+            // Record order in database/localStorage
+            try {
+                if (window.vidoraData && typeof window.vidoraData.createOrder === 'function') {
+                    const order = await window.vidoraData.createOrder({
+                        plan: planTitle,
+                        price: planPrice,
+                        name: name,
+                        phone: phone,
+                        email: email,
+                        method: method.toUpperCase()
+                    });
+                    if (order && order.id) orderId = order.id;
+
+                    // Trigger Xsender WA if available
+                    if (window.xsender && typeof window.xsender.notifyOrderPlaced === 'function') {
+                        window.xsender.notifyOrderPlaced(order).catch(function(err) {
+                            console.warn('[Xsender] Gagal notif order:', err);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('Gagal record order:', err);
+            }
+
+            // WhatsApp confirmation link
+            const waMsg = encodeURIComponent(
+                'Halo Admin VIDORA, saya ingin konfirmasi pesanan lisensi:\n\n' +
+                '📋 *No Invoice:* ' + orderId + '\n' +
+                '📦 *Paket:* ' + planTitle + '\n' +
+                '💰 *Total:* Rp ' + planPrice.toLocaleString('id-ID') + '\n' +
+                '👤 *Nama:* ' + name + '\n' +
+                '📱 *WhatsApp:* ' + phone + '\n' +
+                '✉️ *Email:* ' + email + '\n' +
+                '💳 *Metode:* ' + method.toUpperCase() + '\n\n' +
+                'Mohon aktivasi akun Creator Pass saya ya. Terima kasih!'
+            );
+
+            closeLpModal();
+            alert('Pemesanan Berhasil!\n\nNomor Invoice: ' + orderId + '\nPaket: ' + planTitle + '\nTotal: Rp 75.000\n\nMenghubungkan ke WhatsApp Admin...');
+            window.open('https://wa.me/6281234567890?text=' + waMsg, '_blank');
+        });
+
+        // Auto open modal if url contains ?checkout=true or #checkout
+        if (window.location.search.includes('checkout=true') || window.location.hash === '#checkout') {
+            setTimeout(openLpModal, 300);
+        }
 
         const sections = document.querySelectorAll('section[id]');
         const navLinks = document.querySelectorAll('.landing-nav-item');
