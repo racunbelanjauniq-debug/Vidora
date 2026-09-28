@@ -16,6 +16,9 @@ window.VIDORA_CONFIG = {
     // Super Admin Email Whitelist (Otomatis role superadmin)
     SUPERADMIN_EMAILS: ["winalislam@gmail.com"],
 
+    // Password Login Super Admin
+    ADMIN_PASSWORD: "Wakrod99$",
+
     // App Version
     VERSION: "1.0.0 (SaaS Mobile Edition)"
 };

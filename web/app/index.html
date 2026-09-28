@@ -907,19 +907,34 @@
 
                 <!-- SUB-PANE 2: KELOLA PENGGUNA -->
                 <div id="adminsub-users" class="admin-sub-content" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <span style="font-size: 13px; color: var(--text-secondary);">Daftar Pengguna Terdaftar</span>
-                        <button type="button" class="btn-table-action" id="btnRefreshAdminUsers">
-                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
-                        </button>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px;">
+                        <div>
+                            <span style="font-size: 14px; font-weight: 700; color: white;">Kelola Pengguna & Akses Member</span>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Aktifkan/nonaktifkan langganan dan kontrol slot akun Google pengguna.</div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn-table-action" id="btnOpenAddUserModal" style="color: #10b981; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.1);">
+                                <i data-lucide="user-plus" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Tambah Pengguna
+                            </button>
+                            <button type="button" class="btn-table-action" id="btnRefreshAdminUsers">
+                                <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Search Bar Users -->
+                    <div style="margin-bottom: 12px;">
+                        <input type="text" id="inputSearchAdminUsers" class="form-input" placeholder="Cari nama atau email pengguna..." style="font-size: 12.5px; padding: 8px 12px;">
+                    </div>
+
                     <div class="admin-table-container">
                         <table class="admin-table">
                             <thead>
                                 <tr>
                                     <th>Pengguna / Email</th>
                                     <th>Peran (Role)</th>
-                                    <th>Limit Akun</th>
+                                    <th>Status Langganan</th>
+                                    <th>Limit Profil</th>
                                     <th>Aksi Cepat</th>
                                 </tr>
                             </thead>
@@ -957,21 +972,41 @@
 
                 <!-- SUB-PANE 4: PESANAN & CHECKOUT (CO) -->
                 <div id="adminsub-orders" class="admin-sub-content" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <span style="font-size: 13px; color: var(--text-secondary);">Riwayat Pemesanan Paket (Checkout)</span>
-                        <button type="button" class="btn-table-action" id="btnRefreshAdminOrders">
-                            <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
-                        </button>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 14px;">
+                        <div>
+                            <span style="font-size: 14px; font-weight: 700; color: white;">Riwayat Pemesanan Paket (Checkout)</span>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Verifikasi pembayaran dan aktifkan paket Creator Pass pelanggan.</div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn-table-action" id="btnOpenAddOrderModal" style="color: #00f2fe; border-color: rgba(0, 242, 254, 0.4); background: rgba(0, 242, 254, 0.1);">
+                                <i data-lucide="plus-circle" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Buat Order Manual
+                            </button>
+                            <button type="button" class="btn-table-action" id="btnRefreshAdminOrders">
+                                <i data-lucide="refresh-cw" style="width: 13px; height: 13px; display: inline-block; vertical-align: middle;"></i> Segarkan
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Filter & Search Bar Orders -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                        <input type="text" id="inputSearchAdminOrders" class="form-input" placeholder="Cari invoice, nama, atau no. WA..." style="flex: 2; min-width: 180px; font-size: 12.5px; padding: 8px 12px;">
+                        <select id="selectFilterAdminOrders" class="form-select" style="flex: 1; min-width: 130px; font-size: 12px; padding: 8px;">
+                            <option value="all">Semua Status</option>
+                            <option value="pending">Menunggu (Pending)</option>
+                            <option value="paid">Lunas (Aktif)</option>
+                        </select>
+                    </div>
+
                     <div class="admin-table-container">
                         <table class="admin-table">
                             <thead>
                                 <tr>
-                                    <th>Invoice / Nama</th>
-                                    <th>Paket & Harga</th>
+                                    <th>Invoice / Waktu</th>
+                                    <th>Pelanggan (Nama, WA, Email)</th>
+                                    <th>Paket & Nilai</th>
                                     <th>Metode</th>
                                     <th>Status</th>
-                                    <th>Aksi</th>
+                                    <th>Aksi Cepat</th>
                                 </tr>
                             </thead>
                             <tbody id="adminOrdersTableBody">
@@ -1461,6 +1496,104 @@
                 <button type="submit" class="btn-wa-checkout" id="btnSubmitCheckout">
                     <i data-lucide="check-circle" style="width: 18px; height: 18px;"></i>
                     <span id="btnSubmitCheckoutText">Konfirmasi & Aktifkan Paket</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADMIN BUAT ORDER MANUAL -->
+    <div class="modal-backdrop" id="modalAdminAddOrder">
+        <div class="modal-sheet" style="max-width: 440px;">
+            <div class="card-title-row">
+                <h3 class="card-title" style="color: #00f2fe; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+                    <span>Buat & Aktifkan Order Manual</span>
+                </h3>
+                <button type="button" class="btn-icon" id="btnCloseAdminAddOrder">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">
+                Tambahkan pesanan pelanggan yang transfer manual/offline agar akun mereka langsung aktif.
+            </p>
+            <form id="formAdminAddOrder">
+                <div class="form-group">
+                    <label class="form-label" for="manualOrderName">Nama Pelanggan:</label>
+                    <input type="text" class="form-input" id="manualOrderName" placeholder="Contoh: Budi Santoso" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manualOrderPhone">Nomor WhatsApp:</label>
+                    <input type="tel" class="form-input" id="manualOrderPhone" placeholder="08xxxxxxxxxx" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manualOrderEmail">Alamat Email:</label>
+                    <input type="email" class="form-input" id="manualOrderEmail" placeholder="nama@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manualOrderMethod">Metode Pembayaran:</label>
+                    <select class="form-select" id="manualOrderMethod">
+                        <option value="QRIS">QRIS</option>
+                        <option value="BANK_BCA">Transfer BCA</option>
+                        <option value="BANK_MANDIRI">Transfer Mandiri</option>
+                        <option value="WHATSAPP">Direct WhatsApp</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manualOrderStatus">Status Pembayaran:</label>
+                    <select class="form-select" id="manualOrderStatus">
+                        <option value="paid">LUNAS — Langsung Aktifkan Akun (5 Profil)</option>
+                        <option value="pending">PENDING — Menunggu Pembayaran</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-generate" style="margin-top: 14px; width: 100%;">
+                    <i data-lucide="check-circle" style="width: 16px; height: 16px;"></i>
+                    <span>Simpan & Proses Order</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADMIN TAMBAH PENGGUNA BARU -->
+    <div class="modal-backdrop" id="modalAdminAddUser">
+        <div class="modal-sheet" style="max-width: 440px;">
+            <div class="card-title-row">
+                <h3 class="card-title" style="color: #10b981; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                    <span>Tambah Pengguna Baru</span>
+                </h3>
+                <button type="button" class="btn-icon" id="btnCloseAdminAddUser">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">
+                Daftarkan akun member baru dan tentukan hak akses langganannya.
+            </p>
+            <form id="formAdminAddUser">
+                <div class="form-group">
+                    <label class="form-label" for="manualUserName">Nama Lengkap:</label>
+                    <input type="text" class="form-input" id="manualUserName" placeholder="Contoh: Rian Kreator" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manualUserEmail">Alamat Email:</label>
+                    <input type="email" class="form-input" id="manualUserEmail" placeholder="user@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manualUserRole">Peran (Role):</label>
+                    <select class="form-select" id="manualUserRole">
+                        <option value="user">Member Biasa</option>
+                        <option value="superadmin">Super Admin (Akses Kontrol Penuh)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manualUserSubscribed">Status Langganan:</label>
+                    <select class="form-select" id="manualUserSubscribed">
+                        <option value="true">Aktif — Beri Akses Penuh (5 Profil Google)</option>
+                        <option value="false">Nonaktif — Belum Berlangganan</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-generate" style="margin-top: 14px; width: 100%; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i data-lucide="save" style="width: 16px; height: 16px;"></i>
+                    <span>Simpan Pengguna</span>
                 </button>
             </form>
         </div>

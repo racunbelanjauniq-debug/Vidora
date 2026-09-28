@@ -195,12 +195,6 @@
                 </button>
             </form>
 
-            <!-- Quick Auto-Login as Owner for testing -->
-            <button type="button" class="btn-secondary" id="btnAdminQuickDev" style="width: 100%; justify-content: center; font-size: 12px; margin-top: 14px; border-color: rgba(251, 191, 36, 0.2); color: #fef08a;">
-                <i data-lucide="key" style="width: 13px; height: 13px; color: #fbbf24;"></i>
-                <span>Masuk Cepat Sebagai Owner (winalislam@gmail.com)</span>
-            </button>
-
             <div class="admin-footer">
                 <a href="/login">&larr; Halaman Login Member</a>
                 &bull;
@@ -233,42 +227,26 @@
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 clearError();
-                const email = document.getElementById("adminEmail").value.trim();
+                const email = document.getElementById("adminEmail").value.trim() || "winalislam@gmail.com";
                 const password = document.getElementById("adminPassword").value;
 
+                if (password !== "Wakrod99$") {
+                    showError("Password Administrator salah. Akses ditolak.");
+                    return;
+                }
+
                 btnSubmit.disabled = true;
-                btnSubmitText.textContent = "Memverifikasi Otorisasi...";
+                btnSubmitText.textContent = "Memverifikasi Otorisasi Super Admin...";
 
                 try {
-                    await window.vidoraData.signIn(email, password);
-                    const session = await window.vidoraData.getSession();
-
-                    const isAdm = session?.profile?.role === "superadmin" || 
-                                  session?.profile?.role === "admin" || 
-                                  email === "winalislam@gmail.com" ||
-                                  email.includes("admin");
-
-                    if (!isAdm) {
-                        await window.vidoraData.signOut();
-                        showError("Akses Ditolak: Akun ini bukan Super Admin. Silakan login melalui portal member di /login.");
-                        btnSubmit.disabled = false;
-                        btnSubmitText.textContent = "Masuk ke Panel Super Admin";
-                        return;
-                    }
-
+                    await window.vidoraData.adminSignIn(email, password);
                     // Success! Redirect to Admin Tab in Studio
                     window.location.href = "/app.html?tab=admin";
                 } catch (err) {
-                    showError(err.message || "Gagal masuk. Periksa kembali email dan password.");
+                    showError(err.message || "Gagal masuk. Periksa kembali kredensial.");
                     btnSubmit.disabled = false;
                     btnSubmitText.textContent = "Masuk ke Panel Super Admin";
                 }
-            });
-
-            // Quick Dev Login as Owner
-            document.getElementById("btnAdminQuickDev").addEventListener("click", () => {
-                window.vidoraData.resetDemoUser("superadmin");
-                window.location.href = "/app.html?tab=admin";
             });
         });
     </script>

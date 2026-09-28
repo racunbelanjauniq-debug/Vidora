@@ -679,16 +679,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // Render Admin Users
+    let adminUsersList = [];
     async function renderAdminUsers() {
         const tbody = document.getElementById("adminUsersTableBody");
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 20px;">Memuat data pengguna...</td></tr>`;
+        if (!tbody) return;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">Memuat data pengguna...</td></tr>`;
 
-        const users = await window.vidoraData.getAllUsers();
+        adminUsersList = await window.vidoraData.getAllUsers();
+        renderAdminUsersTable();
+    }
+
+    function renderAdminUsersTable() {
+        const tbody = document.getElementById("adminUsersTableBody");
+        if (!tbody) return;
         tbody.innerHTML = "";
 
-        users.forEach(u => {
+        const search = (document.getElementById("inputSearchAdminUsers")?.value || "").toLowerCase().trim();
+        const filtered = adminUsersList.filter(u => {
+            if (!search) return true;
+            return (u.email || "").toLowerCase().includes(search) || (u.full_name || "").toLowerCase().includes(search);
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-tertiary);">Tidak ada pengguna yang sesuai pencarian.</td></tr>`;
+            return;
+        }
+
+        filtered.forEach(u => {
             const tr = document.createElement("tr");
             const isAdm = u.role === "admin" || u.role === "superadmin";
+            const isSub = u.is_subscribed === true || isAdm;
 
             tr.innerHTML = `
                 <td>
@@ -699,16 +719,31 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <span class="${isAdm ? 'role-badge-admin' : 'role-badge-user'}">${isAdm ? 'Super Admin' : 'Member'}</span>
                 </td>
                 <td>
+                    <span style="font-size: 11px; font-weight: 700; color: ${isSub ? '#10b981' : '#f59e0b'};">
+                        ${isSub ? '● AKTIF (Creator Pass)' : '○ Non-Member'}
+                    </span>
+                </td>
+                <td>
                     <span style="font-family: monospace; font-weight: 700;">${isAdm ? 'Unlimited' : (u.max_google_accounts || 5) + ' Akun'}</span>
                 </td>
                 <td>
-                    <button class="btn-table-action btn-toggle-user-role" data-uid="${u.id}" data-currole="${u.role}">
-                        ${isAdm ? 'Jadikan Member' : 'Jadikan Admin'}
-                    </button>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button class="btn-table-action btn-toggle-user-sub" data-uid="${u.id}" data-cursub="${isSub}" style="color: ${isSub ? '#f43f5e' : '#10b981'}; font-weight: 700;">
+                            ${isSub ? 'Nonaktifkan' : '✓ Aktifkan (5 Slot)'}
+                        </button>
+                        <button class="btn-table-action btn-toggle-user-role" data-uid="${u.id}" data-currole="${u.role}">
+                            ${isAdm ? 'Jadikan Member' : 'Jadikan Admin'}
+                        </button>
+                        <button class="btn-table-action btn-del-user" data-uid="${u.id}" title="Hapus Akun Pengguna" style="color: var(--text-tertiary); padding: 4px 6px;">
+                            <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i>
+                        </button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
+
+        lucide.createIcons();
 
         // Wire role toggle buttons
         document.querySelectorAll(".btn-toggle-user-role").forEach(btn => {
@@ -721,9 +756,54 @@ document.addEventListener("DOMContentLoaded", async () => {
                 await initApp();
             });
         });
+
+        // Wire subscription toggle buttons
+        document.querySelectorAll(".btn-toggle-user-sub").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const uid = btn.getAttribute("data-uid");
+                const curSub = btn.getAttribute("data-cursub") === "true";
+                await window.vidoraData.toggleUserSubscription(uid, !curSub);
+                alert(`Status langganan pengguna berhasil diubah menjadi: ${!curSub ? 'AKTIF (5 Profil Google)' : 'NONAKTIF'}`);
+                await renderAdminUsers();
+                await initApp();
+            });
+        });
+
+        // Wire delete user buttons
+        document.querySelectorAll(".btn-del-user").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                if (!confirm("Yakin ingin menghapus data pengguna ini dari sistem?")) return;
+                const uid = btn.getAttribute("data-uid");
+                await window.vidoraData.deleteUser(uid);
+                await renderAdminUsers();
+            });
+        });
     }
 
-    document.getElementById("btnRefreshAdminUsers").addEventListener("click", renderAdminUsers);
+    document.getElementById("btnRefreshAdminUsers")?.addEventListener("click", renderAdminUsers);
+    document.getElementById("inputSearchAdminUsers")?.addEventListener("input", renderAdminUsersTable);
+
+    // Modal Admin Add User
+    const modalAdminAddUser = document.getElementById("modalAdminAddUser");
+    document.getElementById("btnOpenAddUserModal")?.addEventListener("click", () => {
+        if (modalAdminAddUser) modalAdminAddUser.style.display = "flex";
+    });
+    document.getElementById("btnCloseAdminAddUser")?.addEventListener("click", () => {
+        if (modalAdminAddUser) modalAdminAddUser.style.display = "none";
+    });
+    document.getElementById("formAdminAddUser")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fullName = document.getElementById("manualUserName").value.trim();
+        const email = document.getElementById("manualUserEmail").value.trim();
+        const role = document.getElementById("manualUserRole").value;
+        const isSubscribed = document.getElementById("manualUserSubscribed").value === "true";
+
+        await window.vidoraData.addUserManual({ fullName, email, role, isSubscribed });
+        alert(`Pengguna ${email} berhasil didaftarkan dan statusnya telah ${isSubscribed ? 'AKTIF' : 'NONAKTIF'}.`);
+        if (modalAdminAddUser) modalAdminAddUser.style.display = "none";
+        document.getElementById("formAdminAddUser").reset();
+        await renderAdminUsers();
+    });
 
     // Render Admin Queue
     async function renderAdminQueue() {
@@ -782,78 +862,167 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    document.getElementById("btnRefreshAdminQueue").addEventListener("click", renderAdminQueue);
+    document.getElementById("btnRefreshAdminQueue")?.addEventListener("click", renderAdminQueue);
 
     // Render Admin Orders
+    let adminOrdersList = [];
     async function renderAdminOrders() {
         const tbody = document.getElementById("adminOrdersTableBody");
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px;">Memuat pesanan...</td></tr>`;
+        if (!tbody) return;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px;">Memuat pesanan...</td></tr>`;
 
-        const orders = await window.vidoraData.getAllOrders();
+        adminOrdersList = await window.vidoraData.getAllOrders();
+        renderAdminOrdersTable();
+    }
+
+    function renderAdminOrdersTable() {
+        const tbody = document.getElementById("adminOrdersTableBody");
+        if (!tbody) return;
         tbody.innerHTML = "";
 
-        if (orders.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-tertiary);">Belum ada riwayat pesanan checkout.</td></tr>`;
+        const search = (document.getElementById("inputSearchAdminOrders")?.value || "").toLowerCase().trim();
+        const filterStatus = document.getElementById("selectFilterAdminOrders")?.value || "all";
+
+        const filtered = adminOrdersList.filter(o => {
+            if (filterStatus !== "all" && o.status !== filterStatus) return false;
+            if (!search) return true;
+            return (o.id || "").toLowerCase().includes(search) || 
+                   (o.customer_name || "").toLowerCase().includes(search) || 
+                   (o.customer_phone || "").toLowerCase().includes(search) ||
+                   (o.customer_email || "").toLowerCase().includes(search);
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-tertiary);">Belum ada riwayat pesanan yang sesuai filter.</td></tr>`;
             return;
         }
 
-        orders.forEach(o => {
+        filtered.forEach(o => {
             const tr = document.createElement("tr");
             const isPaid = o.status === "paid";
+            const cleanPhone = (o.customer_phone || "").replace(/[^0-9]/g, "");
+            const waPhone = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : (cleanPhone.startsWith("62") ? cleanPhone : "62" + cleanPhone);
+            const waMsg = encodeURIComponent(`Halo ${o.customer_name}, terima kasih telah memesan ${o.plan_name || 'VIDORA Creator Pass'} (No Invoice: ${o.id}). Akun Anda sudah kami aktifkan dengan kuota 5 profil Google. Silakan login di https://www.vidora.biz.id/login!`);
 
             tr.innerHTML = `
                 <td>
                     <div style="font-weight: 700; color: white;">${o.id}</div>
-                    <div style="font-size: 11px; color: var(--text-tertiary);">${o.customer_name} (${o.customer_phone || '-'})</div>
+                    <div style="font-size: 10px; color: var(--text-tertiary);">${new Date(o.created_at || Date.now()).toLocaleDateString("id-ID")} ${new Date(o.created_at || Date.now()).toLocaleTimeString("id-ID", {hour:'2-digit', minute:'2-digit'})}</div>
                 </td>
                 <td>
-                    <div style="font-weight: 600;">${o.plan_name}</div>
-                    <div style="font-size: 11px; color: var(--accent-cyan);">Rp ${(o.price || 0).toLocaleString("id-ID")}</div>
+                    <div style="font-weight: 600; color: white;">${o.customer_name || '-'}</div>
+                    <div style="font-size: 11px; color: var(--accent-cyan);">${o.customer_phone || '-'}</div>
+                    <div style="font-size: 10px; color: var(--text-tertiary);">${o.customer_email || '-'}</div>
                 </td>
                 <td>
-                    <span style="font-weight: 600; font-size: 11px;">${o.payment_method}</span>
+                    <div style="font-weight: 600; font-size: 12px;">${o.plan_name || 'Creator Pass'}</div>
+                    <div style="font-size: 12px; font-weight: 800; color: #00f2fe;">Rp ${(o.price || 75000).toLocaleString("id-ID")}</div>
+                </td>
+                <td>
+                    <span style="font-weight: 600; font-size: 11px;">${(o.payment_method || 'QRIS').toUpperCase()}</span>
                 </td>
                 <td>
                     <span style="font-weight: 700; color: ${isPaid ? '#10b981' : '#f59e0b'}; font-size: 11px;">
-                        ${isPaid ? 'LUNAS (AKTIF)' : 'PENDING'}
+                        ${isPaid ? '● LUNAS (AKTIF)' : '○ PENDING'}
                     </span>
                 </td>
                 <td>
-                    ${isPaid 
-                        ? `<span style="font-size: 11px; color: #10b981;">✓ Terverifikasi</span>`
-                        : `<button class="btn-table-action btn-approve-order" data-oid="${o.id}" style="color: #10b981;">Aktifkan</button>`
-                    }
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        ${isPaid 
+                            ? `<span style="font-size: 11px; color: #10b981; font-weight: 700; padding: 4px 6px;">✓ Aktif</span>`
+                            : `<button class="btn-table-action btn-approve-order" data-oid="${o.id}" style="color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.15); font-weight: 700;">✓ Aktifkan</button>`
+                        }
+                        ${cleanPhone ? `
+                            <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="btn-table-action" style="color: #6ee7b7; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;" title="Chat WhatsApp Pelanggan">
+                                <i data-lucide="message-circle" style="width: 12px; height: 12px;"></i> WA
+                            </a>
+                        ` : ''}
+                        <button class="btn-table-action btn-del-order" data-oid="${o.id}" title="Hapus Order" style="color: var(--text-tertiary); padding: 4px 6px;">
+                            <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+                        </button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
+        lucide.createIcons();
+
+        // Wire approve order
         document.querySelectorAll(".btn-approve-order").forEach(b => {
             b.addEventListener("click", async () => {
                 const oid = b.getAttribute("data-oid");
-                const targetOrder = orders.find(o => o.id === oid);
+                const targetOrder = adminOrdersList.find(o => o.id === oid);
                 await window.vidoraData.approveOrder(oid);
-                renderAdminOrders();
+                await renderAdminOrders();
 
-                // Trigger WhatsApp Notification via xsender.id
+                // Trigger WhatsApp Notification via xsender.id if configured
                 if (window.xsender && targetOrder) {
                     window.xsender.notifyOrderApproved(targetOrder).then(res => {
                         if (res && res.success) {
-                            alert(`Pesanan ${oid} disetujui!\nNotifikasi WhatsApp aktivasi paket telah dikirim ke ${targetOrder.customer_phone || targetOrder.customer_name}.`);
+                            alert(`Pesanan ${oid} berhasil diaktifkan!\nNotifikasi WhatsApp aktivasi paket telah dikirim ke ${targetOrder.customer_phone || targetOrder.customer_name}.`);
                         } else {
-                            alert("Pesanan berhasil disetujui & paket 5 profil Google pengguna telah aktif!");
+                            alert(`Pesanan ${oid} BERHASIL DIAKTIFKAN!\nPaket 5 Profil Akun Google pengguna telah aktif seketika.`);
                         }
                     }).catch(() => {
-                        alert("Pesanan berhasil disetujui & paket pengguna diaktifkan!");
+                        alert(`Pesanan ${oid} BERHASIL DIAKTIFKAN!\nPaket pengguna telah aktif.`);
                     });
                 } else {
-                    alert("Pesanan berhasil disetujui & paket pengguna diaktifkan!");
+                    alert(`Pesanan ${oid} BERHASIL DIAKTIFKAN!\nPaket 5 Profil Akun Google pengguna telah aktif seketika.`);
                 }
+            });
+        });
+
+        // Wire delete order
+        document.querySelectorAll(".btn-del-order").forEach(b => {
+            b.addEventListener("click", async () => {
+                if (!confirm("Hapus pesanan ini dari riwayat?")) return;
+                const oid = b.getAttribute("data-oid");
+                await window.vidoraData.deleteOrder(oid);
+                await renderAdminOrders();
             });
         });
     }
 
-    document.getElementById("btnRefreshAdminOrders").addEventListener("click", renderAdminOrders);
+    document.getElementById("btnRefreshAdminOrders")?.addEventListener("click", renderAdminOrders);
+    document.getElementById("inputSearchAdminOrders")?.addEventListener("input", renderAdminOrdersTable);
+    document.getElementById("selectFilterAdminOrders")?.addEventListener("change", renderAdminOrdersTable);
+
+    // Modal Admin Add Order Manual
+    const modalAdminAddOrder = document.getElementById("modalAdminAddOrder");
+    document.getElementById("btnOpenAddOrderModal")?.addEventListener("click", () => {
+        if (modalAdminAddOrder) modalAdminAddOrder.style.display = "flex";
+    });
+    document.getElementById("btnCloseAdminAddOrder")?.addEventListener("click", () => {
+        if (modalAdminAddOrder) modalAdminAddOrder.style.display = "none";
+    });
+    document.getElementById("formAdminAddOrder")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("manualOrderName").value.trim();
+        const phone = document.getElementById("manualOrderPhone").value.trim();
+        const email = document.getElementById("manualOrderEmail").value.trim();
+        const method = document.getElementById("manualOrderMethod").value;
+        const status = document.getElementById("manualOrderStatus").value;
+
+        const newOrder = await window.vidoraData.createOrder({
+            plan: "VIDORA Creator Pass",
+            price: 75000,
+            name,
+            phone,
+            email,
+            method,
+            status
+        });
+
+        if (status === "paid") {
+            await window.vidoraData.approveOrder(newOrder.id);
+        }
+
+        alert(`Order manual ${newOrder.id} berhasil disimpan!\nStatus: ${status === 'paid' ? 'LUNAS & AKUN TELAH DIAKTIFKAN (5 PROFIL)' : 'PENDING'}.`);
+        if (modalAdminAddOrder) modalAdminAddOrder.style.display = "none";
+        document.getElementById("formAdminAddOrder").reset();
+        await renderAdminOrders();
+    });
 
     // =========================================================================
     // 5.1 Super Admin WhatsApp Gateway Controller (xsender.id)
