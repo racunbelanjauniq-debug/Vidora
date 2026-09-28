@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VIDORA — Studio AI Video & Image Generator dari Foto Produk</title>
+    <meta name="description" content="Platform AI Video & Image Generator otomatis dari foto produk dengan smart prompt generator dan rotasi multi-akun Google.">
+    <link rel="stylesheet" href="css/landing.css?v=3.0">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-color: #07090e !important;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px) !important;
+            background-size: 20px 20px !important;
+            display: flex !important;
+            justify-content: center !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", sans-serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+        .app-shell {
+            width: 100% !important;
+            max-width: 480px !important;
+            min-height: 100vh !important;
+            background: #0c0e17 !important;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.09) !important;
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+            padding-bottom: 74px !important;
+            margin: 0 auto !important;
+            box-sizing: border-box !important;
+        }
+        @media (max-width: 480px) {
+            html, body {
+                background-image: none !important;
+                background-color: #0c0e17 !important;
+            }
+            .app-shell {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =====================================================
+         CENTERED MOBILE APP SHELL (Exact DonasiHub Pattern)
+         ===================================================== -->
+    <div class="app-shell">
+
+        <!-- App Header (Sticky) -->
+        <header class="navbar">
+            <div class="nav-content">
+                <a href="index.html" class="brand-logo">
+                    <div class="logo-badge">V</div>
+                    <div>
+                        <div class="brand-name">VID<span>ORA</span></div>
+                    </div>
+                </a>
+                <div class="nav-actions">
+                    <a href="login" class="btn-nav-login">Masuk</a>
+                    <a href="app.html" class="btn-nav-studio">
+                        <span>Studio</span>
+                        <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Hero Section -->
+            <section class="hero" id="hero">
+                <div class="eyebrow-pill">
+                    <i data-lucide="sparkles" style="width: 12px; height: 12px; color: #10b981;"></i>
+                    <span>VIDORA 2.0 &bull; AI CONTENT STUDIO</span>
+                </div>
+                <h1 class="hero-title">
+                    Satu Studio AI.<br>
+                    <span>Semua Rasio &amp; Konten.</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Hadirkan video &amp; gambar berkualitas sinematik untuk semua platform. Fleksibel di semua rasio (9:16 Vertikal, 16:9 Landscape YouTube, 1:1 Feed) didukung 17+ gaya prompt otomatis dan video mixer terintegrasi.
+                </p>
+
+                <div class="hero-cta">
+                    <button type="button" class="btn-apple-primary" id="btnHeroCheckout">
+                        <i data-lucide="crown" style="width: 16px; height: 16px;"></i>
+                        <span>Mulai Berlangganan — Rp 75.000 / bln</span>
+                    </button>
+                    <a href="app.html" class="btn-apple-secondary">
+                        <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
+                        <span>Buka Studio AI</span>
+                    </a>
+                </div>
+
+                <!-- Showcase Canvas (Multi-Ratio Showcase) -->
+                <div class="studio-canvas">
+                    <div class="studio-inner">
+                        <div class="video-frame-apple">
+                            <span class="video-badge-overlay">🎬 SEMUA RASIO: 9:16 &bull; 16:9 &bull; 1:1</span>
+                            <video autoplay loop muted playsinline poster="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&auto=format&fit=crop&q=80">
+                                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="hud-header">
+                            <span class="hud-tag">
+                                <i data-lucide="check-circle" style="width: 12px; height: 12px;"></i>
+                                <span>Hasil Otomatis AI</span>
+                            </span>
+                            <span style="font-size: 11px; color: #94a3b8;">Format: 9:16 &bull; 16:9 &bull; 1:1 Bebas Pilih</span>
+                        </div>
+                        <div class="hud-prompt-box">
+                            "Cinematic luxury product shot, soft studio rim lighting, 4k 60fps high details, seamless multi-angle motion."
+                        </div>
+                        <div class="hud-meta-row">
+                            <span class="meta-chip">TikTok &amp; Reels (9:16)</span>
+                            <span class="meta-chip">YouTube Panjang (16:9)</span>
+                            <span class="meta-chip">Feed &amp; Katalog (1:1)</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Category Grid -->
+            <div class="category-grid-card">
+                <a href="app.html" class="cat-item">
+                    <div class="cat-icon-circle" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
+                        🎬
+                    </div>
+                    <span class="cat-label">Semua Rasio</span>
+                </a>
+                <a href="app.html" class="cat-item">
+                    <div class="cat-icon-circle" style="background: linear-gradient(135deg, #00f2fe, #4facfe);">
+                        📸
+                    </div>
+                    <span class="cat-label">Gambar AI</span>
+                </a>
+                <a href="app.html" class="cat-item">
+                    <div class="cat-icon-circle" style="background: linear-gradient(135deg, #f59e0b, #ea580c);">
+                        💡
+                    </div>
+                    <span class="cat-label">17+ Gaya</span>
+                </a>
+                <a href="app.html" class="cat-item">
+                    <div class="cat-icon-circle" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
+                        🎛️
+                    </div>
+                    <span class="cat-label">Video Mixer</span>
+                </a>
+                <a href="app.html" class="cat-item">
+                    <div class="cat-icon-circle" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        🛡️
+                    </div>
+                    <span class="cat-label">Vault 5 Akun</span>
+                </a>
+                <a href="app.html" class="cat-item">
+                    <div class="cat-icon-circle" style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">
+                        ⚡
+                    </div>
+                    <span class="cat-label">Auto Prompt</span>
+                </a>
+            </div>
+
+            <!-- Feature Highlight Card -->
+            <div class="promo-action-card">
+                <div>
+                    <div class="promo-badge">
+                        <i data-lucide="crown" style="width: 11px; height: 11px;"></i>
+                        <span>Akses Penuh Kreator</span>
+                    </div>
+                    <div class="promo-title">VIDORA Creator Pass</div>
+                    <div class="promo-desc">Hanya Rp 75.000 / bln &bull; Akses Studio Lengkap &bull; Semua Rasio &amp; Mixer</div>
+                </div>
+                <button type="button" class="btn-promo-action" id="btnPromoCheckout">
+                    Langganan Sekarang
+                </button>
+            </div>
+
+            <!-- Alur Kerja 3 Langkah -->
+            <section class="section" id="cara-kerja">
+                <span class="section-eyebrow">Alur Kerja Praktis</span>
+                <h2 class="section-title">3 Langkah Mudah</h2>
+                <p class="section-desc">Tidak perlu repot editing manual atau bingung menyusun prompt.</p>
+
+                <div class="bento-grid">
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #6366f1;">
+                            <i data-lucide="upload-cloud" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">1. Upload Foto atau Tulis Ide</h3>
+                        <p class="bento-desc">
+                            Unggah foto produk, pemandangan, atau ide konten Anda. AI membaca subjek, komposisi, dan detail secara akurat.
+                        </p>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #f59e0b;">
+                            <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">2. Pilih Gaya &amp; Rasio Bebas</h3>
+                        <p class="bento-desc">
+                            Tersedia 17+ pilihan gaya lengkap (Musik Playlist, Vlog Drone Alam, ASMR, Before-After, Hard Selling, Kuliner) di rasio 9:16, 16:9, atau 1:1.
+                        </p>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #10b981;">
+                            <i data-lucide="film" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">3. Render &amp; Gabung di Mixer</h3>
+                        <p class="bento-desc">
+                            Video beresolusi tinggi otomatis selesai di antrian dan dapat langsung dirangkai menjadi video utuh lewat Video Mixer terintegrasi.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fitur Utama -->
+            <section class="section" id="fitur">
+                <span class="section-eyebrow">Fitur Unggulan</span>
+                <h2 class="section-title">Solusi All-in-One Kreator</h2>
+                <p class="section-desc">Segala kebutuhan produksi video dan foto produk harian Anda.</p>
+
+                <div class="bento-grid">
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #6366f1;">
+                            <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">17+ Gaya Auto Prompt Cerdas</h3>
+                        <p class="bento-desc">
+                            Mencakup Musik Playlist Kamera Statis, Vlog Alam Drone Sinematik, Storyboard Multi-Adegan, Before-After, TikTok Go Wisata/Kuliner/Hotel, hingga Hard &amp; Soft Selling.
+                        </p>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #0071e3;">
+                            <i data-lucide="layout-grid" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">Mendukung Semua Aspek Rasio</h3>
+                        <p class="bento-desc">
+                            Bukan cuma 9:16 vertikal! Buat video landscape 16:9 untuk YouTube panjang, 9:16 untuk TikTok/Reels, dan 1:1 square untuk feed Instagram serta katalog toko online.
+                        </p>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #ec4899;">
+                            <i data-lucide="film" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">Video Mixer Terintegrasi</h3>
+                        <p class="bento-desc">
+                            Gabungkan beberapa hasil video klip menjadi satu video utuh siap tayang langsung di browser tanpa perlu software editing terpisah.
+                        </p>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #10b981;">
+                            <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">Rotasi Hingga 5 Akun Google</h3>
+                        <p class="bento-desc">
+                            Simpan hingga 5 akun Google di vault untuk rotasi antrian harian tanpa perlu bolak-balik login ulang.
+                        </p>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #f59e0b;">
+                            <i data-lucide="image" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">AI Image Studio Generator</h3>
+                        <p class="bento-desc">
+                            Generate gambar produk tajam beresolusi tinggi dengan pencahayaan studio profesional untuk foto banner dan marketplace.
+                        </p>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="bento-icon" style="color: #00f2fe;">
+                            <i data-lucide="cpu" style="width: 18px; height: 18px;"></i>
+                        </div>
+                        <h3 class="bento-title">Render Otomatis di Background</h3>
+                        <p class="bento-desc">
+                            Proses render berjalan senyap di background. Anda bebas multitasking dan memeriksa hasilnya kapan saja di galeri.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+
+        </main>
+
+        <!-- Natural, Clean Indonesian Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="logo-badge" style="width: 24px; height: 24px; font-size: 12px;">V</div>
+                    <span style="font-weight: 700; color: white;">VIDORA</span>
+                    <span>&bull; Studio AI Video &amp; Gambar</span>
+                </div>
+                <div>&copy; 2026 VIDORA. Platform AI Video &amp; Konten Kreator Indonesia.</div>
+                <div class="footer-links">
+                    <a href="app.html">Buka Studio</a>
+                    <span>&bull;</span>
+                    <a href="https://wa.me/6281234567890?text=Halo%20Admin%20VIDORA,%20saya%20butuh%20bantuan." target="_blank">Bantuan WhatsApp</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Fixed Bottom Navigation Bar -->
+        <nav class="landing-bottom-nav">
+            <a href="#hero" class="landing-nav-item active">
+                <i data-lucide="home" style="width: 18px; height: 18px;"></i>
+                <span>Beranda</span>
+            </a>
+            <a href="#fitur" class="landing-nav-item">
+                <i data-lucide="zap" style="width: 18px; height: 18px;"></i>
+                <span>Fitur</span>
+            </a>
+            <a href="#checkout" class="landing-nav-item center-btn" id="btnBottomNavCheckout" title="Langganan">
+                <i data-lucide="crown" style="width: 20px; height: 20px;"></i>
+            </a>
+            <a href="#cara-kerja" class="landing-nav-item">
+                <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i>
+                <span>Alur</span>
+            </a>
+            <a href="app.html" class="landing-nav-item">
+                <i data-lucide="video" style="width: 18px; height: 18px;"></i>
+                <span>Studio</span>
+            </a>
+        </nav>
+
+        <!-- Floating WhatsApp Button -->
+        <a href="https://wa.me/6281234567890?text=Halo%20Admin%20VIDORA,%20saya%20ingin%20tanya%20tentang%20fitur%20studio." target="_blank" class="floating-wa-btn" title="Hubungi Admin via WhatsApp">
+            <i data-lucide="message-circle" style="width: 22px; height: 22px;"></i>
+        </a>
+
+    </div>
+
+    <!-- =====================================================
+         LANDING PAGE CHECKOUT MODAL
+         ===================================================== -->
+    <style>
+        #lpCheckoutModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.84);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow-y: auto;
+            padding: 16px 12px;
+            align-items: center;
+            justify-content: center;
+        }
+        .lp-modal-sheet {
+            background: #0d0f17;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            max-width: 440px;
+            width: 100%;
+            padding: 22px 18px 28px;
+            max-height: 92vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9);
+            margin: auto;
+            animation: lpModalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes lpModalPop {
+            from { opacity: 0; transform: scale(0.95) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @media (max-width: 480px) {
+            #lpCheckoutModal {
+                align-items: flex-end;
+                padding: 0;
+            }
+            .lp-modal-sheet {
+                border-radius: 20px 20px 0 0;
+                max-height: 94vh;
+                margin-bottom: 0;
+                padding: 20px 16px 32px;
+            }
+        }
+        .lp-pay-method {
+            padding: 10px 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #94a3b8;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .lp-pay-method.active {
+            background: rgba(0, 242, 254, 0.12);
+            border-color: #00f2fe;
+            color: #00f2fe;
+        }
+        .lp-btn-copy {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11px;
+            color: #00f2fe;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+    </style>
+
+    <div id="lpCheckoutModal">
+        <div class="lp-modal-sheet">
+            <!-- Header -->
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:9px;">
+                    <div style="width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#ea580c); display:flex; align-items:center; justify-content:center;">
+                        <i data-lucide="shopping-cart" style="width:17px;height:17px;color:white;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:16px; font-weight:800; color:white; letter-spacing:-0.3px;">Form Checkout &amp; Langganan</div>
+                        <div style="font-size:11px; color:#64748b;">Aktivasi instan via QRIS, Bank, atau WhatsApp</div>
+                    </div>
+                </div>
+                <button type="button" id="btnCloseLpCheckout" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white;">
+                    <i data-lucide="x" style="width:15px;height:15px;"></i>
+                </button>
+            </div>
+
+            <!-- Plan Card -->
+            <div style="background:rgba(99,102,241,0.1); border:1.5px solid #6366f1; border-radius:14px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div style="font-weight:700; font-size:14.5px; color:white;">VIDORA Creator Pass</div>
+                    <div style="font-size:11.5px; color:#94a3b8; margin-top:2px;">Maks 5 Profil Akun Google &bull; Akses Penuh Studio</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:18px; font-weight:800; color:#00f2fe;">Rp 75.000</div>
+                    <div style="font-size:10.5px; color:#64748b;">/ bulan</div>
+                </div>
+            </div>
+
+            <form id="formLpCheckout">
+                <!-- Buyer Data -->
+                <div style="font-size:11.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Data Pemesan</div>
+                <input type="text" id="lpCoName" placeholder="Nama Lengkap" required style="width:100%; background:rgba(11,13,20,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:11px 13px; color:white; font-size:13.5px; margin-bottom:9px; outline:none; box-sizing:border-box; font-family:inherit;">
+                <input type="tel" id="lpCoPhone" placeholder="Nomor WhatsApp (08xxx...)" required style="width:100%; background:rgba(11,13,20,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:11px 13px; color:white; font-size:13.5px; margin-bottom:9px; outline:none; box-sizing:border-box; font-family:inherit;">
+                <input type="email" id="lpCoEmail" placeholder="Alamat Email Aktif" required style="width:100%; background:rgba(11,13,20,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:11px; padding:11px 13px; color:white; font-size:13.5px; margin-bottom:16px; outline:none; box-sizing:border-box; font-family:inherit;">
+
+                <!-- Payment Method -->
+                <div style="font-size:11.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Metode Pembayaran</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:14px;">
+                    <button type="button" class="lp-pay-method active" data-method="qris">
+                        <i data-lucide="qr-code" style="width:15px;height:15px;display:block;margin:0 auto 3px;"></i>
+                        QRIS Instan
+                    </button>
+                    <button type="button" class="lp-pay-method" data-method="bank">
+                        <i data-lucide="landmark" style="width:15px;height:15px;display:block;margin:0 auto 3px;"></i>
+                        Transfer Bank
+                    </button>
+                    <button type="button" class="lp-pay-method" data-method="whatsapp">
+                        <i data-lucide="message-circle" style="width:15px;height:15px;display:block;margin:0 auto 3px;"></i>
+                        WhatsApp
+                    </button>
+                </div>
+
+                <!-- QRIS View -->
+                <div id="lpPay_qris" class="lp-pay-view" style="background:#ffffff; border-radius:13px; padding:14px; text-align:center; margin-bottom:14px;">
+                    <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(99,102,241,0.15); color:#4f46e5; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:800; margin-bottom:10px;">
+                        ⚡ Pembayaran QRIS Otomatis (Pakasir)
+                    </div>
+                    <div style="font-size:11.5px; font-weight:800; color:#1e1b4b; text-transform:uppercase; margin-bottom:8px;">Scan QRIS VIDORA Studio</div>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&amp;data=00020101021126570014ID.LINKAJA.WWW011893600911002123456702150000000000000000303UMI51440014ID.CO.QRIS.WWW0215ID10200000000005204549953033605802ID5914VIDORA%20STUDIO6007JAKARTA61051234062070703A016304" alt="QRIS VIDORA" style="width:160px; height:160px; display:block; margin:0 auto 8px;">
+                    <div style="font-size:13px; font-weight:800; color:#1e1b4b;">Total: Rp 75.000</div>
+                    <div style="font-size:10.5px; color:#64748b; margin-top:3px;">GoPay, OVO, Dana, ShopeePay, BCA Mobile, Mandiri</div>
+                    <div style="background:#f1f5f9; border-radius:8px; padding:8px; margin-top:10px; font-size:11px; color:#475569; line-height:1.4;">
+                        🚀 <strong>Verifikasi Instan:</strong> Klik "Bayar Sekarang" di bawah untuk membuka halaman pembayaran QRIS Pakasir dengan auto-fulfillment akun 5 Profil.
+                    </div>
+                </div>
+
+                <!-- Bank View -->
+                <div id="lpPay_bank" class="lp-pay-view" style="display:none; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:13px; padding:12px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div>
+                            <div style="font-weight:700; color:white; font-size:12.5px;">Bank Central Asia (BCA)</div>
+                            <div style="color:#00f2fe; font-family:monospace; font-size:14px; font-weight:800; margin:2px 0;">8012 3456 7890</div>
+                            <div style="font-size:10.5px; color:#64748b;">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="lp-btn-copy" onclick="navigator.clipboard.writeText('801234567890'); alert('Nomor Rekening BCA disalin!');">Salin</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:10px;">
+                        <div>
+                            <div style="font-weight:700; color:white; font-size:12.5px;">Bank Mandiri</div>
+                            <div style="color:#00f2fe; font-family:monospace; font-size:14px; font-weight:800; margin:2px 0;">137 00 9876543 2</div>
+                            <div style="font-size:10.5px; color:#64748b;">a.n VIDORA OFFICIAL</div>
+                        </div>
+                        <button type="button" class="lp-btn-copy" onclick="navigator.clipboard.writeText('1370098765432'); alert('Nomor Rekening Mandiri disalin!');">Salin</button>
+                    </div>
+                    <div style="background:rgba(99,102,241,0.1); border-radius:9px; padding:9px; margin-top:10px; font-size:11px; color:#a5b4fc; line-height:1.4;">
+                        ⚡ Setelah transfer, konfirmasi via WhatsApp agar akun langsung diaktifkan.
+                    </div>
+                </div>
+
+                <!-- WhatsApp View -->
+                <div id="lpPay_whatsapp" class="lp-pay-view" style="display:none; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:13px; padding:12px; margin-bottom:14px;">
+                    <div style="font-size:12px; color:#a7f3d0; line-height:1.5;">
+                        ✅ Form ini akan membuat invoice otomatis dan mengarahkan ke WhatsApp Admin VIDORA. Admin kami akan langsung membantu proses aktivasi paket akun Anda.
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" style="width:100%; padding:13px 18px; background:linear-gradient(135deg,#10b981 0%,#059669 100%); border:none; border-radius:12px; color:white; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 18px rgba(16,185,129,0.4); transition:all 0.2s; font-family:inherit;">
+                    <i data-lucide="check-circle" style="width:17px;height:17px;"></i>
+                    <span id="btnLpSubmitText">Bayar Sekarang (Rp 75.000)</span>
+                </button>
+
+                <p style="text-align:center; font-size:10.5px; color:#64748b; margin-top:10px; line-height:1.4;">
+                    🔒 Data Anda aman &bull; Aktivasi langsung setelah verifikasi &bull; Masa berlaku 30 hari
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/xsender-service.js"></script>
+
+    <!-- Lucide Icons initialization & active nav scroll -->
+    <script>
+        lucide.createIcons();
+
+        // --- Landing Page Checkout Modal Logic ---
+        const lpCheckoutModal = document.getElementById('lpCheckoutModal');
+        const btnHeroCheckout = document.getElementById('btnHeroCheckout');
+        const btnPromoCheckout = document.getElementById('btnPromoCheckout');
+        const btnBottomNavCheckout = document.getElementById('btnBottomNavCheckout');
+        const btnCloseLpCheckout = document.getElementById('btnCloseLpCheckout');
+
+        function openLpModal(e) {
+            if (e) e.preventDefault();
+            lpCheckoutModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            lucide.createIcons();
+        }
+
+        function closeLpModal() {
+            lpCheckoutModal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        [btnHeroCheckout, btnPromoCheckout, btnBottomNavCheckout].forEach(btn => {
+            if (btn) btn.addEventListener('click', openLpModal);
+        });
+
+        if (btnCloseLpCheckout) {
+            btnCloseLpCheckout.addEventListener('click', closeLpModal);
+        }
+
+        lpCheckoutModal.addEventListener('click', function(e) {
+            if (e.target === lpCheckoutModal) closeLpModal();
+        });
+
+        // Payment method toggle
+        const payMethods = document.querySelectorAll('.lp-pay-method');
+        payMethods.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                payMethods.forEach(function(b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                const method = btn.getAttribute('data-method');
+                document.querySelectorAll('.lp-pay-view').forEach(function(v) { v.style.display = 'none'; });
+                const view = document.getElementById('lpPay_' + method);
+                if (view) view.style.display = 'block';
+
+                const submitText = document.getElementById('btnLpSubmitText');
+                if (method === 'whatsapp') {
+                    submitText.textContent = 'Hubungi Admin via WhatsApp';
+                } else {
+                    submitText.textContent = 'Bayar Sekarang (Rp 75.000)';
+                }
+            });
+        });
+
+        // Form submit
+        document.getElementById('formLpCheckout').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('lpCoName').value.trim();
+            const phone = document.getElementById('lpCoPhone').value.trim();
+            const email = document.getElementById('lpCoEmail').value.trim();
+            const method = document.querySelector('.lp-pay-method.active')?.getAttribute('data-method') || 'qris';
+
+            if (!name || !phone || !email) {
+                alert('Harap lengkapi semua data pemesan terlebih dahulu.');
+                return;
+            }
+
+            const planTitle = "VIDORA Creator Pass (5 Profil)";
+            const planPrice = 75000;
+            let orderId = "INV-" + Math.floor(100000 + Math.random() * 900000);
+
+            // Record order in database/localStorage
+            try {
+                if (window.vidoraData && typeof window.vidoraData.createOrder === 'function') {
+                    const order = await window.vidoraData.createOrder({
+                        plan: planTitle,
+                        price: planPrice,
+                        name: name,
+                        phone: phone,
+                        email: email,
+                        method: method.toUpperCase()
+                    });
+                    if (order && order.id) orderId = order.id;
+
+                    // Trigger Xsender WA if available
+                    if (window.xsender && typeof window.xsender.notifyOrderPlaced === 'function') {
+                        window.xsender.notifyOrderPlaced(order).catch(function(err) {
+                            console.warn('[Xsender] Gagal notif order:', err);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('Gagal record order:', err);
+            }
+
+            const slug = localStorage.getItem("cfg_pakasir_slug") || "vidora";
+            const redirectTarget = window.location.origin + "/app.html?order_id=" + orderId + "&status=success";
+            const pakasirPayUrl = `https://app.pakasir.com/pay/${slug}/${planPrice}?order_id=${orderId}&redirect=${encodeURIComponent(redirectTarget)}`;
+
+            if (method === 'qris') {
+                closeLpModal();
+                alert('Pesanan ' + orderId + ' Berhasil Dibuat!\n\nAnda akan dialihkan ke halaman pembayaran QRIS Pakasir.\nSetelah scan & bayar, akun Creator Pass (5 Profil Google) Anda akan AKTIF secara otomatis.');
+                window.location.href = pakasirPayUrl;
+                return;
+            }
+
+            // WhatsApp confirmation link for manual/bank
+            const waMsg = encodeURIComponent(
+                'Halo Admin VIDORA, saya ingin konfirmasi pesanan lisensi:\n\n' +
+                '📋 *No Invoice:* ' + orderId + '\n' +
+                '📦 *Paket:* ' + planTitle + '\n' +
+                '💰 *Total:* Rp ' + planPrice.toLocaleString('id-ID') + '\n' +
+                '👤 *Nama:* ' + name + '\n' +
+                '📱 *WhatsApp:* ' + phone + '\n' +
+                '✉️ *Email:* ' + email + '\n' +
+                '💳 *Metode:* ' + method.toUpperCase() + '\n\n' +
+                'Mohon aktivasi akun Creator Pass saya ya. Terima kasih!'
+            );
+
+            closeLpModal();
+            alert('Pemesanan Berhasil!\n\nNomor Invoice: ' + orderId + '\nPaket: ' + planTitle + '\nTotal: Rp 75.000\n\nMenghubungkan ke WhatsApp Admin...');
+            window.open('https://wa.me/6281234567890?text=' + waMsg, '_blank');
+        });
+
+        // Auto open modal if url contains ?checkout=true or #checkout
+        if (window.location.search.includes('checkout=true') || window.location.hash === '#checkout') {
+            setTimeout(openLpModal, 300);
+        }
+
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.landing-nav-item');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

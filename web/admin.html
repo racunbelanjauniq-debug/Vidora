@@ -840,11 +840,11 @@
                 </div>
 
                 <form id="formPakasirSettings">
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px;">
                         <div class="form-group">
                             <label class="form-label">Pakasir Project Slug:</label>
                             <input type="text" class="form-input" id="cfgPakasirSlug" placeholder="Contoh: vidora" value="vidora" required>
-                            <small style="color: var(--text-tertiary); font-size: 11px;">Slug proyek yang Anda buat di app.pakasir.com (contoh: vidora).</small>
+                            <small style="color: var(--text-tertiary); font-size: 11px;">Slug proyek Anda di app.pakasir.com (contoh: vidora).</small>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Pakasir API Key:</label>
@@ -854,7 +854,17 @@
                                     <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
                                 </button>
                             </div>
-                            <small style="color: var(--text-tertiary); font-size: 11px;">API Key untuk verifikasi transaksi (opsional jika webhook aktif).</small>
+                            <small style="color: var(--text-tertiary); font-size: 11px;">API Key dari Detail Proyek Pakasir.</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pakasir Webhook Secret:</label>
+                            <div style="position: relative;">
+                                <input type="password" class="form-input" id="cfgPakasirWebhookSecret" placeholder="Webhook Secret dari Detail Proyek" style="padding-right: 40px;">
+                                <button type="button" id="btnTogglePakasirSecret" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px;">
+                                    <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                            <small style="color: var(--text-tertiary); font-size: 11px;">Webhook Secret dari dashboard app.pakasir.com.</small>
                         </div>
                     </div>
 
@@ -1509,7 +1519,7 @@
         }
 
         // Settings Populate
-        function populateSettings() {
+        async function populateSettings() {
             document.getElementById("cfgSupabaseUrl").value = localStorage.getItem("vidora_supabase_url") || window.VIDORA_CONFIG.SUPABASE_URL;
             document.getElementById("cfgSupabaseKey").value = localStorage.getItem("vidora_supabase_key") || window.VIDORA_CONFIG.SUPABASE_ANON_KEY;
             document.getElementById("cfgR2Domain").value = localStorage.getItem("vidora_r2_domain") || window.VIDORA_CONFIG.R2_PUBLIC_DOMAIN;
@@ -1532,8 +1542,30 @@
             const keyInput = document.getElementById("cfgPakasirApiKey");
             if (keyInput) keyInput.value = localStorage.getItem("cfg_pakasir_key") || "";
 
+            const secretInput = document.getElementById("cfgPakasirWebhookSecret");
+            if (secretInput) secretInput.value = localStorage.getItem("cfg_pakasir_secret") || "";
+
             const activeCheck = document.getElementById("cfgPakasirActive");
             if (activeCheck) activeCheck.checked = localStorage.getItem("cfg_pakasir_active") !== "false";
+
+            // Fetch live settings from /api/settings fallback (like GAMA PRO)
+            try {
+                const res = await fetch("/api/settings", { cache: "no-store" });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.settings) {
+                        const s = data.settings;
+                        if (s.cfg_pakasir_slug && slugInput) slugInput.value = s.cfg_pakasir_slug;
+                        if (s.cfg_pakasir_key && keyInput) keyInput.value = s.cfg_pakasir_key;
+                        if (s.cfg_pakasir_secret && secretInput) secretInput.value = s.cfg_pakasir_secret;
+                        if (s.cfg_payment_qris_active !== undefined && activeCheck) {
+                            activeCheck.checked = s.cfg_payment_qris_active === "true" || s.cfg_payment_qris_active === true;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("API settings fetch fallback:", err);
+            }
         }
 
         // Pakasir Settings Form Submit
@@ -1541,18 +1573,38 @@
             e.preventDefault();
             const slug = document.getElementById("cfgPakasirSlug").value.trim() || "vidora";
             const key = document.getElementById("cfgPakasirApiKey").value.trim();
+            const secret = document.getElementById("cfgPakasirWebhookSecret").value.trim();
             const isActive = document.getElementById("cfgPakasirActive").checked;
 
             localStorage.setItem("cfg_pakasir_slug", slug);
             localStorage.setItem("cfg_pakasir_key", key);
+            localStorage.setItem("cfg_pakasir_secret", secret);
             localStorage.setItem("cfg_pakasir_active", String(isActive));
 
-            // Sync ke Supabase system_settings jika terhubung
+            const settingsPayload = {
+                cfg_pakasir_slug: slug,
+                cfg_pakasir_key: key,
+                cfg_pakasir_secret: secret,
+                cfg_payment_qris_active: isActive ? "true" : "false"
+            };
+
+            // 1. Simpan ke /api/settings (disimpan persisten ke Supabase seperti di GAMA PRO)
+            try {
+                await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ settings: settingsPayload })
+                });
+            } catch (err) {
+                console.warn("/api/settings save warning:", err);
+            }
+
+            // 2. Sync langsung ke Supabase system_settings jika live client terhubung
             if (window.vidoraData && window.vidoraData.isLive) {
                 try {
                     await window.vidoraData.client.from("system_settings").upsert({
                         key: "pakasir_config",
-                        value: { slug, api_key: key, is_active: isActive, webhook_url: document.getElementById("cfgPakasirWebhookUrl").value },
+                        value: { slug, api_key: key, api_secret: secret, is_active: isActive, webhook_url: document.getElementById("cfgPakasirWebhookUrl").value },
                         updated_at: new Date().toISOString()
                     });
                 } catch (err) {
@@ -1561,6 +1613,12 @@
             }
 
             alert("✅ Pengaturan Payment Gateway Pakasir berhasil disimpan!");
+        });
+
+        // Toggle Secret Key
+        document.getElementById("btnTogglePakasirSecret")?.addEventListener("click", () => {
+            const input = document.getElementById("cfgPakasirWebhookSecret");
+            input.type = input.type === "password" ? "text" : "password";
         });
 
         // Copy Webhook URL

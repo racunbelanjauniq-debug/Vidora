@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Masuk / Daftar — VIDORA Studio</title>
+    <meta name="description" content="Masuk ke VIDORA Studio untuk membuat AI Video & Image dari Foto Produk.">
+    <link rel="stylesheet" href="/css/app.css?v=3.0">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #000000;
+            padding: 20px 16px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .auth-card {
+            background: #0d0f17;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-xl);
+            padding: 36px 28px;
+            box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9), var(--specular-top);
+        }
+
+        .auth-brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-logo {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-weight: 900;
+            font-size: 20px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .auth-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .auth-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12.5px;
+            color: var(--text-tertiary);
+        }
+
+        .auth-footer a {
+            color: var(--accent-indigo);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-error-box {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fda4af;
+            font-size: 12.5px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .guest-demo-divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0 16px;
+            color: var(--text-tertiary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .guest-demo-divider::before, .guest-demo-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .guest-demo-divider span {
+            padding: 0 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Brand Logo & Header -->
+            <a href="/" class="auth-brand-row" style="text-decoration: none;">
+                <div class="auth-logo">V</div>
+                <span style="font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.02em;">VID<span style="color: #6366f1;">ORA</span></span>
+            </a>
+
+            <h1 class="auth-title" id="authHeading">Masuk ke Studio</h1>
+            <p class="auth-subtitle" id="authSubheading">Kelola profil akun Google dan produksi video & gambar AI produk Anda.</p>
+
+            <!-- Segmented Control Auth Switcher -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="btnTabLogin">Masuk</button>
+                <button type="button" class="auth-tab-btn" id="btnTabRegister">Daftar Akun Baru</button>
+            </div>
+
+            <!-- Error Box -->
+            <div class="auth-error-box" id="authErrorMsg"></div>
+
+            <!-- Form 1: Login (Member) -->
+            <form id="formMemberLogin">
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Email Terdaftar:</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="nama@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label" for="loginPassword" style="margin-bottom: 0;">Password:</label>
+                    </div>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-generate" id="btnSubmitLogin" style="margin-top: 14px;">
+                    <i data-lucide="log-in" style="width: 17px; height: 17px;"></i>
+                    <span id="btnSubmitLoginText">Masuk ke Studio</span>
+                </button>
+            </form>
+
+            <!-- Form 2: Register (Daftar Akun) -->
+            <form id="formMemberRegister" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label" for="regName">Nama Lengkap:</label>
+                    <input type="text" class="form-input" id="regName" placeholder="Contoh: Budi Santoso" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="regEmail">Email:</label>
+                    <input type="email" class="form-input" id="regEmail" placeholder="nama@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="regPassword">Password (Minimal 6 Karakter):</label>
+                    <input type="password" class="form-input" id="regPassword" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn-generate" id="btnSubmitReg" style="margin-top: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <i data-lucide="user-plus" style="width: 17px; height: 17px;"></i>
+                    <span id="btnSubmitRegText">Daftar & Masuk ke Studio</span>
+                </button>
+            </form>
+
+            <div class="auth-footer" style="margin-top: 24px;">
+                <a href="/">&larr; Kembali ke Beranda VIDORA</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/config.js"></script>
+    <script src="/js/supabase-client.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            lucide.createIcons();
+
+            const btnTabLogin = document.getElementById("btnTabLogin");
+            const btnTabRegister = document.getElementById("btnTabRegister");
+            const formLogin = document.getElementById("formMemberLogin");
+            const formRegister = document.getElementById("formMemberRegister");
+            const heading = document.getElementById("authHeading");
+            const subheading = document.getElementById("authSubheading");
+            const errorBox = document.getElementById("authErrorMsg");
+
+            function showError(msg) {
+                errorBox.textContent = msg;
+                errorBox.style.display = "block";
+            }
+            function clearError() {
+                errorBox.textContent = "";
+                errorBox.style.display = "none";
+            }
+
+            // Tab switching
+            btnTabLogin.addEventListener("click", () => {
+                btnTabLogin.classList.add("active");
+                btnTabRegister.classList.remove("active");
+                formLogin.style.display = "block";
+                formRegister.style.display = "none";
+                heading.textContent = "Masuk ke Studio";
+                subheading.textContent = "Kelola profil akun Google dan produksi video & gambar AI produk Anda.";
+                clearError();
+            });
+
+            btnTabRegister.addEventListener("click", () => {
+                btnTabRegister.classList.add("active");
+                btnTabLogin.classList.remove("active");
+                formRegister.style.display = "block";
+                formLogin.style.display = "none";
+                heading.textContent = "Daftar Akun Baru";
+                subheading.textContent = "Buat akun kreator Anda untuk mulai generate konten video 9:16 vertikal.";
+                clearError();
+            });
+
+            // Check URL param ?tab=signup or ?tab=register
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("tab") === "signup" || urlParams.get("tab") === "register") {
+                btnTabRegister.click();
+            }
+
+            // Form Login Handler
+            formLogin.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                clearError();
+                const email = document.getElementById("loginEmail").value.trim();
+                const password = document.getElementById("loginPassword").value;
+                const submitBtn = document.getElementById("btnSubmitLogin");
+
+                submitBtn.disabled = true;
+                document.getElementById("btnSubmitLoginText").textContent = "Memverifikasi...";
+
+                try {
+                    await window.vidoraData.signIn(email, password);
+                    window.location.href = "/app.html";
+                } catch (err) {
+                    showError(err.message || "Gagal masuk. Periksa kembali email dan password Anda.");
+                    submitBtn.disabled = false;
+                    document.getElementById("btnSubmitLoginText").textContent = "Masuk ke Studio";
+                }
+            });
+
+            // Form Register Handler
+            formRegister.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                clearError();
+                const name = document.getElementById("regName").value.trim();
+                const email = document.getElementById("regEmail").value.trim();
+                const password = document.getElementById("regPassword").value;
+                const submitBtn = document.getElementById("btnSubmitReg");
+
+                submitBtn.disabled = true;
+                document.getElementById("btnSubmitRegText").textContent = "Mendaftarkan...";
+
+                try {
+                    await window.vidoraData.signUp(email, password, name);
+                    window.location.href = "/app.html";
+                } catch (err) {
+                    showError(err.message || "Gagal mendaftar. Silakan gunakan alamat email lain.");
+                    submitBtn.disabled = false;
+                    document.getElementById("btnSubmitRegText").textContent = "Daftar & Masuk ke Studio";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

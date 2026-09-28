@@ -1,5 +1,6 @@
 {
-  "outputDirectory": "web",
+  "version": 2,
+  "cleanUrls": true,
   "headers": [
     {
       "source": "/api/(.*)",
@@ -9,14 +10,26 @@
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS, PUT, DELETE" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
       ]
+    },
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/admin(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
     }
   ],
   "rewrites": [
     { "source": "/login", "destination": "/login.html" },
     { "source": "/register", "destination": "/login.html?tab=signup" },
     { "source": "/admin/login", "destination": "/admin/login.html" },
-    { "source": "/admin/dashboard", "destination": "/admin/index.html" },
-    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/admin/dashboard", "destination": "/admin.html" },
+    { "source": "/admin", "destination": "/admin.html" },
     { "source": "/app", "destination": "/app.html" },
     { "source": "/studio", "destination": "/app.html" }
   ]

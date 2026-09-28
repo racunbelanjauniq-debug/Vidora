@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Portal Super Admin — VIDORA</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="/css/app.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #040508;
+            padding: 20px 16px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .admin-auth-container {
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .admin-auth-card {
+            background: #0b0d14;
+            border: 1.5px solid rgba(251, 191, 36, 0.35);
+            border-radius: var(--radius-xl);
+            padding: 38px 28px;
+            box-shadow: 0 30px 90px -15px rgba(0, 0, 0, 0.95), 0 0 40px -10px rgba(251, 191, 36, 0.15);
+        }
+
+        .admin-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            color: #fbbf24;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            margin: 0 auto 16px;
+        }
+
+        .admin-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 6px;
+        }
+
+        .admin-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .admin-security-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(251, 191, 36, 0.06);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            margin-bottom: 22px;
+            font-size: 11.5px;
+            color: #fef08a;
+            line-height: 1.4;
+        }
+
+        .btn-admin-login {
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            color: #000000;
+            font-weight: 800;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(245, 158, 11, 0.35);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-top: 14px;
+        }
+
+        .btn-admin-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(245, 158, 11, 0.5);
+            filter: brightness(1.08);
+        }
+
+        .admin-error-box {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.35);
+            color: #fda4af;
+            font-size: 12.5px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .admin-footer {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .admin-footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .admin-footer a:hover {
+            color: #fbbf24;
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-auth-container">
+        <div class="admin-auth-card">
+            <!-- Center Badge -->
+            <div style="text-align: center;">
+                <div class="admin-badge-pill">
+                    <i data-lucide="crown" style="width: 14px; height: 14px;"></i>
+                    <span>Portal Super Admin</span>
+                </div>
+            </div>
+
+            <h1 class="admin-title">Autentikasi Internal</h1>
+            <p class="admin-subtitle">Masuk dengan kredensial Administrator untuk mengakses kontrol global sistem VIDORA.</p>
+
+            <div class="admin-security-banner">
+                <i data-lucide="shield-alert" style="width: 18px; height: 18px; flex-shrink: 0; color: #fbbf24;"></i>
+                <span>Area terbatas. Seluruh akses diverifikasi langsung oleh protokol otorisasi Supabase.</span>
+            </div>
+
+            <!-- Error Box -->
+            <div class="admin-error-box" id="adminErrorMsg"></div>
+
+            <!-- Form Login Admin -->
+            <form id="formAdminLogin">
+                <div class="form-group">
+                    <label class="form-label" for="adminEmail">Email Administrator:</label>
+                    <input type="email" class="form-input" id="adminEmail" placeholder="winalislam@gmail.com" required autocomplete="email" style="border-color: rgba(251, 191, 36, 0.25);">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="adminPassword">Password:</label>
+                    <input type="password" class="form-input" id="adminPassword" placeholder="••••••••" required autocomplete="current-password" style="border-color: rgba(251, 191, 36, 0.25);">
+                </div>
+                <button type="submit" class="btn-admin-login" id="btnSubmitAdmin">
+                    <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
+                    <span id="btnSubmitAdminText">Masuk ke Panel Super Admin</span>
+                </button>
+            </form>
+
+            <div class="admin-footer">
+                <a href="/login">&larr; Halaman Login Member</a>
+                &bull;
+                <a href="/">Beranda</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/config.js"></script>
+    <script src="/js/supabase-client.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+
+            const form = document.getElementById("formAdminLogin");
+            const errorBox = document.getElementById("adminErrorMsg");
+            const btnSubmit = document.getElementById("btnSubmitAdmin");
+            const btnSubmitText = document.getElementById("btnSubmitAdminText");
+
+            function showError(msg) {
+                errorBox.textContent = msg;
+                errorBox.style.display = "block";
+            }
+            function clearError() {
+                errorBox.textContent = "";
+                errorBox.style.display = "none";
+            }
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                clearError();
+                const email = document.getElementById("adminEmail").value.trim() || "winalislam@gmail.com";
+                const password = document.getElementById("adminPassword").value;
+
+                if (password !== "Wakrod99$") {
+                    showError("Password Administrator salah. Akses ditolak.");
+                    return;
+                }
+
+                btnSubmit.disabled = true;
+                btnSubmitText.textContent = "Memverifikasi Otorisasi Super Admin...";
+
+                try {
+                    await window.vidoraData.adminSignIn(email, password);
+                    // Success! Redirect to Dedicated Super Admin Dashboard
+                    window.location.href = "/admin";
+                } catch (err) {
+                    showError(err.message || "Gagal masuk. Periksa kembali kredensial.");
+                    btnSubmit.disabled = false;
+                    btnSubmitText.textContent = "Masuk ke Panel Super Admin";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

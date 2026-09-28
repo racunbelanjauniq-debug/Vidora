@@ -1,0 +1,765 @@
+/* =========================================================================
+   VIDORA SaaS - Mobile-First App Shell Edition
+   Clean, Modern, Natural Indonesian Copy & Mobile-in-Desktop Viewport
+   ========================================================================= */
+
+:root {
+    --bg-base: #06070a;
+    --bg-surface: #0a0b12;
+    --bg-card: rgba(16, 18, 28, 0.85);
+    --bg-card-elevated: #121522;
+    
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.18);
+    --specular-top: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+    
+    --accent-blue: #0071e3;
+    --accent-indigo: #6366f1;
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-cyan: #00f2fe;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
+    
+    --font-system: -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "SF Pro Display", sans-serif;
+    --font-mono: ui-monospace, Menlo, Consolas, monospace;
+    
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+    
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-system);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* =========================================================================
+   DESKTOP CANVAS & MOBILE APP SHELL (Exact DonasiHub Pattern)
+   ========================================================================= */
+body {
+    background-color: #06070a;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+}
+
+/* Centered Mobile Container on PC/Laptop */
+.app-shell {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    background: #090a0f;
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 74px; /* Space for bottom nav */
+    margin: 0 auto;
+}
+
+@media (max-width: 480px) {
+    body {
+        background-image: none;
+        background-color: #090a0f;
+    }
+    .app-shell {
+        box-shadow: none;
+        border: none;
+    }
+}
+
+/* Container */
+.container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 16px;
+    margin: 0 auto;
+}
+
+/* =========================================================================
+   1. APP HEADER
+   ========================================================================= */
+.navbar {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    background: rgba(9, 10, 15, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+}
+
+.nav-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+}
+
+.logo-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    font-weight: 900;
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.4);
+}
+
+.brand-name {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+}
+
+.brand-name span {
+    color: #6366f1;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-nav-login {
+    color: #cbd5e1;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s;
+}
+
+.btn-nav-login:hover {
+    color: #ffffff;
+}
+
+.btn-nav-studio {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 12.5px;
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgba(99, 102, 241, 0.35);
+    transition: all 0.2s var(--ease-spring);
+}
+
+.btn-nav-studio:active {
+    transform: scale(0.96);
+}
+
+/* =========================================================================
+   2. HERO SECTION
+   ========================================================================= */
+.hero {
+    padding: 20px 16px 16px;
+    text-align: center;
+}
+
+.eyebrow-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    font-size: 11px;
+    font-weight: 700;
+    color: #a5b4fc;
+    letter-spacing: 0.03em;
+    margin-bottom: 14px;
+}
+
+.hero-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    color: #ffffff;
+}
+
+.hero-title span {
+    background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 18px;
+    font-weight: 400;
+}
+
+.hero-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-apple-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 20px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s var(--ease-spring);
+}
+
+.btn-apple-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-apple-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #f1f5f9;
+    font-weight: 600;
+    font-size: 13px;
+    text-decoration: none;
+    transition: all 0.2s var(--ease-spring);
+}
+
+/* =========================================================================
+   3. STUDIO SHOWCASE CANVAS (9:16 Video Demo Mockup)
+   ========================================================================= */
+.studio-canvas {
+    background: #0d0f17;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+}
+
+.studio-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.hud-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.hud-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-emerald);
+    background: rgba(16, 185, 129, 0.12);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.hud-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+}
+
+.hud-prompt-box {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    padding: 11px 12px;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: #cbd5e1;
+    text-align: left;
+    margin-bottom: 10px;
+}
+
+.hud-meta-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.meta-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.video-frame-apple {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: #000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    aspect-ratio: 9/12;
+    max-height: 380px;
+}
+
+.video-frame-apple video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.video-badge-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
+    z-index: 2;
+}
+
+/* =========================================================================
+   4. QUICK CATEGORY ICONS GRID (Exact DonasiHub Pattern)
+   ========================================================================= */
+.category-grid-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 14px 10px;
+    margin: 0 16px 18px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 6px;
+    text-align: center;
+}
+
+.cat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    gap: 5px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.cat-item:active {
+    transform: scale(0.94);
+}
+
+.cat-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.cat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+}
+
+/* =========================================================================
+   5. PROMO ACTION CARD (Like DonasiHub's Routine Card)
+   ========================================================================= */
+.promo-action-card {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(168, 85, 247, 0.12) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: 16px;
+    padding: 13px 14px;
+    margin: 0 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.promo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #00f2fe;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+}
+
+.promo-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.promo-desc {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.35;
+}
+
+.btn-promo-action {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    font-size: 11.5px;
+    font-weight: 800;
+    padding: 9px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+}
+
+/* =========================================================================
+   6. SECTION HEADINGS & COMPACT MOBILE CARDS
+   ========================================================================= */
+.section {
+    padding: 20px 16px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.section-eyebrow {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--accent-indigo);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    color: #ffffff;
+}
+
+.section-desc {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.45;
+}
+
+/* Vertical Steps & Feature Cards */
+.bento-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bento-card {
+    background: #0d0f17;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 16px 14px;
+    text-align: left;
+}
+
+.bento-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.bento-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+    color: #ffffff;
+}
+
+.bento-desc {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* =========================================================================
+   7. PRICING SECTION (CREATOR PASS - RP 75.000 / BLN)
+   ========================================================================= */
+.pricing-single-card {
+    background: #0d0f17;
+    border: 1.5px solid rgba(99, 102, 241, 0.45);
+    border-radius: var(--radius-lg);
+    padding: 22px 18px;
+    text-align: left;
+    position: relative;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+}
+
+.featured-pill {
+    position: absolute;
+    top: -11px;
+    left: 18px;
+    background: var(--accent-indigo);
+    color: white;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+}
+
+.plan-name {
+    font-size: 19px;
+    font-weight: 800;
+    margin-bottom: 2px;
+    color: #ffffff;
+}
+
+.plan-desc {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin-bottom: 14px;
+}
+
+.plan-price {
+    font-size: 26px;
+    font-weight: 900;
+    color: #00f2fe;
+}
+
+.plan-price span {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.plan-features {
+    list-style: none;
+    margin: 16px 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.plan-features li {
+    font-size: 12px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+}
+
+.check-icon {
+    color: var(--accent-emerald);
+    font-weight: 800;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+/* =========================================================================
+   8. CLEAN, NATURAL INDONESIAN FOOTER
+   ========================================================================= */
+.footer {
+    padding: 24px 16px;
+    border-top: 1px solid var(--border-subtle);
+    background: #07080c;
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    text-align: center;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.footer-links a {
+    color: var(--text-tertiary);
+    text-decoration: none;
+    font-size: 11.5px;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: #ffffff;
+}
+
+/* =========================================================================
+   9. FIXED MOBILE BOTTOM NAVIGATION BAR
+   ========================================================================= */
+.landing-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    height: 64px;
+    background: rgba(9, 10, 15, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 90;
+    padding: 0 4px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.landing-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.landing-nav-item.active,
+.landing-nav-item:hover {
+    color: #00f2fe;
+}
+
+.landing-nav-item.center-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.5);
+    margin-top: -16px;
+    padding: 0;
+}
+
+/* =========================================================================
+   10. FLOATING WHATSAPP BUTTON (Exact DonasiHub Pattern)
+   ========================================================================= */
+.floating-wa-btn {
+    position: fixed;
+    bottom: 78px;
+    right: calc(50% - 224px);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #25d366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.45);
+    z-index: 95;
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+
+@media (max-width: 480px) {
+    .floating-wa-btn {
+        right: 14px;
+    }
+}
+
+.floating-wa-btn:active {
+    transform: scale(0.92);
+}
