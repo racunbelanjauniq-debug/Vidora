@@ -158,9 +158,45 @@ def process_job(supabase, r2, job):
         }).eq("id", job_id).execute()
         return False
 
+def cleanup_expired_r2_files(supabase, r2, days=3):
+    """Otomatis menghapus file hasil generate di Cloudflare R2 setelah 3 hari."""
+    try:
+        from datetime import timedelta
+        cutoff = (datetime.utcnow() - timedelta(days=days)).isoformat()
+        
+        # Cari file yang lebih lama dari 3 hari
+        res = supabase.table("generate_jobs").select("id, r2_key").eq("status", "completed").lt("created_at", cutoff).not_.is_("r2_key", "null").execute()
+        expired_jobs = res.data or []
+        
+        if expired_jobs:
+            print(f"[R2 Auto-Cleaner] Menemukan {len(expired_jobs)} file > {days} hari yang perlu dibersihkan...")
+            for job in expired_jobs:
+                r2_key = job.get("r2_key")
+                if r2_key:
+                    r2.delete_file(r2_key)
+                    supabase.table("generate_jobs").update({
+                        "status": "expired",
+                        "video_url": None,
+                        "r2_key": None,
+                        "status_message": f"Media kadaluwarsa (dibersihkan otomatis setelah {days} hari)"
+                    }).eq("id", job["id"]).execute()
+            print(f"[R2 Auto-Cleaner] Pembersihan storage selesai. Kapasitas R2 tetap lega!")
+    except Exception as e:
+        print(f"[R2 Auto-Cleaner] Error saat membersihkan file kadaluwarsa: {e}")
+
+def supabase_keepalive_ping(supabase):
+    """Ping ringan ke Supabase setiap beberapa jam agar database tidak sleep/pause."""
+    try:
+        supabase.table("profiles").select("id").limit(1).execute()
+        print(f"[Supabase Heartbeat] Ping sukses pada {datetime.now().strftime('%H:%M:%S')} - Database tetap aktif & anti-sleep.")
+    except Exception as e:
+        print(f"[Supabase Heartbeat] Ping gagal: {e}")
+
 def run_loop():
     print(f"============================================================")
     print(f"  VIDORA Background Worker Engine [{WORKER_ID}]")
+    print(f"  • Mode: Anti-Sleep Supabase Active")
+    print(f"  • Storage Policy: Auto-Delete R2 File > 3 Hari")
     print(f"  Menunggu antrian video generate dari Web SaaS...")
     print(f"============================================================")
 
@@ -175,15 +211,31 @@ def run_loop():
         print(f"[Worker] FATAL: Cloudflare R2 belum dikonfigurasi: {e}")
         sys.exit(1)
 
+    last_cleanup_time = 0
+    last_ping_time = 0
+
     while True:
         try:
-            # Ambil 1 job pending tertua
+            current_time = time.time()
+
+            # 1. Supabase Anti-Sleep Ping (Setiap 4 jam)
+            if current_time - last_ping_time > 14400:
+                supabase_keepalive_ping(supabase)
+                last_ping_time = current_time
+
+            # 2. R2 Auto-Delete Files > 3 Hari (Setiap 1 jam)
+            if current_time - last_cleanup_time > 3600:
+                cleanup_expired_r2_files(supabase, r2, days=3)
+                last_cleanup_time = current_time
+
+            # 3. Ambil 1 job pending tertua
             res = supabase.table("generate_jobs").select("*").eq("status", "pending").order("created_at", desc=False).limit(1).execute()
             if res.data and len(res.data) > 0:
                 job = res.data[0]
                 process_job(supabase, r2, job)
             else:
                 time.sleep(3)
+
         except KeyboardInterrupt:
             print("\n[Worker] Worker dihentikan oleh pengguna.")
             break

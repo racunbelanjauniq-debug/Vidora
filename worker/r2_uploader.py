@@ -59,3 +59,17 @@ class R2Uploader:
             "url": final_url,
             "size": local_file.stat().st_size
         }
+
+    def delete_file(self, destination_key):
+        """Hapus file dari Cloudflare R2 untuk menghemat kuota storage."""
+        if not destination_key:
+            return False
+        try:
+            print(f"[R2 Cleanup] Menghapus file kadaluwarsa dari R2: {destination_key}...")
+            self.s3_client.delete_object(Bucket=self.bucket_name, Key=destination_key)
+            print(f"[R2 Cleanup] Berhasil dihapus: {destination_key}")
+            return True
+        except Exception as e:
+            print(f"[R2 Cleanup] Gagal menghapus {destination_key}: {e}")
+            return False
+
