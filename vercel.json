@@ -1,6 +1,10 @@
 {
   "outputDirectory": "web",
   "rewrites": [
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/register", "destination": "/login.html?tab=signup" },
+    { "source": "/admin/login", "destination": "/admin/login.html" },
+    { "source": "/admin", "destination": "/app.html?tab=admin" },
     { "source": "/app", "destination": "/app.html" },
     { "source": "/studio", "destination": "/app.html" }
   ]

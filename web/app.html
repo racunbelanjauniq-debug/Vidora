@@ -10,6 +10,16 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // STRICT AUTH GUARD: Tendang langsung ke /login jika belum ada sesi login
+        (function() {
+            const hasDemoSession = localStorage.getItem("vidora_demo_current_user");
+            const hasSbSession = Object.keys(localStorage).some(k => k.startsWith("sb-") && k.endsWith("-auth-token"));
+            if (!hasDemoSession && !hasSbSession) {
+                window.location.replace("login");
+            }
+        })();
+    </script>
 </head>
 <body>
     <!-- App Header (Bersih tanpa tombol pengaturan/teknis) -->

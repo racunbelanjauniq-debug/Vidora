@@ -107,19 +107,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         const btnCloseAuth = document.getElementById("btnCloseAuth");
 
         if (!currentUser) {
-            // Tampilkan form autentikasi (Masuk / Daftar) secara wajib
-            modalAuth.classList.add("open");
-            if (btnCloseAuth) btnCloseAuth.style.display = "none";
-        } else {
-            modalAuth.classList.remove("open");
-            if (btnCloseAuth) btnCloseAuth.style.display = "flex";
+            // STRICT AUTH GUARD: Belum login, alihkan langsung ke halaman login
+            window.location.replace("login");
+            return;
+        }
+
+        // Proteksi Tab Admin
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("tab") === "admin" && activeProfile.role !== "superadmin" && activeProfile.role !== "admin") {
+            alert("Akses Terbatas: Hanya Super Admin yang dapat mengakses panel ini.");
+            window.location.replace("admin/login");
+            return;
         }
 
         updateHeaderUI();
-        if (currentUser) {
-            await refreshAccounts();
-            await refreshJobs();
-        }
+        await refreshAccounts();
+        await refreshJobs();
 
         // Check connection pill in admin tab
         updateConnectionStatusPill();
@@ -365,13 +368,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         await initApp();
     });
 
-    // Sign Out
+    // Sign Out -> Redirect ke halaman Login
     document.getElementById("btnSignOut").addEventListener("click", async () => {
-        if (confirm("Apakah Anda yakin ingin keluar?")) {
+        if (confirm("Apakah Anda yakin ingin keluar dari VIDORA Studio?")) {
             await window.vidoraData.signOut();
-            modalUserProfile.classList.remove("open");
-            await initApp();
-            switchTab("studio");
+            window.location.replace("login");
         }
     });
 
