@@ -1460,16 +1460,35 @@
                     </div>
                 </div>
 
-                <!-- Pilihan Tampilan Pembayaran -->
-                <div id="payViewQris" class="qris-preview-box">
-                    <span style="font-size: 11px; font-weight: 800; background: rgba(99,102,241,0.15); color: #4f46e5; padding: 3px 8px; border-radius: 20px; text-transform: uppercase;">⚡ QRIS Otomatis (Pakasir)</span>
-                    <span style="font-size: 12px; font-weight: 700; color: #1e1b4b; text-transform: uppercase; margin-top: 4px;">Scan QRIS VIDORA Studio</span>
-                    <!-- Barcode Visual QRIS Generator -->
-                    <img class="qris-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020101021126570014ID.LINKAJA.WWW011893600911002123456702150000000000000000303UMI51440014ID.CO.QRIS.WWW0215ID10200000000005204549953033605802ID5914VIDORA%20STUDIO6007JAKARTA61051234062070703A016304" alt="QRIS Barcode">
-                    <span style="font-size: 12px; font-weight: 800; color: #1e1b4b;" id="qrisAmountText">Total: Rp 75.000</span>
-                    <span style="font-size: 11px; color: #64748b;">Mendukung: GoPay, OVO, Dana, ShopeePay, BCA Mobile, Livin Mandiri</span>
-                    <div style="background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-top: 6px; font-size: 11px; color: #475569; text-align: center;">
-                        Klik "Bayar Sekarang" untuk dialihkan ke halaman QRIS interaktif Pakasir (auto-fulfillment aktif).
+                <!-- Pilihan Tampilan Pembayaran (Official Pakasir Dynamic QRIS) -->
+                <div id="payViewQris" class="qris-preview-box" style="background: linear-gradient(180deg, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.85) 100%); border: 1.5px solid rgba(99,102,241,0.4); border-radius: 14px; padding: 16px; margin-bottom: 14px; text-align: center; color: white;">
+                    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(99,102,241,0.25); color: #c7d2fe; border: 1px solid rgba(99,102,241,0.4); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.04em;">
+                        ⚡ Pembayaran QRIS Otomatis (Pakasir)
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;">
+                        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(99,102,241,0.2); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(99,102,241,0.35);">
+                            <i data-lucide="qr-code" style="width: 22px; height: 22px; color: #818cf8;"></i>
+                        </div>
+                        <div style="text-align: left;">
+                            <div style="font-size: 13.5px; font-weight: 800; color: white;">Generate QRIS Dinamis</div>
+                            <div style="font-size: 11px; color: #94a3b8;">Kode QRIS resmi akan langsung muncul setelah klik tombol di bawah</div>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0, 0, 0, 0.4); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.06); font-size: 11.5px; color: #cbd5e1; text-align: left; line-height: 1.5;">
+                        <div style="font-weight: 700; color: #38bdf8; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="check-circle" style="width: 13px; height: 13px;"></i>
+                            Mendukung Semua e-Wallet &amp; Mobile Banking:
+                        </div>
+                        <div style="color: #94a3b8; font-size: 11px;">
+                            GoPay, OVO, Dana, ShopeePay, LinkAja, BCA, Mandiri, BRI, BNI, CIMB, &amp; Semua Aplikasi Bank.
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 9px 12px; font-size: 11px; color: #6ee7b7; text-align: left; display: flex; align-items: flex-start; gap: 8px;">
+                        <i data-lucide="zap" style="width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; color: #34d399;"></i>
+                        <span>Klik <strong>"Bayar Sekarang"</strong> untuk membuka QRIS resmi Pakasir. Setelah di-scan, akun Creator Pass (5 Profil Google) Anda langsung <strong>AKTIF OTOMATIS</strong>.</span>
                     </div>
                 </div>
 

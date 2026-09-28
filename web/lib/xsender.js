@@ -8,21 +8,62 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const FIXED_XSENDER_URL = "https://xsender.id/send-message";
 
 const DEFAULT_TEMPLATES = {
+  login: `Halo *{nama}* 👋,
+
+Selamat datang di *VIDORA Studio*! 🚀
+Akun Anda telah aktif dan siap digunakan:
+
+📧 Email: *{email}*
+📱 WhatsApp: *{phone}*
+🌐 Akses Studio: https://vidora.biz.id/app.html
+
+Mulai kreasi video produk AI tanpa batas dengan multi-sudut, subtitle otomatis, dan render cloud secepat kilat!
+
+Salam hangat,
+*Tim VIDORA Studio*`,
+
   order: `Halo *{nama}* 👋,
 
-Terima kasih telah memesan *VIDORA Creator Pass*!
+Terima kasih telah memesan *VIDORA Creator Pass*! 🎬
 
-📋 *Detail Pesanan Anda:*
+📋 *Detail Pesanan Anda (Tahap 1):*
 • No Invoice: \`{invoice}\`
 • Paket: *{paket}*
-• Total: *Rp {total}*
+• Total Tagihan: *Rp {total}*
 
 💳 *Selesaikan Pembayaran via QRIS Pakasir:*
 👉 {payment_url}
 
-(Pembayaran diverifikasi otomatis via QRIS. Setelah pembayaran selesai, kuota 5 Profil Google Anda akan langsung aktif otomatis).
+(Pembayaran diverifikasi instan otomatis via QRIS. Setelah scan pembayaran, kuota 5 Profil Akun Google Anda langsung aktif otomatis).
 
 Salam hangat,
+*Tim VIDORA Studio* 🚀`,
+
+  follow_up_2: `Halo *{nama}* 😊,
+
+Kami melihat pesanan *VIDORA Creator Pass* Anda (\`{invoice}\`) sebesar *Rp {total}* masih menunggu pembayaran via QRIS.
+
+✨ *Keuntungan Creator Pass Aktif Anda:*
+• 5 Akun Google Terisolasi (Bebas Limit & Anti-Banned)
+• Video Mixer & Multi-angle Concatenation
+• Cloud Render Resolusi Tinggi & Tanpa Watermark
+
+Selesaikan pembayaran Anda sekarang melalui link QRIS resmi berikut:
+👉 {payment_url}
+
+Jika ada kendala saat scan QRIS, silakan balas pesan ini ya Kak. Terima kasih! 🙏`,
+
+  follow_up_3: `Halo *{nama}* ⚠️,
+
+Ini adalah pengingat terakhir untuk tagihan pesanan *VIDORA Creator Pass* Anda:
+No Invoice: \`{invoice}\` (Total: *Rp {total}*)
+
+Promo harga spesial Rp 75.000 / bulan untuk 5 Profil Google akan segera ditutup. Segera amankan kuota akun Anda sekarang:
+👉 {payment_url}
+
+Butuh bantuan pembayaran atau transfer manual? Admin kami siap membantu, cukup balas pesan ini sekarang ya Kak.
+
+Salam sukses,
 *Tim VIDORA Studio* 🚀`,
 
   approval: `🎉 *PEMBAYARAN DIVERIFIKASI & LISENSI AKTIF!*
@@ -208,13 +249,68 @@ async function sendPaymentSuccessNotification({ customerName, customerWa, invoic
       `• Status: *LUNAS (5 Profil Google Aktif)*\n` +
       `• Gateway: *Pakasir QRIS Otomatis*`;
     await sendWhatsAppMessage(config.adminPhone, adminSuccess).catch(() => {});
-  }
+}
+
+/**
+ * Notifikasi Sambutan User Login / Registrasi Baru
+ */
+async function sendUserLoginNotification({ name, email, phone }) {
+  if (!phone) return;
+  const config = await getXsenderConfig();
+  const template = config.template_login || DEFAULT_TEMPLATES.login;
+
+  const msg = template
+    .replace(/{nama}/gi, name || "Kreator")
+    .replace(/{email}/gi, email || "-")
+    .replace(/{phone}/gi, phone || "-");
+
+  return sendWhatsAppMessage(phone, msg).catch(() => {});
+}
+
+/**
+ * Notifikasi Follow-up Tahap 2 (Pengingat Belum Bayar 15-30 Menit)
+ */
+async function sendFollowUpStage2Notification({ customerName, customerWa, invoice, planName, total, paymentUrl }) {
+  if (!customerWa) return;
+  const config = await getXsenderConfig();
+  const template = config.template_follow_up_2 || DEFAULT_TEMPLATES.follow_up_2;
+
+  const msg = template
+    .replace(/{nama}/gi, customerName || "Kreator")
+    .replace(/{invoice}/gi, invoice || "")
+    .replace(/{paket}/gi, planName || "VIDORA Creator Pass")
+    .replace(/{total}/gi, Number(total || 75000).toLocaleString('id-ID'))
+    .replace(/{payment_url}/gi, paymentUrl || "");
+
+  return sendWhatsAppMessage(customerWa, msg).catch(() => {});
+}
+
+/**
+ * Notifikasi Follow-up Tahap 3 (Urgent / Promo Terakhir)
+ */
+async function sendFollowUpStage3Notification({ customerName, customerWa, invoice, planName, total, paymentUrl }) {
+  if (!customerWa) return;
+  const config = await getXsenderConfig();
+  const template = config.template_follow_up_3 || DEFAULT_TEMPLATES.follow_up_3;
+
+  const msg = template
+    .replace(/{nama}/gi, customerName || "Kreator")
+    .replace(/{invoice}/gi, invoice || "")
+    .replace(/{paket}/gi, planName || "VIDORA Creator Pass")
+    .replace(/{total}/gi, Number(total || 75000).toLocaleString('id-ID'))
+    .replace(/{payment_url}/gi, paymentUrl || "");
+
+  return sendWhatsAppMessage(customerWa, msg).catch(() => {});
 }
 
 module.exports = {
   getXsenderConfig,
   sendWhatsAppMessage,
+  sendUserLoginNotification,
   sendOrderCreatedNotification,
+  sendFollowUpStage2Notification,
+  sendFollowUpStage3Notification,
   sendPaymentSuccessNotification,
-  formatPhone
+  formatPhone,
+  DEFAULT_TEMPLATES
 };

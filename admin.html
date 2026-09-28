@@ -995,6 +995,64 @@
                         <small style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px; display: block;">Setiap ada pembeli checkout atau pembayaran QRIS Pakasir selesai, notifikasi instan akan dikirim ke nomor ini.</small>
                     </div>
 
+                    <!-- SIKLUS NOTIFIKASI & 3 TAHAP FOLLOW-UP WHATSAPP -->
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 20px; margin-top: 20px;">
+                        <div style="margin-bottom: 16px;">
+                            <h4 style="font-size: 14px; font-weight: 800; color: white; margin: 0; display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="messages-square" style="width: 17px; height: 17px; color: #10b981;"></i>
+                                <span>Template Notifikasi &amp; 3 Tahap Follow-up WhatsApp</span>
+                            </h4>
+                            <div style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 4px; line-height: 1.5;">
+                                Atur format pesan WhatsApp otomatis mulai dari user login/register hingga 3 tahap follow-up checkout (CO). Tag dinamis: <code style="color: #38bdf8;">{nama}</code>, <code style="color: #38bdf8;">{email}</code>, <code style="color: #38bdf8;">{phone}</code>, <code style="color: #38bdf8;">{invoice}</code>, <code style="color: #38bdf8;">{total}</code>, <code style="color: #38bdf8;">{payment_url}</code>.
+                            </div>
+                        </div>
+
+                        <!-- Template 1: User Login / Registrasi Baru -->
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>📱 1. Notifikasi Sambutan User Login / Registrasi Akun:</span>
+                                <span style="font-size: 10.5px; color: #34d399; background: rgba(16,185,129,0.15); padding: 2px 8px; border-radius: 12px; font-weight: 700;">Saat Daftar / Login</span>
+                            </label>
+                            <textarea id="cfgWaTemplateLogin" rows="5" class="form-input" style="font-family: inherit; font-size: 12px; line-height: 1.5; resize: vertical;"></textarea>
+                        </div>
+
+                        <!-- Template 2: Follow-up Tahap 1 (Checkout Dibuat / Tagihan Instan) -->
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>🛒 2. Follow-up Tahap 1: Inisiasi Pesanan (Checkout Dibuat &amp; Link QRIS):</span>
+                                <span style="font-size: 10.5px; color: #38bdf8; background: rgba(56,189,248,0.15); padding: 2px 8px; border-radius: 12px; font-weight: 700;">Instan saat Checkout</span>
+                            </label>
+                            <textarea id="cfgWaTemplateOrder" rows="6" class="form-input" style="font-family: inherit; font-size: 12px; line-height: 1.5; resize: vertical;"></textarea>
+                        </div>
+
+                        <!-- Template 3: Follow-up Tahap 2 (Pengingat Belum Bayar 15-30 Menit) -->
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>⏰ 3. Follow-up Tahap 2: Pengingat Belum Bayar (Menit 15 - 30):</span>
+                                <span style="font-size: 10.5px; color: #fbbf24; background: rgba(251,191,36,0.15); padding: 2px 8px; border-radius: 12px; font-weight: 700;">Reminder Edukasi Fitur</span>
+                            </label>
+                            <textarea id="cfgWaTemplateFollowUp2" rows="6" class="form-input" style="font-family: inherit; font-size: 12px; line-height: 1.5; resize: vertical;"></textarea>
+                        </div>
+
+                        <!-- Template 4: Follow-up Tahap 3 (Urgent / Promo Terakhir) -->
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>🔥 4. Follow-up Tahap 3: Urgensi &amp; Batas Promo Terakhir (Last Call):</span>
+                                <span style="font-size: 10.5px; color: #f43f5e; background: rgba(244,63,94,0.15); padding: 2px 8px; border-radius: 12px; font-weight: 700;">Closing &amp; Urgensi</span>
+                            </label>
+                            <textarea id="cfgWaTemplateFollowUp3" rows="6" class="form-input" style="font-family: inherit; font-size: 12px; line-height: 1.5; resize: vertical;"></textarea>
+                        </div>
+
+                        <!-- Template 5: Notifikasi Pembayaran Berhasil & Lisensi Aktif -->
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>🎉 5. Notifikasi Pembayaran Sukses &amp; Lisensi Aktif:</span>
+                                <span style="font-size: 10.5px; color: #a78bfa; background: rgba(167,139,250,0.15); padding: 2px 8px; border-radius: 12px; font-weight: 700;">Auto-Fulfillment</span>
+                            </label>
+                            <textarea id="cfgWaTemplateApproval" rows="6" class="form-input" style="font-family: inherit; font-size: 12px; line-height: 1.5; resize: vertical;"></textarea>
+                        </div>
+                    </div>
+
                     <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 14px; margin: 18px 0;">
                         <div style="font-weight: 700; font-size: 13px; color: #6ee7b7; margin-bottom: 6px;">Tes Kirim Pesan WhatsApp Langsung</div>
                         <div style="display: flex; gap: 8px;">
@@ -1377,9 +1435,20 @@
                                 <button type="button" class="btn-action btn-action-primary btn-approve" data-oid="${o.id}">
                                     ✓ Aktifkan
                                 </button>
+                                <div style="display:inline-flex; border-radius:6px; overflow:hidden; border:1px solid rgba(56,189,248,0.3); background:rgba(56,189,248,0.08);" title="Kirim Follow-up WhatsApp 3 Tahap">
+                                    <button type="button" class="btn-action btn-fu" data-stage="1" data-oid="${o.id}" title="Follow-up 1: Tagihan QRIS Instan" style="padding:2px 7px; font-size:10px; font-weight:700; color:#38bdf8; border:none; border-right:1px solid rgba(56,189,248,0.2);">
+                                        FU 1
+                                    </button>
+                                    <button type="button" class="btn-action btn-fu" data-stage="2" data-oid="${o.id}" title="Follow-up 2: Pengingat Belum Bayar (Menit 15-30)" style="padding:2px 7px; font-size:10px; font-weight:700; color:#fbbf24; border:none; border-right:1px solid rgba(56,189,248,0.2);">
+                                        FU 2
+                                    </button>
+                                    <button type="button" class="btn-action btn-fu" data-stage="3" data-oid="${o.id}" title="Follow-up 3: Urgensi & Batas Promo (Last Call)" style="padding:2px 7px; font-size:10px; font-weight:700; color:#f43f5e; border:none;">
+                                        FU 3
+                                    </button>
+                                </div>
                             `}
                             ${cleanPhone ? `
-                                <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="btn-action" style="color:#6ee7b7;">
+                                <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="btn-action" style="color:#6ee7b7;" title="Chat WhatsApp Langsung">
                                     <i data-lucide="message-circle" style="width:12px;height:12px;"></i> WA
                                 </a>
                             ` : ''}
@@ -1400,6 +1469,37 @@
                     await window.vidoraData.approveOrder(oid);
                     alert(`Pesanan ${oid} berhasil DIAKTIFKAN!\nStatus lisensi pelanggan ${target?.customer_name || ''} kini telah aktif (5 profil Google).`);
                     await refreshAllAdminData();
+                });
+            });
+
+            // Wire 3-stage follow-up buttons
+            document.querySelectorAll(".btn-fu").forEach(b => {
+                b.addEventListener("click", async () => {
+                    const stage = b.getAttribute("data-stage");
+                    const oid = b.getAttribute("data-oid");
+                    const target = cachedOrders.find(o => o.id === oid);
+                    if (!target || !target.customer_phone) {
+                        alert("Nomor WhatsApp pemesan tidak ditemukan!");
+                        return;
+                    }
+
+                    b.disabled = true;
+                    const oldText = b.textContent;
+                    b.textContent = "...";
+
+                    try {
+                        let res;
+                        if (stage === "1") res = await window.xsender.notifyOrderPlaced(target);
+                        else if (stage === "2") res = await window.xsender.notifyFollowUpStage2(target);
+                        else if (stage === "3") res = await window.xsender.notifyFollowUpStage3(target);
+
+                        alert(`✅ Follow-up Tahap ${stage} berhasil dikirim ke WhatsApp ${target.customer_name} (${target.customer_phone})!`);
+                    } catch (err) {
+                        alert(`Gagal mengirim Follow-up Tahap ${stage}: ` + err.message);
+                    } finally {
+                        b.disabled = false;
+                        b.textContent = oldText;
+                    }
                 });
             });
 
@@ -1533,6 +1633,12 @@
                 document.getElementById("cfgXsenderApiKey").value = window.xsender.config.apiKey || window.xsender.config.apiToken || "";
                 document.getElementById("cfgXsenderSender").value = window.xsender.config.sender || window.xsender.config.deviceId || "";
                 document.getElementById("cfgXsenderAdminPhone").value = window.xsender.config.adminPhone || "";
+
+                if (document.getElementById("cfgWaTemplateLogin")) document.getElementById("cfgWaTemplateLogin").value = window.xsender.config.templateLogin || "";
+                if (document.getElementById("cfgWaTemplateOrder")) document.getElementById("cfgWaTemplateOrder").value = window.xsender.config.templateOrder || "";
+                if (document.getElementById("cfgWaTemplateFollowUp2")) document.getElementById("cfgWaTemplateFollowUp2").value = window.xsender.config.templateFollowUp2 || "";
+                if (document.getElementById("cfgWaTemplateFollowUp3")) document.getElementById("cfgWaTemplateFollowUp3").value = window.xsender.config.templateFollowUp3 || "";
+                if (document.getElementById("cfgWaTemplateApproval")) document.getElementById("cfgWaTemplateApproval").value = window.xsender.config.templateApproval || "";
             }
 
             // Pakasir Gateway Settings
@@ -1663,12 +1769,23 @@
             const sender = document.getElementById("cfgXsenderSender").value.trim();
             const adminPhone = document.getElementById("cfgXsenderAdminPhone").value.trim();
 
+            const templateLogin = document.getElementById("cfgWaTemplateLogin")?.value.trim() || "";
+            const templateOrder = document.getElementById("cfgWaTemplateOrder")?.value.trim() || "";
+            const templateFollowUp2 = document.getElementById("cfgWaTemplateFollowUp2")?.value.trim() || "";
+            const templateFollowUp3 = document.getElementById("cfgWaTemplateFollowUp3")?.value.trim() || "";
+            const templateApproval = document.getElementById("cfgWaTemplateApproval")?.value.trim() || "";
+
             await window.xsender.saveConfig({
                 apiKey: apiKey,
                 sender: sender,
-                adminPhone: adminPhone
+                adminPhone: adminPhone,
+                templateLogin: templateLogin,
+                templateOrder: templateOrder,
+                templateFollowUp2: templateFollowUp2,
+                templateFollowUp3: templateFollowUp3,
+                templateApproval: templateApproval
             });
-            alert("✅ Konfigurasi WhatsApp Gateway (xsender.id) berhasil disimpan!");
+            alert("✅ Konfigurasi WhatsApp Gateway & 3 Tahap Follow-up berhasil disimpan!");
         });
 
         // Toggle Password Visibility for XSender API Key
