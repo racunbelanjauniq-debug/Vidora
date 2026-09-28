@@ -66,9 +66,9 @@ module.exports = async function handler(req, res) {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderId = `INV-VID-${Date.now().toString(36).toUpperCase()}-${randomSuffix}`;
 
-    // Target Redirect setelah bayar di app.pakasir.com
+    // Target Redirect setelah bayar di app.pakasir.com (Dipaksa QRIS Saja tanpa VA)
     const redirectTarget = return_url || `https://vidora.biz.id/app.html?order_id=${orderId}&status=success`;
-    const paymentUrl = `https://app.pakasir.com/pay/${activeSlug}/${nominal}?order_id=${orderId}&redirect=${encodeURIComponent(redirectTarget)}`;
+    const paymentUrl = `https://app.pakasir.com/pay/${activeSlug}/${nominal}?order_id=${orderId}&redirect=${encodeURIComponent(redirectTarget)}&qris_only=1&method=qris`;
 
     const orderData = {
       id: orderId,

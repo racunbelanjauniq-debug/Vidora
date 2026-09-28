@@ -634,7 +634,7 @@
 
             const slug = localStorage.getItem("cfg_pakasir_slug") || "vidora";
             const redirectTarget = window.location.origin + "/app.html?order_id=" + orderId + "&status=success";
-            const pakasirPayUrl = `https://app.pakasir.com/pay/${slug}/${planPrice}?order_id=${orderId}&redirect=${encodeURIComponent(redirectTarget)}`;
+            const pakasirPayUrl = `https://app.pakasir.com/pay/${slug}/${planPrice}?order_id=${orderId}&redirect=${encodeURIComponent(redirectTarget)}&qris_only=1&method=qris`;
 
             if (method === 'qris') {
                 closeLpModal();
