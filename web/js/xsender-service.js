@@ -1,6 +1,6 @@
 // =========================================================================
 // VIDORA — xsender.id WhatsApp Gateway Integration Service
-// Otomasi Notifikasi WhatsApp — Standar GAMA PRO (Tanpa Endpoint Manual)
+// Otomasi Notifikasi WhatsApp (Tanpa Endpoint Manual)
 // =========================================================================
 
 class XsenderService {

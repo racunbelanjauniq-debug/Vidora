@@ -1,6 +1,6 @@
 /**
  * api/send-wa.js — Serverless Endpoint Pengiriman WhatsApp (Proxy XSender)
- * Sesuai Standar GAMA PRO:
+ * Standar Keamanan & Performa:
  * 1. Mencegah error CORS di browser
  * 2. Mengamankan API key & koneksi gateway
  * 3. Memberikan status respon yang jelas ke admin

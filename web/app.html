@@ -39,7 +39,7 @@
     <!-- Main Content Container -->
     <main class="app-container">
 
-        <!-- TAB 1: STUDIO (Mirip 100% dengan Generate GAMA) -->
+        <!-- TAB 1: STUDIO -->
         <section id="tab-studio" class="tab-pane active">
 
             <!-- Warning Banner untuk Non-Member / Belum Berlangganan -->
@@ -115,9 +115,9 @@
                         </select>
                     </div>
 
-                    <!-- Gaya Auto Prompt (17 Gaya Lengkap GAMA PRO) -->
+                    <!-- Gaya Auto Prompt -->
                     <div class="form-group">
-                        <label class="form-label" for="videoApStyleSelect">Gaya Auto Prompt (17 Pilihan GAMA PRO):</label>
+                        <label class="form-label" for="videoApStyleSelect">Gaya Auto Prompt:</label>
                         <select class="form-select" id="videoApStyleSelect">
                             <option value="hard_selling">Hard Selling (Iklan TV)</option>
                             <option value="soft_selling">Soft Selling / Storytelling</option>
@@ -139,7 +139,7 @@
                         </select>
                     </div>
 
-                    <!-- Platform & Jenis CTA (GAMA PRO Style) -->
+                    <!-- Platform & Jenis CTA -->
                     <div class="form-group">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                             <div>
@@ -280,7 +280,7 @@
                         </select>
                     </div>
 
-                    <!-- Gaya Foto / Style Preset (GAMA Style) -->
+                    <!-- Gaya Foto / Style Preset -->
                     <div class="form-group">
                         <label class="form-label">Gaya Foto:</label>
                         <div class="style-chips" id="imageStyleChips">
@@ -349,7 +349,7 @@
                 </div>
             </div>
 
-            <!-- SUB-VIEW 3: PROMPT GENERATOR DARI FOTO (Persis GAMA PRO) -->
+            <!-- SUB-VIEW 3: PROMPT GENERATOR DARI FOTO -->
             <div id="subview-promptgen" class="sub-view-content" style="display: none;">
                 <div class="card">
                     <div class="card-title-row">
@@ -400,9 +400,9 @@
                         <input type="hidden" id="pgModeSelect" value="video">
                     </div>
 
-                    <!-- Gaya Konten — GAMA Style 17 Pilihan -->
+                    <!-- Gaya Konten -->
                     <div class="form-group">
-                        <label class="form-label">Gaya Konten (17 Gaya GAMA PRO Engine):</label>
+                        <label class="form-label">Pilihan Gaya Konten:</label>
                         <div class="style-grid" id="pgStyleGrid">
                             <div class="style-card active" data-pgstyle="hard_selling">
                                 <div class="style-card-icon">&#x1F525;</div>
@@ -493,7 +493,7 @@
                         <input type="hidden" id="pgStyleSelect" value="hard_selling">
                     </div>
 
-                    <!-- Platform Target (10 Platform GAMA PRO) -->
+                    <!-- Platform Target -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div class="form-group">
                             <label class="form-label" for="pgPlatformSelect">Platform Target:</label>
@@ -538,7 +538,7 @@
                     <!-- Generate Prompt Button -->
                     <button class="btn-generate" id="btnRunPromptGen" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                         <i data-lucide="wand-2" style="width: 18px; height: 18px;"></i>
-                        <span>GENERATE SMART PROMPT (GAMA PRO ENGINE)</span>
+                        <span>GENERATE SMART PROMPT AI</span>
                     </button>
 
                     <!-- Kotak Hasil Prompt -->
@@ -1023,7 +1023,7 @@
                         <form id="formAdminXsenderConfig">
                             <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
                                 <p style="font-size: 11.5px; color: #a7f3d0; margin: 0; line-height: 1.4;">
-                                    💡 <strong>Otomatis Terhubung:</strong> Menggunakan gateway resmi <code>https://xsender.id/send-message</code> sama seperti di GAMA PRO. Tidak perlu mencari atau mengisi endpoint manual.
+                                    💡 <strong>Otomatis Terhubung:</strong> Menggunakan gateway resmi <code>https://xsender.id/send-message</code>. Tidak perlu mencari atau mengisi endpoint manual.
                                 </p>
                             </div>
 
@@ -1472,7 +1472,7 @@
                             Mendukung Semua e-Wallet &amp; Mobile Banking:
                         </div>
                         <div style="color: #94a3b8; font-size: 11px;">
-                            GoPay, OVO, Dana, ShopeePay, LinkAja, BCA, Mandiri, BRI, BNI, CIMB, &amp; Semua Aplikasi Bank.
+                            GoPay, OVO, Dana, ShopeePay, LinkAja, BCA, BRI, BNI, CIMB, &amp; Semua Aplikasi Bank.
                         </div>
                     </div>
 
@@ -1490,14 +1490,6 @@
                             <div style="font-size: 11px; color: var(--text-tertiary);">a.n VIDORA OFFICIAL</div>
                         </div>
                         <button type="button" class="btn-copy-account" onclick="navigator.clipboard.writeText('801234567890'); alert('Nomor Rekening BCA disalin!')">Salin</button>
-                    </div>
-                    <div class="bank-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06);">
-                        <div>
-                            <div style="font-weight: 700; color: white;">Bank Mandiri</div>
-                            <div style="color: var(--accent-cyan); font-family: monospace; font-size: 15px; font-weight: 700;">137 00 9876543 2</div>
-                            <div style="font-size: 11px; color: var(--text-tertiary);">a.n VIDORA OFFICIAL</div>
-                        </div>
-                        <button type="button" class="btn-copy-account" onclick="navigator.clipboard.writeText('1370098765432'); alert('Nomor Rekening Mandiri disalin!')">Salin</button>
                     </div>
                 </div>
 
@@ -1548,7 +1540,6 @@
                     <select class="form-select" id="manualOrderMethod">
                         <option value="QRIS">QRIS</option>
                         <option value="BANK_BCA">Transfer BCA</option>
-                        <option value="BANK_MANDIRI">Transfer Mandiri</option>
                         <option value="WHATSAPP">Direct WhatsApp</option>
                     </select>
                 </div>

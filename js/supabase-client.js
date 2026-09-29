@@ -783,7 +783,7 @@ class VidoraDataBridge {
                     customer_email: "toko_cantik@gmail.com",
                     plan_name: "VIDORA Creator Pass",
                     price: 75000,
-                    payment_method: "BANK_MANDIRI",
+                    payment_method: "BANK_BCA",
                     status: "pending",
                     created_at: new Date(Date.now() - 3600000).toISOString()
                 }

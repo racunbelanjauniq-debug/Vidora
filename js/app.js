@@ -1338,7 +1338,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return (localStorage.getItem("vidora_user_gemini_key") || "").trim();
     }
 
-    // Gemini Vision API Caller (GAMA PRO Engine)
+    // Gemini Vision API Caller
     async function analyzeProductImageWithGemini(base64Data, mode, style, platform, extra = "", ctaType = "auto", customCta = "") {
         const apiKey = getUserGeminiKey();
         if (!apiKey) {
@@ -1398,7 +1398,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             ctaInstruction = `Closing CTA Cue: ${customCta}`;
         }
 
-        // Full 17 GAMA PRO style instruction map
+        // 17 Visual style instruction map
         const styleInstructions = {
             hard_selling: "Style: Hard Selling Commercial (Iklan TV). High-energy composition, bold product hero shot with exploding dynamic action, motion blur trails, bright saturated colors, urgency-focused commercial framing with direct purchasing cues.",
             hardselling: "Style: Hard Selling Commercial (Iklan TV). High-energy composition, bold product hero shot with exploding dynamic action, motion blur trails, bright saturated colors, urgency-focused commercial framing.",
@@ -1430,7 +1430,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
         const styleInstruction = styleInstructions[style] || styleInstructions.cinematic;
 
-        const systemPrompt = `You are VIDORA Smart Prompt Generator (powered by GAMA PRO Engine), an elite commercial director, cinematographer, and prompt engineer.
+        const systemPrompt = `You are VIDORA Smart Prompt Generator, an elite commercial director, cinematographer, and prompt engineer.
 Your task: Analyze the provided image/details and generate an extremely rich, cinematic, photorealistic prompt optimized for AI video generation (Google Flow / Omni Flash) or studio photography (Imagen / Nano Banana).
 Mode: ${mode}
 ${styleInstruction}
@@ -1579,7 +1579,7 @@ Requirements for the generated prompt:
         const prompt = await analyzeProductImageWithGemini(uploadedProductImage, mode, style, platform, extra, ctaType, customCta);
 
         btnRunPromptGen.disabled = false;
-        btnRunPromptGen.innerHTML = `<i data-lucide="sparkles" style="width:18px;height:18px;"></i> <span>GENERATE SMART PROMPT (GAMA PRO ENGINE)</span>`;
+        btnRunPromptGen.innerHTML = `<i data-lucide="sparkles" style="width:18px;height:18px;"></i> <span>GENERATE SMART PROMPT AI</span>`;
         lucide.createIcons();
 
         if (prompt) {

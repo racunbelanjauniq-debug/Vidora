@@ -2543,7 +2543,7 @@ class GoogleVideoGenerator:
             if stopped():
                 return False
 
-            # Untuk mode IMAGE atau tanpa image_path: out_dir ke output GAMA.
+            # Untuk mode IMAGE atau tanpa image_path: out_dir ke output VIDORA.
             # Mode VIDEO dengan image_path memakai parent folder gambar produk.
             if self.is_image or not self.image_path:
                 out_dir = (runtime_data_root() / "output" / sanitize_email(self.email)).resolve()

@@ -261,7 +261,7 @@ body {
     gap: 8px;
 }
 
-/* Product Image Upload Dropzone (Persis GAMA) */
+/* Product Image Upload Dropzone */
 .upload-dropzone {
     border: 2px dashed rgba(99, 102, 241, 0.3);
     background: rgba(12, 14, 21, 0.6);
@@ -1539,7 +1539,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 
 /* =========================================================================
-   STYLE CARDS GRID — GAMA-Style visual mood picker (Prompt Generator)
+   STYLE CARDS GRID — Visual mood picker (Prompt Generator)
    ========================================================================= */
 .style-grid {
     display: grid;

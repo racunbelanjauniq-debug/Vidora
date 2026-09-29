@@ -680,7 +680,7 @@
                     <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
                         <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase;">Metode Pembayaran Utama</div>
                         <div style="font-size: 17px; font-weight: 800; color: white; margin-top: 4px;">QRIS &amp; Transfer Bank</div>
-                        <div style="font-size: 12px; color: #10b981; margin-top: 2px;">BCA, Mandiri, E-Wallet</div>
+                        <div style="font-size: 12px; color: #10b981; margin-top: 2px;">BCA &amp; QRIS E-Wallet</div>
                     </div>
                     <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
                         <div style="font-size: 11px; color: var(--text-tertiary); text-transform: uppercase;">Rata-rata Konversi</div>
@@ -775,7 +775,7 @@
                     Nomor rekening dan QRIS yang ditampilkan di modal checkout landing page.
                 </p>
 
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr; max-width: 480px; gap: 16px;">
                     <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
                         <div style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 10px;">Bank BCA</div>
                         <div class="form-group">
@@ -785,18 +785,6 @@
                         <div class="form-group">
                             <label class="form-label">Atas Nama:</label>
                             <input type="text" class="form-input" id="cfgBcaName" value="VIDORA OFFICIAL">
-                        </div>
-                    </div>
-
-                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
-                        <div style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 10px;">Bank Mandiri</div>
-                        <div class="form-group">
-                            <label class="form-label">Nomor Rekening Mandiri:</label>
-                            <input type="text" class="form-input" id="cfgMandiriNumber" value="137 00 9876543 2">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Atas Nama:</label>
-                            <input type="text" class="form-input" id="cfgMandiriName" value="VIDORA OFFICIAL">
                         </div>
                     </div>
                 </div>
@@ -815,7 +803,7 @@
                             <i data-lucide="zap" style="width: 18px; height: 18px; color: #818cf8;"></i>
                             <span>Integrasi Payment Gateway Pakasir (QRIS Otomatis)</span>
                         </div>
-                        <div class="panel-desc">Sistem checkout QRIS otomatis seperti di GAMA PRO. User bayar via QRIS &rarr; Webhook Pakasir auto-aktifkan akun 5 Profil &rarr; Notif WhatsApp terkirim instan.</div>
+                        <div class="panel-desc">Sistem checkout QRIS otomatis. User bayar via QRIS &rarr; Webhook Pakasir auto-aktifkan akun 5 Profil &rarr; Notif WhatsApp terkirim instan.</div>
                     </div>
                     <div style="display: flex; gap: 6px;">
                         <span style="font-size: 11px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 20px; font-weight: 700;">
@@ -967,7 +955,7 @@
                 <form id="formAdminXsender">
                     <div style="background: rgba(16, 185, 129, 0.08); border-left: 4px solid #10b981; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
                         <p style="font-size: 12px; color: #a7f3d0; margin: 0; line-height: 1.5;">
-                            💡 <strong>Otomatis Terhubung (Tanpa Endpoint Manual):</strong> Server VIDORA otomatis terhubung ke gateway resmi <code>https://xsender.id/send-message</code> sama persis seperti di GAMA PRO. Anda hanya perlu memasukkan <strong>API Key</strong> dan <strong>Nomor Sender</strong> yang Anda scan di dashboard xsender.id.
+                            💡 <strong>Otomatis Terhubung (Tanpa Endpoint Manual):</strong> Server VIDORA otomatis terhubung ke gateway resmi <code>https://xsender.id/send-message</code>. Anda hanya perlu memasukkan <strong>API Key</strong> dan <strong>Nomor Sender</strong> yang Anda scan di dashboard xsender.id.
                         </p>
                     </div>
 
@@ -1181,7 +1169,6 @@
                     <select class="form-input" id="mOrderMethod">
                         <option value="QRIS">QRIS Instan</option>
                         <option value="BANK_BCA">Transfer Bank BCA</option>
-                        <option value="BANK_MANDIRI">Transfer Bank Mandiri</option>
                         <option value="WHATSAPP">Direct WhatsApp</option>
                     </select>
                 </div>
@@ -1659,7 +1646,7 @@
             const activeCheck = document.getElementById("cfgPakasirActive");
             if (activeCheck) activeCheck.checked = localStorage.getItem("cfg_pakasir_active") !== "false";
 
-            // Fetch live settings from /api/settings fallback (like GAMA PRO)
+            // Fetch live settings from /api/settings fallback
             try {
                 const res = await fetch("/api/settings", { cache: "no-store" });
                 if (res.ok) {
@@ -1699,7 +1686,7 @@
                 cfg_payment_qris_active: isActive ? "true" : "false"
             };
 
-            // 1. Simpan ke /api/settings (disimpan persisten ke Supabase seperti di GAMA PRO)
+            // 1. Simpan ke /api/settings (disimpan persisten ke Supabase)
             try {
                 await fetch("/api/settings", {
                     method: "POST",
