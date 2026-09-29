@@ -6,7 +6,7 @@
  * 3. Memberikan status respon yang jelas ke admin
  */
 
-const { formatPhone } = require('../lib/xsender');
+const { formatPhone, getXsenderConfig } = require('../lib/xsender');
 
 async function parseBody(req) {
   if (req.body) {
@@ -39,8 +39,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const body = await parseBody(req);
-    const apiKey = body.api_key || body.apiKey || process.env.XSENDER_API_KEY || '';
-    const sender = body.sender || process.env.XSENDER_SENDER || '';
+    const dbConfig = await getXsenderConfig().catch(() => ({}));
+    const apiKey = body.api_key || body.apiKey || process.env.XSENDER_API_KEY || dbConfig.apiKey || '';
+    const sender = body.sender || process.env.XSENDER_SENDER || dbConfig.sender || '';
     const rawNumber = body.number || body.phone || '';
     const message = body.message || '';
     const apiUrl = 'https://xsender.id/send-message';

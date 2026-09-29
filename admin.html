@@ -1789,6 +1789,13 @@
                 alert("Masukkan nomor HP tujuan tes!");
                 return;
             }
+
+            // Sync input form terkini jika baru diketik
+            const curApiKey = document.getElementById("cfgXsenderApiKey")?.value?.trim();
+            const curSender = document.getElementById("cfgXsenderSender")?.value?.trim();
+            if (curApiKey) window.xsender.config.apiKey = curApiKey;
+            if (curSender) window.xsender.config.sender = curSender;
+
             msgBox.style.display = "block";
             msgBox.style.color = "#fbbf24";
             msgBox.textContent = "Mengirim pesan WhatsApp via xsender.id...";
@@ -1800,7 +1807,7 @@
                     msgBox.textContent = "Pesan berhasil terkirim ke WhatsApp!";
                 } else {
                     msgBox.style.color = "#f43f5e";
-                    msgBox.textContent = "Gagal kirim: " + (res.error || "Periksa token API xsender Anda.");
+                    msgBox.textContent = "Gagal kirim: " + (res.error || res.message || "Periksa token API xsender Anda.");
                 }
             } catch (err) {
                 msgBox.style.color = "#f43f5e";
