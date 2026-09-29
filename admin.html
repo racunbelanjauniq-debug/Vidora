@@ -232,7 +232,7 @@
         /* Metrics Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
             gap: 16px;
             margin-bottom: 26px;
         }
@@ -610,6 +610,14 @@
                 <p>Kelola omset lisensi, pembayaran masuk, pengguna aktif, dan integrasi WhatsApp sistem VIDORA.</p>
             </div>
             <div class="topbar-right">
+                <button type="button" class="btn-action" onclick="switchPane('hermes')" style="border-color: rgba(168, 85, 247, 0.5); color: #c084fc; background: rgba(168, 85, 247, 0.12); padding: 7px 14px; font-weight: 700;">
+                    <i data-lucide="cpu" style="width: 14px; height: 14px;"></i>
+                    <span>Hermes MCP</span>
+                </button>
+                <button type="button" class="btn-action" onclick="switchPane('users')" style="border-color: rgba(16, 185, 129, 0.5); color: #34d399; background: rgba(16, 185, 129, 0.12); padding: 7px 14px; font-weight: 700;">
+                    <i data-lucide="users" style="width: 14px; height: 14px;"></i>
+                    <span>Kelola User</span>
+                </button>
                 <div class="admin-user-pill">
                     <i data-lucide="crown" style="width: 14px; height: 14px; color: #fbbf24;"></i>
                     <span id="adminEmailDisplay">Super Administrator</span>
@@ -646,13 +654,22 @@
                 <div class="stat-sub">Perlu konfirmasi &amp; aktivasi</div>
             </div>
 
-            <div class="stat-card" style="--card-accent: #a855f7;">
+            <div class="stat-card" style="--card-accent: #a855f7; cursor: pointer;" onclick="switchPane('users')" title="Klik untuk Buka Kelola User & Lisensi">
                 <div class="stat-label">
                     <span>Lisensi User Aktif</span>
                     <i data-lucide="users" style="width: 16px; height: 16px; color: #a855f7;"></i>
                 </div>
                 <div class="stat-value" id="metricActiveUsers" style="color: #c084fc;">0</div>
-                <div class="stat-sub">Total akun dengan hak akses studio</div>
+                <div class="stat-sub">Buka daftar pengguna &rarr;</div>
+            </div>
+
+            <div class="stat-card" style="--card-accent: #c084fc; cursor: pointer; background: linear-gradient(135deg, rgba(168,85,247,0.12) 0%, rgba(15,23,42,0.8) 100%);" onclick="switchPane('hermes')" title="Klik untuk Buka Panel Hermes AI Agent & MCP">
+                <div class="stat-label">
+                    <span>Hermes AI Agent</span>
+                    <i data-lucide="cpu" style="width: 16px; height: 16px; color: #c084fc;"></i>
+                </div>
+                <div class="stat-value" id="metricHermesStatus" style="color: #e9d5ff; font-size: 19px;">6 Tools MCP</div>
+                <div class="stat-sub" style="color: #a855f7; font-weight: 700;">FastMCP Port 8000 &rarr;</div>
             </div>
         </section>
 
@@ -1464,9 +1481,9 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/config.js"></script>
-    <script src="/js/supabase-client.js"></script>
-    <script src="/js/xsender-service.js"></script>
+    <script src="/js/config.js?v=2.5.2"></script>
+    <script src="/js/supabase-client.js?v=2.5.2"></script>
+    <script src="/js/xsender-service.js?v=2.5.2"></script>
     <script>
         let cachedOrders = [];
         let cachedUsers = [];
@@ -1502,7 +1519,7 @@
             return true;
         }
 
-        // Tab Navigation
+        // Tab Navigation & Switcher
         const sidebarItems = document.querySelectorAll(".sidebar-item");
         const contentPanes = document.querySelectorAll(".content-pane");
         const pageTitleHeading = document.getElementById("pageTitleHeading");
@@ -1517,20 +1534,31 @@
             hermes: "Hermes AI Agent & Model Context Protocol (MCP)"
         };
 
+        function switchPane(pane) {
+            if (!titles[pane]) pane = "omset";
+            sidebarItems.forEach(i => {
+                if (i.getAttribute("data-pane") === pane) i.classList.add("active");
+                else i.classList.remove("active");
+            });
+            contentPanes.forEach(p => {
+                if (p.id === `pane-${pane}`) p.classList.add("active");
+                else p.classList.remove("active");
+            });
+            if (titles[pane]) {
+                const icon = pane === "hermes" ? "cpu" : (pane === "users" ? "users" : (pane === "whatsapp" ? "message-square" : "shield-check"));
+                const color = pane === "hermes" ? "#c084fc" : (pane === "users" ? "#10b981" : "#fbbf24");
+                pageTitleHeading.innerHTML = `<i data-lucide="${icon}" style="width: 22px; height: 22px; color: ${color};"></i> <span>${titles[pane]}</span>`;
+                lucide.createIcons();
+            }
+            try {
+                history.replaceState(null, "", `#${pane}`);
+            } catch (_) {}
+        }
+
         sidebarItems.forEach(item => {
             item.addEventListener("click", () => {
                 const pane = item.getAttribute("data-pane");
-                sidebarItems.forEach(i => i.classList.remove("active"));
-                contentPanes.forEach(p => p.classList.remove("active"));
-
-                item.classList.add("active");
-                const target = document.getElementById(`pane-${pane}`);
-                if (target) target.classList.add("active");
-
-                if (titles[pane]) {
-                    pageTitleHeading.innerHTML = `<i data-lucide="shield-check" style="width: 22px; height: 22px; color: #fbbf24;"></i> <span>${titles[pane]}</span>`;
-                    lucide.createIcons();
-                }
+                switchPane(pane);
             });
         });
 
@@ -2388,6 +2416,11 @@
             const authOk = await checkSuperAdminAuth();
             if (authOk) {
                 await refreshAllAdminData();
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialTab = urlParams.get('tab') || window.location.hash.replace('#', '');
+                if (initialTab && titles[initialTab]) {
+                    switchPane(initialTab);
+                }
             }
         });
     </script>
