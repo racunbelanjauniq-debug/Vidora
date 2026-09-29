@@ -8,7 +8,7 @@ window.VIDORA_CONFIG = {
     SUPABASE_ANON_KEY: localStorage.getItem("vidora_supabase_key") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     
     // Cloudflare R2 Public Domain
-    R2_PUBLIC_DOMAIN: localStorage.getItem("vidora_r2_domain") || "https://pub-your-id.r2.dev",
+    R2_PUBLIC_DOMAIN: localStorage.getItem("vidora_r2_domain") || "https://pub-20905c060e7d4c948fd28b8991fd3743.r2.dev",
 
     // Default Limits
     MAX_GOOGLE_ACCOUNTS_DEFAULT: 5,
