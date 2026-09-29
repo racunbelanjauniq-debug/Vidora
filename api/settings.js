@@ -40,6 +40,10 @@ module.exports = async function handler(req, res) {
   // GET Settings
   if (req.method === 'GET') {
     const defaults = {
+      cfg_bca_number: '8012 3456 7890',
+      cfg_bca_name: 'VIDORA OFFICIAL',
+      cfg_mandiri_number: '',
+      cfg_mandiri_name: '',
       cfg_payment_qris_active: 'true',
       cfg_pakasir_slug: 'vidora',
       cfg_pakasir_key: '',
@@ -87,20 +91,48 @@ module.exports = async function handler(req, res) {
 
       if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
         try {
-          await fetch(`${SUPABASE_URL}/rest/v1/system_settings`, {
-            method: 'POST',
-            headers: {
-              'apikey': SUPABASE_SERVICE_ROLE_KEY,
-              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'resolution=merge-duplicates'
-            },
-            body: JSON.stringify({
-              key: 'pakasir_config',
-              value: settings,
+          // 1. Simpan Bank Config jika ada data bank
+          if (settings.cfg_bca_number !== undefined || settings.bca_number !== undefined || settings.cfg_mandiri_number !== undefined) {
+            const bankData = {
+              cfg_bca_number: settings.cfg_bca_number || settings.bca_number || '8012 3456 7890',
+              cfg_bca_name: settings.cfg_bca_name || settings.bca_name || 'VIDORA OFFICIAL',
+              cfg_mandiri_number: settings.cfg_mandiri_number || '',
+              cfg_mandiri_name: settings.cfg_mandiri_name || '',
               updated_at: new Date().toISOString()
-            })
-          });
+            };
+            await fetch(`${SUPABASE_URL}/rest/v1/system_settings`, {
+              method: 'POST',
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify({
+                key: 'bank_config',
+                value: bankData,
+                updated_at: new Date().toISOString()
+              })
+            });
+          }
+
+          // 2. Simpan Pakasir Config jika ada data pakasir
+          if (settings.cfg_pakasir_slug !== undefined || settings.cfg_pakasir_key !== undefined || settings.cfg_payment_qris_active !== undefined) {
+            await fetch(`${SUPABASE_URL}/rest/v1/system_settings`, {
+              method: 'POST',
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify({
+                key: 'pakasir_config',
+                value: settings,
+                updated_at: new Date().toISOString()
+              })
+            });
+          }
         } catch (e) {
           console.warn('[system_settings table error]:', e.message);
         }

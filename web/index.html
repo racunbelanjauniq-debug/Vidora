@@ -510,10 +510,10 @@
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div>
                             <div style="font-weight:700; color:white; font-size:12.5px;">Bank Central Asia (BCA)</div>
-                            <div style="color:#00f2fe; font-family:monospace; font-size:14px; font-weight:800; margin:2px 0;">8012 3456 7890</div>
-                            <div style="font-size:10.5px; color:#64748b;">a.n VIDORA OFFICIAL</div>
+                            <div style="color:#00f2fe; font-family:monospace; font-size:14px; font-weight:800; margin:2px 0;" id="lpBankNumberBca">8012 3456 7890</div>
+                            <div style="font-size:10.5px; color:#64748b;" id="lpBankNameBca">a.n VIDORA OFFICIAL</div>
                         </div>
-                        <button type="button" class="lp-btn-copy" onclick="navigator.clipboard.writeText('801234567890'); alert('Nomor Rekening BCA disalin!');">Salin</button>
+                        <button type="button" class="lp-btn-copy" id="lpBtnCopyBank" onclick="copyLpBank()">Salin</button>
                     </div>
                     <div style="background:rgba(99,102,241,0.1); border-radius:9px; padding:9px; margin-top:10px; font-size:11px; color:#a5b4fc; line-height:1.4;">
                         ⚡ Setelah transfer, konfirmasi via WhatsApp agar akun langsung diaktifkan.
@@ -600,6 +600,42 @@
                 }
             });
         });
+
+        // Dynamic Bank Account Support
+        function copyLpBank() {
+            const num = (document.getElementById('lpBankNumberBca')?.textContent || '').replace(/\s+/g, '');
+            if (num) {
+                navigator.clipboard.writeText(num);
+                alert('Nomor Rekening BCA (' + num + ') berhasil disalin!');
+            }
+        }
+        window.copyLpBank = copyLpBank;
+
+        function syncLpBankInfo() {
+            const bcaNum = localStorage.getItem('cfg_bca_number') || '8012 3456 7890';
+            const bcaName = localStorage.getItem('cfg_bca_name') || 'VIDORA OFFICIAL';
+            const numEl = document.getElementById('lpBankNumberBca');
+            const nameEl = document.getElementById('lpBankNameBca');
+            if (numEl) numEl.textContent = bcaNum;
+            if (nameEl) nameEl.textContent = 'a.n ' + bcaName;
+
+            fetch('/api/settings', { cache: 'no-store' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data && data.success && data.settings) {
+                        if (data.settings.cfg_bca_number) {
+                            localStorage.setItem('cfg_bca_number', data.settings.cfg_bca_number);
+                            if (numEl) numEl.textContent = data.settings.cfg_bca_number;
+                        }
+                        if (data.settings.cfg_bca_name) {
+                            localStorage.setItem('cfg_bca_name', data.settings.cfg_bca_name);
+                            if (nameEl) nameEl.textContent = 'a.n ' + data.settings.cfg_bca_name;
+                        }
+                    }
+                })
+                .catch(function() {});
+        }
+        syncLpBankInfo();
 
         // Form submit
         document.getElementById('formLpCheckout').addEventListener('submit', async function(e) {

@@ -558,7 +558,44 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("coCustomerName").value = "";
             document.getElementById("coCustomerEmail").value = "";
         }
+
+        // Sync Rekening Bank Dinamis dari Pengaturan Super Admin
+        syncCheckoutBankInfo();
     }
+
+    // Fungsi Sync Rekening Bank Checkout Dinamis
+    function syncCheckoutBankInfo() {
+        const bcaNum = localStorage.getItem("cfg_bca_number") || "8012 3456 7890";
+        const bcaName = localStorage.getItem("cfg_bca_name") || "VIDORA OFFICIAL";
+        const numEl = document.getElementById("bankNumberBca");
+        const nameEl = document.getElementById("bankNameBca");
+        if (numEl) numEl.textContent = bcaNum;
+        if (nameEl) nameEl.textContent = "a.n " + bcaName;
+
+        fetch("/api/settings", { cache: "no-store" })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.settings) {
+                    if (data.settings.cfg_bca_number) {
+                        localStorage.setItem("cfg_bca_number", data.settings.cfg_bca_number);
+                        if (numEl) numEl.textContent = data.settings.cfg_bca_number;
+                    }
+                    if (data.settings.cfg_bca_name) {
+                        localStorage.setItem("cfg_bca_name", data.settings.cfg_bca_name);
+                        if (nameEl) nameEl.textContent = "a.n " + data.settings.cfg_bca_name;
+                    }
+                }
+            })
+            .catch(() => {});
+    }
+
+    document.getElementById("btnCopyBankBca")?.addEventListener("click", () => {
+        const num = (document.getElementById("bankNumberBca")?.textContent || "").replace(/\s+/g, "");
+        if (num) {
+            navigator.clipboard.writeText(num);
+            alert(`Nomor Rekening BCA (${num}) berhasil disalin!`);
+        }
+    });
 
     btnHeaderUpgrade.addEventListener("click", () => openCheckoutModal());
     document.getElementById("btnProfileUpgrade").addEventListener("click", () => openCheckoutModal());

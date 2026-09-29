@@ -788,32 +788,54 @@
 
             <!-- Rekening Bank & QRIS Settings -->
             <div class="panel">
-                <div class="panel-title" style="margin-bottom: 12px; color: #00f2fe;">
+                <div class="panel-title" style="margin-bottom: 12px; color: #00f2fe; display: flex; align-items: center; gap: 8px;">
                     <i data-lucide="wallet" style="width: 18px; height: 18px;"></i>
-                    <span>Pengaturan Rekening &amp; Gateway Pembayaran</span>
+                    <span>Pengaturan Nomor Rekening Bank &amp; Gateway Pembayaran</span>
                 </div>
                 <p style="font-size: 12px; color: var(--text-tertiary); margin-bottom: 16px;">
-                    Nomor rekening dan QRIS yang ditampilkan di modal checkout landing page.
+                    Nomor rekening yang disimpan di sini akan otomatis tampil di landing page, popup checkout, dan pesan WhatsApp tagihan.
                 </p>
 
-                <div style="display: grid; grid-template-columns: 1fr; max-width: 480px; gap: 16px;">
-                    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
-                        <div style="font-size: 13px; font-weight: 700; color: white; margin-bottom: 10px;">Bank BCA</div>
-                        <div class="form-group">
-                            <label class="form-label">Nomor Rekening BCA:</label>
-                            <input type="text" class="form-input" id="cfgBcaNumber" value="8012 3456 7890">
+                <form id="formBankSettings">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); max-width: 760px; gap: 16px; margin-bottom: 16px;">
+                        <!-- Rekening Utama (BCA) -->
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #38bdf8; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                <i data-lucide="credit-card" style="width: 15px; height: 15px;"></i>
+                                <span>Rekening Utama (Bank BCA)</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nomor Rekening BCA:</label>
+                                <input type="text" class="form-input" id="cfgBcaNumber" placeholder="Contoh: 8012 3456 7890" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Atas Nama (A/N):</label>
+                                <input type="text" class="form-input" id="cfgBcaName" placeholder="Contoh: VIDORA OFFICIAL" required>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Atas Nama:</label>
-                            <input type="text" class="form-input" id="cfgBcaName" value="VIDORA OFFICIAL">
+
+                        <!-- Rekening Cadangan (Mandiri / Lainnya) -->
+                        <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #fbbf24; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                                <i data-lucide="landmark" style="width: 15px; height: 15px;"></i>
+                                <span>Rekening Cadangan / Bank Lain (Opsional)</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nomor Rekening Bank Lain:</label>
+                                <input type="text" class="form-input" id="cfgMandiriNumber" placeholder="Contoh: 123 000 456 789">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Nama Bank &amp; Atas Nama:</label>
+                                <input type="text" class="form-input" id="cfgMandiriName" placeholder="Contoh: Mandiri a/n VIDORA">
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <button type="button" class="btn-action btn-action-primary" style="margin-top: 14px;" onclick="alert('Pengaturan rekening berhasil diperbarui!');">
-                    <i data-lucide="save" style="width: 14px; height: 14px;"></i>
-                    <span>Simpan Pengaturan Rekening</span>
-                </button>
+                    <button type="submit" class="btn-action btn-action-primary" id="btnSaveBankSettings" style="background: linear-gradient(135deg, #00f2fe, #0284c7); color: #000; font-weight: 700;">
+                        <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                        <span>Simpan Pengaturan Rekening Bank</span>
+                    </button>
+                </form>
             </div>
 
             <!-- Integrasi Gateway Pakasir (QRIS Otomatis) -->
@@ -2026,6 +2048,18 @@
                 if (document.getElementById("cfgWaTemplateApproval")) document.getElementById("cfgWaTemplateApproval").value = window.xsender.config.templateApproval || "";
             }
 
+            // Bank Rekening Settings Populate
+            const bcaNumInput = document.getElementById("cfgBcaNumber");
+            const bcaNameInput = document.getElementById("cfgBcaName");
+            const mandiriNumInput = document.getElementById("cfgMandiriNumber");
+            const mandiriNameInput = document.getElementById("cfgMandiriName");
+
+            // Ambil dari localStorage dulu untuk render cepat
+            if (bcaNumInput && localStorage.getItem("cfg_bca_number")) bcaNumInput.value = localStorage.getItem("cfg_bca_number");
+            if (bcaNameInput && localStorage.getItem("cfg_bca_name")) bcaNameInput.value = localStorage.getItem("cfg_bca_name");
+            if (mandiriNumInput && localStorage.getItem("cfg_mandiri_number")) mandiriNumInput.value = localStorage.getItem("cfg_mandiri_number");
+            if (mandiriNameInput && localStorage.getItem("cfg_mandiri_name")) mandiriNameInput.value = localStorage.getItem("cfg_mandiri_name");
+
             // Pakasir Gateway Settings
             const curOrigin = window.location.origin;
             const webhookUrl = curOrigin + "/api/webhook-pakasir";
@@ -2044,13 +2078,29 @@
             const activeCheck = document.getElementById("cfgPakasirActive");
             if (activeCheck) activeCheck.checked = localStorage.getItem("cfg_pakasir_active") !== "false";
 
-            // Fetch live settings from /api/settings fallback
+            // Fetch live settings from /api/settings serverless
             try {
                 const res = await fetch("/api/settings", { cache: "no-store" });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && data.settings) {
                         const s = data.settings;
+                        if (s.cfg_bca_number && bcaNumInput) {
+                            bcaNumInput.value = s.cfg_bca_number;
+                            localStorage.setItem("cfg_bca_number", s.cfg_bca_number);
+                        }
+                        if (s.cfg_bca_name && bcaNameInput) {
+                            bcaNameInput.value = s.cfg_bca_name;
+                            localStorage.setItem("cfg_bca_name", s.cfg_bca_name);
+                        }
+                        if (s.cfg_mandiri_number && mandiriNumInput) {
+                            mandiriNumInput.value = s.cfg_mandiri_number;
+                            localStorage.setItem("cfg_mandiri_number", s.cfg_mandiri_number);
+                        }
+                        if (s.cfg_mandiri_name && mandiriNameInput) {
+                            mandiriNameInput.value = s.cfg_mandiri_name;
+                            localStorage.setItem("cfg_mandiri_name", s.cfg_mandiri_name);
+                        }
                         if (s.cfg_pakasir_slug && slugInput) slugInput.value = s.cfg_pakasir_slug;
                         if (s.cfg_pakasir_key && keyInput) keyInput.value = s.cfg_pakasir_key;
                         if (s.cfg_pakasir_secret && secretInput) secretInput.value = s.cfg_pakasir_secret;
@@ -2062,7 +2112,100 @@
             } catch (err) {
                 console.warn("API settings fetch fallback:", err);
             }
+
+            // Sync langsung dari Supabase system_settings jika terhubung
+            if (window.vidoraData && window.vidoraData.isLive) {
+                try {
+                    const { data: dbData } = await window.vidoraData.client.from("system_settings").select("*").eq("key", "bank_config").maybeSingle();
+                    if (dbData && dbData.value) {
+                        const b = dbData.value;
+                        if (b.cfg_bca_number && bcaNumInput) {
+                            bcaNumInput.value = b.cfg_bca_number;
+                            localStorage.setItem("cfg_bca_number", b.cfg_bca_number);
+                        }
+                        if (b.cfg_bca_name && bcaNameInput) {
+                            bcaNameInput.value = b.cfg_bca_name;
+                            localStorage.setItem("cfg_bca_name", b.cfg_bca_name);
+                        }
+                        if (b.cfg_mandiri_number && mandiriNumInput) {
+                            mandiriNumInput.value = b.cfg_mandiri_number;
+                            localStorage.setItem("cfg_mandiri_number", b.cfg_mandiri_number);
+                        }
+                        if (b.cfg_mandiri_name && mandiriNameInput) {
+                            mandiriNameInput.value = b.cfg_mandiri_name;
+                            localStorage.setItem("cfg_mandiri_name", b.cfg_mandiri_name);
+                        }
+                    }
+                } catch (err) {
+                    console.warn("[Admin] Supabase bank_config direct load:", err);
+                }
+            }
         }
+
+        // Bank Settings Form Submit
+        document.getElementById("formBankSettings")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btnSaveBankSettings");
+            const originalHtml = btn ? btn.innerHTML : "";
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader" style="width: 14px; height: 14px; animation: spin 1s linear infinite;"></i> <span>Menyimpan...</span>`;
+                if (window.lucide) window.lucide.createIcons();
+            }
+
+            const bcaNumber = document.getElementById("cfgBcaNumber").value.trim();
+            const bcaName = document.getElementById("cfgBcaName").value.trim();
+            const mandiriNumber = document.getElementById("cfgMandiriNumber") ? document.getElementById("cfgMandiriNumber").value.trim() : "";
+            const mandiriName = document.getElementById("cfgMandiriName") ? document.getElementById("cfgMandiriName").value.trim() : "";
+
+            localStorage.setItem("cfg_bca_number", bcaNumber);
+            localStorage.setItem("cfg_bca_name", bcaName);
+            localStorage.setItem("cfg_mandiri_number", mandiriNumber);
+            localStorage.setItem("cfg_mandiri_name", mandiriName);
+
+            const payload = {
+                cfg_bca_number: bcaNumber,
+                cfg_bca_name: bcaName,
+                cfg_mandiri_number: mandiriNumber,
+                cfg_mandiri_name: mandiriName
+            };
+
+            // 1. Simpan ke /api/settings
+            try {
+                await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ settings: payload })
+                });
+            } catch (err) {
+                console.warn("/api/settings save warning:", err);
+            }
+
+            // 2. Sync langsung ke Supabase system_settings jika client terhubung
+            if (window.vidoraData && window.vidoraData.isLive) {
+                try {
+                    await window.vidoraData.client.from("system_settings").upsert({
+                        key: "bank_config",
+                        value: payload,
+                        updated_at: new Date().toISOString()
+                    });
+                } catch (err) {
+                    console.warn("Supabase system_settings bank_config error:", err);
+                }
+            }
+
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="check-circle" style="width: 14px; height: 14px;"></i> <span>Tersimpan Permanen!</span>`;
+                if (window.lucide) window.lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    if (window.lucide) window.lucide.createIcons();
+                }, 2500);
+            }
+
+            alert("✅ Pengaturan Rekening Bank (" + bcaNumber + " a.n " + bcaName + ") berhasil disimpan secara permanen!");
+        });
 
         // Pakasir Settings Form Submit
         document.getElementById("formPakasirSettings")?.addEventListener("submit", async (e) => {
