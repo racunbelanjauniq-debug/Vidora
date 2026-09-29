@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Subscription Gate Helpers
     // =========================================================================
     function isUserSubscribed() {
-        if (!currentUser) return false;
+        if (!currentUser || currentUser.id === "guest") return false;
         if (activeProfile?.role === "superadmin" || activeProfile?.role === "admin") return true;
         if (currentUser.email === "winalislam@gmail.com") return true;
         return activeProfile?.is_subscribed === true;
@@ -141,17 +141,33 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (window.syncVercelEnv) {
             await window.syncVercelEnv();
         }
-        const session = await window.vidoraData.getSession();
+        
+        let session = null;
+        try {
+            session = await window.vidoraData.getSession();
+        } catch (e) {
+            console.warn("Session check fallback:", e);
+        }
+
         currentUser = session?.user || null;
-        activeProfile = session?.profile || { role: "user", max_google_accounts: 5, is_subscribed: false };
+        activeProfile = session?.profile || null;
+
+        // Mode Tamu: Pengunjung belum login tetap bisa langsung melihat & menjelajahi Studio AI
+        if (!currentUser) {
+            currentUser = {
+                id: "guest",
+                email: "tamu@vidora.biz.id",
+                user_metadata: { full_name: "Tamu Studio" }
+            };
+            activeProfile = { 
+                role: "guest", 
+                full_name: "Tamu Studio",
+                max_google_accounts: 5, 
+                is_subscribed: false 
+            };
+        }
 
         const btnCloseAuth = document.getElementById("btnCloseAuth");
-
-        if (!currentUser) {
-            // STRICT AUTH GUARD: Belum login, alihkan langsung ke halaman login
-            window.location.replace("login");
-            return;
-        }
 
         // Proteksi Tab Admin -> Alihkan langsung ke Dedicated Super Admin Portal
         const urlParams = new URLSearchParams(window.location.search);
@@ -167,20 +183,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         updateHeaderUI();
-        await refreshAccounts();
-        await refreshJobs();
+        
+        try {
+            await refreshAccounts();
+        } catch (e) {
+            console.warn("refreshAccounts fallback:", e);
+        }
+        
+        try {
+            await refreshJobs();
+        } catch (e) {
+            console.warn("refreshJobs fallback:", e);
+        }
 
         // Non-Member notification & banner
         const isSub = isUserSubscribed();
         if (subWarningBanner) {
             subWarningBanner.style.display = isSub ? "none" : "flex";
-        }
-        if (!isSub) {
-            // Tampilkan popup otomatis saat non-member masuk sesuai instruksi:
-            // "jika seseorang masuk kesini non member pastikan tidak bisa melakukan generate dan muncul popup anda belum berlangganan"
-            setTimeout(() => {
-                openSubscriptionRequiredModal("Akses Studio AI Generator");
-            }, 600);
         }
 
         // Check connection pill in admin tab
@@ -188,42 +207,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function updateHeaderUI() {
-        if (!currentUser) {
-            btnHeaderAuth.style.display = "inline-flex";
-            userRoleBadge.style.display = "none";
-            navItemAdmin.style.display = "none";
+        if (!currentUser || currentUser.id === "guest") {
+            if (btnHeaderAuth) btnHeaderAuth.style.display = "inline-flex";
+            if (userRoleBadge) {
+                userRoleBadge.style.display = "inline-flex";
+                userRoleBadge.innerHTML = `<i data-lucide="eye" style="width:13px;height:13px;color:#94a3b8;"></i> <span id="userRoleText">Mode Tamu</span>`;
+                userRoleBadge.style.borderColor = "rgba(148, 163, 184, 0.3)";
+                userRoleBadge.style.color = "#cbd5e1";
+                userRoleBadge.style.background = "rgba(148, 163, 184, 0.12)";
+                userRoleBadge.title = "Mode Tamu / Preview — Klik untuk Masuk";
+                userRoleBadge.onclick = () => { window.location.href = "login"; };
+            }
+            if (navItemAdmin) navItemAdmin.style.display = "none";
         } else {
-            btnHeaderAuth.style.display = "none";
-            userRoleBadge.style.display = "inline-flex";
+            if (btnHeaderAuth) btnHeaderAuth.style.display = "none";
+            if (userRoleBadge) {
+                userRoleBadge.style.display = "inline-flex";
 
-            if (activeProfile.role === "admin" || activeProfile.role === "superadmin") {
-                userRoleBadge.innerHTML = `<i data-lucide="crown" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">Super Admin</span>`;
-                userRoleBadge.style.borderColor = "rgba(251, 191, 36, 0.4)";
-                userRoleBadge.style.color = "#fef08a";
-                userRoleBadge.style.background = "rgba(251, 191, 36, 0.15)";
-                userRoleBadge.style.cursor = "pointer";
-                userRoleBadge.title = "Buka Portal Super Admin";
-                userRoleBadge.onclick = () => { window.location.href = "/admin"; };
-                navItemAdmin.style.display = "flex";
-                navItemAdmin.onclick = (e) => {
-                    e.preventDefault();
-                    window.location.href = "/admin";
-                };
-            } else if (isUserSubscribed()) {
-                userRoleBadge.innerHTML = `<i data-lucide="check-circle" style="width:13px;height:13px;color:#10b981;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Aktif)</span>`;
-                userRoleBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
-                userRoleBadge.style.color = "#a7f3d0";
-                userRoleBadge.style.background = "rgba(16, 185, 129, 0.12)";
-                navItemAdmin.style.display = "none";
-            } else {
-                userRoleBadge.innerHTML = `<i data-lucide="alert-triangle" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Belum Langganan)</span>`;
-                userRoleBadge.style.borderColor = "rgba(245, 158, 11, 0.4)";
-                userRoleBadge.style.color = "#fde68a";
-                userRoleBadge.style.background = "rgba(245, 158, 11, 0.12)";
-                navItemAdmin.style.display = "none";
+                if (activeProfile.role === "admin" || activeProfile.role === "superadmin") {
+                    userRoleBadge.innerHTML = `<i data-lucide="crown" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">Super Admin</span>`;
+                    userRoleBadge.style.borderColor = "rgba(251, 191, 36, 0.4)";
+                    userRoleBadge.style.color = "#fef08a";
+                    userRoleBadge.style.background = "rgba(251, 191, 36, 0.15)";
+                    userRoleBadge.style.cursor = "pointer";
+                    userRoleBadge.title = "Buka Portal Super Admin";
+                    userRoleBadge.onclick = () => { window.location.href = "/admin"; };
+                    if (navItemAdmin) navItemAdmin.style.display = "flex";
+                    if (navItemAdmin) {
+                        navItemAdmin.onclick = (e) => {
+                            e.preventDefault();
+                            window.location.href = "/admin";
+                        };
+                    }
+                } else if (isUserSubscribed()) {
+                    userRoleBadge.innerHTML = `<i data-lucide="check-circle" style="width:13px;height:13px;color:#10b981;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Aktif)</span>`;
+                    userRoleBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
+                    userRoleBadge.style.color = "#a7f3d0";
+                    userRoleBadge.style.background = "rgba(16, 185, 129, 0.12)";
+                    userRoleBadge.onclick = null;
+                    if (navItemAdmin) navItemAdmin.style.display = "none";
+                } else {
+                    userRoleBadge.innerHTML = `<i data-lucide="alert-triangle" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Belum Langganan)</span>`;
+                    userRoleBadge.style.borderColor = "rgba(245, 158, 11, 0.4)";
+                    userRoleBadge.style.color = "#fde68a";
+                    userRoleBadge.style.background = "rgba(245, 158, 11, 0.12)";
+                    userRoleBadge.onclick = null;
+                    if (navItemAdmin) navItemAdmin.style.display = "none";
+                }
             }
         }
-        lucide.createIcons();
+        if (window.lucide && typeof lucide.createIcons === "function") {
+            lucide.createIcons();
+        }
     }
 
     function updateConnectionStatusPill() {
@@ -316,13 +351,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     // 3. User Authentication & Profile Modal
     // =========================================================================
-    btnHeaderAuth.addEventListener("click", () => {
-        modalAuth.classList.add("open");
-    });
+    if (btnHeaderAuth) {
+        btnHeaderAuth.addEventListener("click", () => {
+            window.location.href = "login";
+        });
+    }
 
     userRoleBadge.addEventListener("click", () => {
-        if (!currentUser) {
-            modalAuth.classList.add("open");
+        if (!currentUser || currentUser.id === "guest") {
+            window.location.href = "login";
             return;
         }
         // Fill profile modal
@@ -361,12 +398,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("btnCloseProfileModal").addEventListener("click", () => {
         modalUserProfile.classList.remove("open");
     });
-
-    if (btnHeaderAuth) {
-        btnHeaderAuth.addEventListener("click", () => {
-            modalAuth.classList.add("open");
-        });
-    }
 
     document.getElementById("btnCloseAuth").addEventListener("click", () => {
         modalAuth.classList.remove("open");
@@ -507,10 +538,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         modalUserProfile.classList.remove("open");
         modalCheckout.classList.add("open");
 
-        // Prefill name & email if logged in
-        if (currentUser) {
+        // Prefill name & email if logged in (not guest)
+        if (currentUser && currentUser.id !== "guest") {
             document.getElementById("coCustomerName").value = activeProfile?.full_name || "";
             document.getElementById("coCustomerEmail").value = currentUser.email || "";
+        } else {
+            document.getElementById("coCustomerName").value = "";
+            document.getElementById("coCustomerEmail").value = "";
         }
     }
 
@@ -1703,7 +1737,12 @@ Requirements for the generated prompt:
     });
 
     async function refreshAccounts() {
-        userAccounts = await window.vidoraData.getGoogleAccounts();
+        try {
+            userAccounts = (await window.vidoraData.getGoogleAccounts()) || [];
+        } catch (err) {
+            console.warn("getGoogleAccounts fallback:", err);
+            userAccounts = [];
+        }
 
         // Update dropdowns
         const updateDropdown = (selectElem) => {
@@ -1784,7 +1823,12 @@ Requirements for the generated prompt:
     // 11. Queue & Gallery Sync
     // =========================================================================
     async function refreshJobs() {
-        userJobs = await window.vidoraData.getJobs();
+        try {
+            userJobs = (await window.vidoraData.getJobs()) || [];
+        } catch (err) {
+            console.warn("getJobs fallback:", err);
+            userJobs = [];
+        }
 
         // Render Antrian
         queueList.innerHTML = "";
