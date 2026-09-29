@@ -580,6 +580,10 @@
                 <i data-lucide="activity" style="width: 18px; height: 18px;"></i>
                 <span>Antrian Global</span>
             </div>
+            <div class="sidebar-item" data-pane="hermes">
+                <i data-lucide="cpu" style="width: 18px; height: 18px; color: #c084fc;"></i>
+                <span>Hermes AI &amp; MCP</span>
+            </div>
         </nav>
 
         <div class="sidebar-footer">
@@ -1142,6 +1146,234 @@
                 </div>
             </div>
         </section>
+
+        <!-- ========================================================
+             PANE 7: HERMES AI AGENT & MCP GATEWAY (KHUSUS SUPER ADMIN)
+             ======================================================== -->
+        <section id="pane-hermes" class="content-pane">
+            <div class="panel" style="border: 1.5px solid rgba(168, 85, 247, 0.4); background: linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(15, 23, 42, 0.75) 100%);">
+                <div class="panel-header" style="border-bottom: 1px solid rgba(168, 85, 247, 0.2); padding-bottom: 14px; margin-bottom: 18px;">
+                    <div>
+                        <div class="panel-title" style="color: #c084fc; display: flex; align-items: center; gap: 9px;">
+                            <i data-lucide="cpu" style="width: 20px; height: 20px; color: #a855f7;"></i>
+                            <span>Hermes AI Agent &amp; Model Context Protocol (MCP) Gateway</span>
+                        </div>
+                        <div class="panel-desc">
+                            Koneksikan VIDORA Engine ke Hermes AI Agent (SumoPod Cloud, VPS, Telegram Bot) via protokol resmi Model Context Protocol (FastMCP SSE).
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span id="hermesConnectionPill" style="font-size: 11.5px; background: rgba(168, 85, 247, 0.2); color: #e9d5ff; border: 1px solid rgba(168, 85, 247, 0.4); padding: 5px 12px; border-radius: 20px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #a855f7; display: inline-block;"></span>
+                            <span id="hermesStatusText">MCP Server Standby (Port 8000)</span>
+                        </span>
+                        <button type="button" class="btn-action" id="btnPingHermesMcp" style="border-color: rgba(168, 85, 247, 0.4); color: #c084fc;">
+                            <i data-lucide="activity" style="width: 14px; height: 14px;"></i>
+                            <span>Tes Ping MCP</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1-Click Quick Setup Box -->
+                <div style="background: rgba(168, 85, 247, 0.12); border: 1px dashed rgba(168, 85, 247, 0.45); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 11.5px; font-weight: 800; color: #e9d5ff; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="terminal" style="width: 14px; height: 14px; color: #c084fc;"></i>
+                            <span>Perintah Instan Pendaftaran ke Hermes Cloud (SumoPod Web Console):</span>
+                        </label>
+                        <span style="font-size: 11px; color: #a855f7; font-weight: 700;">Format: FastMCP SSE</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" readonly id="hermesCliCommand" value='hermes mcp add vidora --url "http://127.0.0.1:8000/sse"' class="form-input" style="font-family: monospace; font-size: 13px; background: rgba(0, 0, 0, 0.7); color: #38bdf8; font-weight: 600;">
+                        <button type="button" class="btn-action btn-action-primary" id="btnCopyHermesCli" style="white-space: nowrap; padding: 0 18px; background: linear-gradient(135deg, #a855f7, #7c3aed);">
+                            <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                            <span>Salin Perintah</span>
+                        </button>
+                    </div>
+                    <div style="font-size: 12px; color: #cbd5e1; margin-top: 10px; line-height: 1.5;">
+                        💡 Buka <strong>SumoPod Web Console</strong> &rarr; Tempel perintah di atas &rarr; Tekan <strong>Enter</strong> &rarr; Saat ditanya authentication ketik <code>n</code> lalu Enter.
+                    </div>
+                </div>
+
+                <!-- Konfigurasi URL Tunnel & Port -->
+                <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid var(--card-border); border-radius: 12px; padding: 18px; margin-bottom: 22px;">
+                    <h4 style="font-size: 13.5px; font-weight: 800; color: white; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="settings" style="width: 16px; height: 16px; color: #38bdf8;"></i>
+                        <span>Konfigurasi Endpoint MCP &amp; Cloudflare Tunnel</span>
+                    </h4>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px;">
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">URL Publik SSE (Cloudflare Tunnel atau Custom Domain):</label>
+                            <input type="url" class="form-input" id="cfgHermesTunnelUrl" placeholder="https://xxxx-xxxx-xxxx.trycloudflare.com/sse" value="http://127.0.0.1:8000/sse">
+                            <small style="color: var(--text-tertiary); font-size: 11px; margin-top: 4px; display: block;">
+                                Didapatkan otomatis saat menjalankan <code>d:\VIDORA\start_mcp_hermes.bat</code> di komputer/server Anda.
+                            </small>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label class="form-label">Port Lokal MCP Server:</label>
+                            <input type="text" class="form-input" id="cfgHermesPort" value="8000" readonly style="color: #38bdf8; font-weight: 700; font-family: monospace;">
+                            <small style="color: var(--text-tertiary); font-size: 11px; margin-top: 4px; display: block;">
+                                Protokol FastMCP SSE transport.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" class="btn-action btn-action-primary" id="btnSaveHermesConfig" style="background: linear-gradient(135deg, #a855f7, #6366f1);">
+                            <i data-lucide="save" style="width: 14px; height: 14px;"></i>
+                            <span>Simpan URL Hermes</span>
+                        </button>
+                        <button type="button" class="btn-action" id="btnCopyMcpJson">
+                            <i data-lucide="file-code" style="width: 14px; height: 14px;"></i>
+                            <span>Salin JSON Config (Claude/Cursor)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3 Panduan Langkah Menghubungkan -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px;">
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 12px; padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: #a855f7; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">1</span>
+                            <strong style="color: white; font-size: 13px;">Jalankan Server di PC</strong>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                            Klik 2x file <code>d:\VIDORA\start_mcp_hermes.bat</code>. Tunggu sampai muncul URL publik <code>.trycloudflare.com/sse</code>.
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 12px; padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: #a855f7; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">2</span>
+                            <strong style="color: white; font-size: 13px;">Daftarkan di SumoPod</strong>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                            Buka Web Console SumoPod, jalankan <code>hermes mcp add vidora --url ...</code> lalu verifikasi via <code>hermes mcp list</code>.
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 12px; padding: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: #a855f7; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800;">3</span>
+                            <strong style="color: white; font-size: 13px;">Chat Telegram Bot</strong>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                            Buka Telegram Bot Hermes Anda dan langsung beri perintah suara atau teks: <em>"Hermes, generate video produk skincare 9:16 pakai VIDORA."</em>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 6 Tools Registry MCP -->
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="font-size: 14px; font-weight: 800; color: white; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="wrench" style="width: 16px; height: 16px; color: #a855f7;"></i>
+                            <span>Daftar 6 Tools MCP VIDORA yang Disediakan untuk Hermes AI:</span>
+                        </h4>
+                        <span style="font-size: 11px; color: #a855f7; background: rgba(168, 85, 247, 0.15); padding: 3px 10px; border-radius: 12px; font-weight: 700;">6 Tools Aktif</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;" id="mcpToolsGrid">
+                        <!-- Tool 1 -->
+                        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <strong style="color: #38bdf8; font-family: monospace; font-size: 13px;">vidora_generate_video</strong>
+                                <span style="font-size: 10px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Video Engine</span>
+                            </div>
+                            <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px;">
+                                Generate video AI sinematik (Omni Flash / Veo) format 9:16 vertikal, 16:9, atau 1:1.
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">
+                                Params: prompt (req), aspect_ratio, model
+                            </div>
+                        </div>
+
+                        <!-- Tool 2 -->
+                        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <strong style="color: #34d399; font-family: monospace; font-size: 13px;">vidora_generate_image</strong>
+                                <span style="font-size: 10px; background: rgba(52, 211, 153, 0.15); color: #34d399; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Studio Photo</span>
+                            </div>
+                            <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px;">
+                                Generate foto produk studio AI kualitas tinggi (Nano Banana Engine).
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">
+                                Params: prompt (req), aspect_ratio
+                            </div>
+                        </div>
+
+                        <!-- Tool 3 -->
+                        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <strong style="color: #fbbf24; font-family: monospace; font-size: 13px;">vidora_generate_prompt</strong>
+                                <span style="font-size: 10px; background: rgba(251, 191, 36, 0.15); color: #fbbf24; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Prompt AI</span>
+                            </div>
+                            <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px;">
+                                Analisa foto produk via Gemini Vision untuk menyusun prompt video/gambar otomatis.
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">
+                                Params: product_name (req), usp, category
+                            </div>
+                        </div>
+
+                        <!-- Tool 4 -->
+                        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <strong style="color: #c084fc; font-family: monospace; font-size: 13px;">vidora_list_accounts</strong>
+                                <span style="font-size: 10px; background: rgba(192, 132, 252, 0.15); color: #c084fc; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Vault Accounts</span>
+                            </div>
+                            <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px;">
+                                Melihat status seluruh akun Google vault yang terhubung di VIDORA.
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">
+                                Params: filter_status (all, ready, limit)
+                            </div>
+                        </div>
+
+                        <!-- Tool 5 -->
+                        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <strong style="color: #f43f5e; font-family: monospace; font-size: 13px;">vidora_get_job_status</strong>
+                                <span style="font-size: 10px; background: rgba(244, 63, 94, 0.15); color: #f43f5e; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Render Monitor</span>
+                            </div>
+                            <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px;">
+                                Memeriksa progres (%), status rendering, dan link download MP4 file hasil video.
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">
+                                Params: job_id (req)
+                            </div>
+                        </div>
+
+                        <!-- Tool 6 -->
+                        <div style="background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); border-radius: 10px; padding: 14px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <strong style="color: #a78bfa; font-family: monospace; font-size: 13px;">vidora_cleanup_storage</strong>
+                                <span style="font-size: 10px; background: rgba(167, 139, 250, 0.15); color: #a78bfa; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Cloud Storage</span>
+                            </div>
+                            <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px;">
+                                Membersihkan file Cloudflare R2 yang sudah lebih dari 3 hari agar kuota storage aman.
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">
+                                Params: days_older (default: 3)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Interactive Prompt / Ping Terminal -->
+                <div style="background: #090d16; border: 1px solid var(--card-border); border-radius: 12px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 12.5px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+                            <i data-lucide="play" style="width: 14px; height: 14px;"></i>
+                            <span>MCP Server Live Status &amp; Logger:</span>
+                        </span>
+                        <button type="button" class="btn-action" id="btnClearHermesLog" style="font-size: 11px; padding: 2px 8px;">Bersihkan Log</button>
+                    </div>
+                    <pre id="hermesConsoleLog" style="background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11.5px; color: #a5b4fc; max-height: 180px; overflow-y: auto; margin: 0; white-space: pre-wrap;">[Hermes MCP] Sistem siap. Klik tombol "Tes Ping MCP" di atas untuk memeriksa status endpoint server.</pre>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- MODAL: BUAT ORDER MANUAL -->
@@ -1199,8 +1431,16 @@
                     <input type="text" class="form-input" id="mUserName" placeholder="Contoh: Rian Kreator" required>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Nomor WhatsApp (Untuk Notifikasi Akun & Lisensi):</label>
+                    <input type="tel" class="form-input" id="mUserPhone" placeholder="Contoh: 081234567890">
+                </div>
+                <div class="form-group">
                     <label class="form-label">Alamat Email:</label>
                     <input type="email" class="form-input" id="mUserEmail" placeholder="user@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kuota Akun Google Studio:</label>
+                    <input type="number" class="form-input" id="mUserMaxAccounts" value="5" min="1" max="99999">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Peran (Role):</label>
@@ -1210,14 +1450,14 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Status Lisensi:</label>
+                    <label class="form-label">Status Lisensi (Hak Akses Studio):</label>
                     <select class="form-input" id="mUserSubscribed">
-                        <option value="true">Aktif (Beri Akses Studio 5 Profil)</option>
+                        <option value="true">Aktif (Langsung Beri Akses Studio)</option>
                         <option value="false">Non-Aktif (Belum Langganan)</option>
                     </select>
                 </div>
                 <button type="submit" class="btn-action btn-action-primary" style="width: 100%; justify-content: center; margin-top: 10px; padding: 11px;">
-                    Simpan Data Pengguna
+                    Simpan &amp; Tetapkan Akses Pengguna
                 </button>
             </form>
         </div>
@@ -1273,7 +1513,8 @@
             users: "Kelola Pengguna & Lisensi Aktif",
             whatsapp: "Integrasi WhatsApp (xsender.id)",
             settings: "Koneksi Database & Cloud Storage",
-            queue: "Antrian Global AI Render"
+            queue: "Antrian Global AI Render",
+            hermes: "Hermes AI Agent & Model Context Protocol (MCP)"
         };
 
         sidebarItems.forEach(item => {
@@ -1521,38 +1762,68 @@
             const filtered = cachedUsers.filter(u => {
                 if (filterRole !== "all" && u.role !== filterRole) return false;
                 if (!search) return true;
-                return (u.email || "").toLowerCase().includes(search) || (u.full_name || "").toLowerCase().includes(search);
+                return (u.email || "").toLowerCase().includes(search) || 
+                       (u.full_name || "").toLowerCase().includes(search) ||
+                       (u.phone || "").toLowerCase().includes(search);
             });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:var(--text-tertiary);">Belum ada pengguna terdaftar yang sesuai filter pencarian.</td></tr>`;
+                return;
+            }
 
             filtered.forEach(u => {
                 const tr = document.createElement("tr");
                 const isAdm = u.role === "admin" || u.role === "superadmin";
                 const isSub = u.is_subscribed === true || isAdm;
+                const cleanPhone = (u.phone || "").replace(/[^0-9]/g, "");
+                const waPhone = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : (cleanPhone.startsWith("62") ? cleanPhone : (cleanPhone ? "62" + cleanPhone : ""));
 
                 tr.innerHTML = `
                     <td>
-                        <strong style="color:white;">${u.full_name || 'Pengguna'}</strong>
+                        <strong style="color:white; display:block;">${u.full_name || 'Pengguna'}</strong>
                         <div style="font-size:11px; color:var(--text-tertiary);">${u.email}</div>
+                        ${u.phone ? `
+                            <a href="https://wa.me/${waPhone}" target="_blank" style="color:#34d399; font-size:11px; text-decoration:none; display:inline-flex; align-items:center; gap:3px; margin-top:2px;">
+                                <i data-lucide="phone" style="width:11px;height:11px;"></i> ${u.phone}
+                            </a>
+                        ` : ''}
                     </td>
                     <td>
                         <span class="badge-status ${isAdm ? 'admin' : ''}">${isAdm ? 'Super Admin' : 'Member'}</span>
                     </td>
                     <td>
-                        <span class="badge-status ${isSub ? 'paid' : 'pending'}">
-                            ${isSub ? '● AKTIF (5 Profil)' : '○ Belum Langganan'}
+                        <span class="badge-status ${isSub ? 'paid' : 'pending'}" style="font-weight:700;">
+                            ${isSub ? '● AKTIF (Lisensi Terbuka)' : '○ BELUM AKTIF'}
                         </span>
                     </td>
-                    <td><strong>${isAdm ? 'Unlimited' : (u.max_google_accounts || 5) + ' Akun'}</strong></td>
+                    <td>
+                        <strong>${isAdm ? 'Unlimited' : (u.max_google_accounts || 5) + ' Akun'}</strong>
+                    </td>
                     <td style="font-size:11px;">${new Date(u.created_at || Date.now()).toLocaleDateString("id-ID")}</td>
                     <td>
-                        <div style="display:flex; gap:6px;">
-                            <button type="button" class="btn-action btn-user-sub" data-uid="${u.id}" data-cursub="${isSub}" style="color:${isSub ? '#f43f5e' : '#10b981'};">
-                                ${isSub ? 'Matikan Lisensi' : '✓ Aktifkan (5 Slot)'}
-                            </button>
-                            <button type="button" class="btn-action btn-user-role" data-uid="${u.id}" data-currole="${u.role}">
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            ${!isSub ? `
+                                <button type="button" class="btn-action btn-action-primary btn-grant-access" data-uid="${u.id}" data-uname="${u.full_name || 'Kreator'}" data-uemail="${u.email}" data-uphone="${u.phone || ''}" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-weight: 700; box-shadow: 0 2px 8px rgba(16,185,129,0.35);">
+                                    <i data-lucide="zap" style="width:13px;height:13px;"></i>
+                                    <span>⚡ Beri Akses (5 Slot)</span>
+                                </button>
+                            ` : `
+                                <button type="button" class="btn-action btn-revoke-access" data-uid="${u.id}" data-uname="${u.full_name || ''}" style="color:#f43f5e; border-color:rgba(244,63,94,0.35);">
+                                    <i data-lucide="lock" style="width:13px;height:13px;"></i>
+                                    <span>Cabut Akses</span>
+                                </button>
+                            `}
+                            ${u.phone ? `
+                                <button type="button" class="btn-action btn-send-wa-user" data-uid="${u.id}" data-uname="${u.full_name || 'Kreator'}" data-uphone="${u.phone}" data-uemail="${u.email}" data-issub="${isSub}" style="color:#34d399;" title="Kirim Pesan WhatsApp">
+                                    <i data-lucide="message-square" style="width:13px;height:13px;"></i>
+                                    <span>Kirim WA</span>
+                                </button>
+                            ` : ''}
+                            <button type="button" class="btn-action btn-user-role" data-uid="${u.id}" data-currole="${u.role}" title="Ubah Peran Pengguna">
                                 ${isAdm ? 'Jadikan Member' : 'Jadikan Admin'}
                             </button>
-                            <button type="button" class="btn-action btn-user-del" data-uid="${u.id}" style="color:#f43f5e;">
+                            <button type="button" class="btn-action btn-user-del" data-uid="${u.id}" style="color:#f43f5e;" title="Hapus Pengguna">
                                 <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
                             </button>
                         </div>
@@ -1561,33 +1832,115 @@
                 tbody.appendChild(tr);
             });
 
-            document.querySelectorAll(".btn-user-sub").forEach(b => {
+            // Action: Beri Akses (5 Slot Google)
+            document.querySelectorAll(".btn-grant-access").forEach(b => {
                 b.addEventListener("click", async () => {
                     const uid = b.getAttribute("data-uid");
-                    const cur = b.getAttribute("data-cursub") === "true";
-                    await window.vidoraData.toggleUserSubscription(uid, !cur);
-                    alert(`Status lisensi berhasil diubah menjadi: ${!cur ? 'AKTIF (5 Slot)' : 'NONAKTIF'}`);
+                    const name = b.getAttribute("data-uname") || "Kreator";
+                    const email = b.getAttribute("data-uemail") || "";
+                    const phone = b.getAttribute("data-uphone") || "";
+
+                    b.disabled = true;
+                    b.innerHTML = `<span>Mengaktifkan...</span>`;
+
+                    try {
+                        await window.vidoraData.grantUserAccess(uid, 5);
+
+                        // Kirim notifikasi WhatsApp jika nomor telepon tersedia
+                        if (phone && window.xsender) {
+                            const sendWaConfirm = confirm(`Akses Creator Pass telah AKTIF untuk ${name} (${email})!\n\nKirimkan juga notifikasi WhatsApp lisensi aktif otomatis ke ${phone}?`);
+                            if (sendWaConfirm) {
+                                const waMsg = (window.xsender.config.templateApproval || `Halo *${name}*, selamat! Lisensi VIDORA Creator Pass Anda telah AKTIF dengan kuota 5 profil Akun Google. Masuk ke studio di https://vidora.biz.id/app`)
+                                    .replace(/{nama}/g, name)
+                                    .replace(/{email}/g, email)
+                                    .replace(/{paket}/g, "VIDORA Creator Pass")
+                                    .replace(/{invoice}/g, "INV-" + Date.now().toString().slice(-6));
+
+                                const waRes = await window.xsender.sendMessage(phone, waMsg);
+                                if (waRes.success) {
+                                    alert(`✅ Akses studio aktif & Notifikasi WhatsApp berhasil dikirim ke ${phone}!`);
+                                } else {
+                                    alert(`Akses studio telah aktif. (Catatan WA: ${waRes.error || waRes.message || 'Pesan disimulasikan'})`);
+                                }
+                            } else {
+                                alert(`✅ Akses Creator Pass berhasil diberikan ke ${name}!`);
+                            }
+                        } else {
+                            alert(`✅ Akses Creator Pass (5 Akun Google) berhasil diaktifkan untuk ${name} (${email})!`);
+                        }
+
+                        await refreshAllAdminData();
+                    } catch (err) {
+                        alert("Gagal memberikan akses: " + err.message);
+                        b.disabled = false;
+                        b.innerHTML = `<span>⚡ Beri Akses</span>`;
+                    }
+                });
+            });
+
+            // Action: Cabut Akses Lisensi
+            document.querySelectorAll(".btn-revoke-access").forEach(b => {
+                b.addEventListener("click", async () => {
+                    const uid = b.getAttribute("data-uid");
+                    const name = b.getAttribute("data-uname") || "Pengguna";
+                    if (!confirm(`Cabut akses lisensi Creator Pass untuk ${name}? Pengguna ini tidak akan bisa merender video sampai lisensi diaktifkan kembali.`)) return;
+
+                    b.disabled = true;
+                    await window.vidoraData.revokeUserAccess(uid);
+                    alert(`Akses lisensi untuk ${name} berhasil dicabut.`);
                     await refreshAllAdminData();
                 });
             });
 
+            // Action: Kirim Pesan WA Manual ke User
+            document.querySelectorAll(".btn-send-wa-user").forEach(b => {
+                b.addEventListener("click", async () => {
+                    const phone = b.getAttribute("data-uphone");
+                    const name = b.getAttribute("data-uname") || "Kreator";
+                    const isSub = b.getAttribute("data-issub") === "true";
+
+                    const defaultText = isSub
+                        ? `Halo ${name}, kami dari tim VIDORA Studio ingin mengabarkan bahwa lisensi Creator Pass Anda (5 Profil Google) sedang aktif penuh. Ada yang bisa kami bantu?`
+                        : `Halo ${name}, terima kasih telah mendaftar di VIDORA Studio! Dapatkan akses 5 Profil Google bebas limit dengan mengaktifkan Creator Pass seharga Rp 75.000. Cek di https://vidora.biz.id`;
+
+                    const pesan = prompt(`Kirim pesan WhatsApp ke ${name} (${phone}):`, defaultText);
+                    if (!pesan) return;
+
+                    b.disabled = true;
+                    try {
+                        const res = await window.xsender.sendMessage(phone, pesan);
+                        if (res.success) {
+                            alert(`✅ Pesan WhatsApp berhasil terkirim ke ${phone}!`);
+                        } else {
+                            alert(`Status pengiriman: ${res.error || res.message || 'Gagal mengirim pesan via XSender'}`);
+                        }
+                    } catch (e) {
+                        alert("Error kirim WA: " + e.message);
+                    } finally {
+                        b.disabled = false;
+                    }
+                });
+            });
+
+            // Action: Ubah Role (Super Admin / Member)
             document.querySelectorAll(".btn-user-role").forEach(b => {
                 b.addEventListener("click", async () => {
                     const uid = b.getAttribute("data-uid");
                     const cur = b.getAttribute("data-currole");
                     const next = cur === "superadmin" || cur === "admin" ? "user" : "superadmin";
+                    if (!confirm(`Ubah peran pengguna ini menjadi "${next === 'superadmin' ? 'Super Admin' : 'Member'}"?`)) return;
                     await window.vidoraData.updateUserRole(uid, next);
                     await refreshAllAdminData();
                 });
             });
 
+            // Action: Hapus User
             document.querySelectorAll(".btn-user-del").forEach(b => {
                 b.addEventListener("click", async () => {
                     const uid = b.getAttribute("data-uid");
-                    if (!confirm("Hapus pengguna ini? Akses lisensi akan dicabut.")) return;
+                    if (!confirm("Hapus pengguna ini secara permanen? Seluruh akun google dan histori render pengguna akan dibersihkan.")) return;
 
                     b.disabled = true;
-                    // Hapus langsung dari memori tampilan (instant feedback)
                     cachedUsers = cachedUsers.filter(u => u.id !== uid);
                     renderUsersTable();
                     renderMetrics();
@@ -1882,16 +2235,152 @@
         document.getElementById("formManualUser").addEventListener("submit", async (e) => {
             e.preventDefault();
             const fullName = document.getElementById("mUserName").value.trim();
+            const phone = document.getElementById("mUserPhone") ? document.getElementById("mUserPhone").value.trim() : "";
             const email = document.getElementById("mUserEmail").value.trim();
+            const maxAccounts = parseInt(document.getElementById("mUserMaxAccounts")?.value) || 5;
             const role = document.getElementById("mUserRole").value;
             const isSubscribed = document.getElementById("mUserSubscribed").value === "true";
 
-            await window.vidoraData.addUserManual({ fullName, email, role, isSubscribed });
-            alert(`Pengguna ${email} berhasil disimpan dengan status lisensi: ${isSubscribed ? 'AKTIF' : 'NONAKTIF'}`);
+            await window.vidoraData.addUserManual({ fullName, email, phone, role, isSubscribed, maxGoogleAccounts: maxAccounts });
+            if (isSubscribed) {
+                await window.vidoraData.grantUserAccess(email, maxAccounts);
+            }
+
+            alert(`Pengguna ${email} berhasil disimpan!\nStatus lisensi: ${isSubscribed ? 'AKTIF (' + maxAccounts + ' Akun)' : 'NONAKTIF'}`);
             closeModal("modalAddUser");
             document.getElementById("formManualUser").reset();
             await refreshAllAdminData();
         });
+
+        // ========================================================
+        // HERMES AI AGENT & MCP GATEWAY CONTROLLER
+        // ========================================================
+        function appendHermesLog(msg, type = "info") {
+            const box = document.getElementById("hermesConsoleLog");
+            if (!box) return;
+            const time = new Date().toLocaleTimeString("id-ID");
+            const colorPrefix = type === "error" ? "❌ " : (type === "success" ? "✅ " : "ℹ️ ");
+            box.textContent += `\n[${time}] ${colorPrefix}${msg}`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function loadHermesStatus() {
+            try {
+                const res = await fetch("/api/hermes?action=get_status").catch(() => null);
+                if (res && res.ok) {
+                    const data = await res.json();
+                    if (data && data.config && data.config.mcp_tunnel_url) {
+                        const tunnelInput = document.getElementById("cfgHermesTunnelUrl");
+                        const cliInput = document.getElementById("hermesCliCommand");
+                        if (tunnelInput) tunnelInput.value = data.config.mcp_tunnel_url;
+                        if (cliInput) cliInput.value = `hermes mcp add vidora --url "${data.config.mcp_tunnel_url}"`;
+                    }
+                }
+            } catch (_) {}
+        }
+
+        // Copy Hermes CLI Command
+        document.getElementById("btnCopyHermesCli")?.addEventListener("click", () => {
+            const cmd = document.getElementById("hermesCliCommand").value;
+            navigator.clipboard.writeText(cmd).then(() => {
+                appendHermesLog(`Perintah CLI disalin: ${cmd}`, "success");
+                alert("📋 Perintah pendaftaran Hermes MCP berhasil disalin ke clipboard:\n\n" + cmd + "\n\nTempel di SumoPod Web Console Anda!");
+            });
+        });
+
+        // Save Hermes Tunnel URL
+        document.getElementById("btnSaveHermesConfig")?.addEventListener("click", async () => {
+            const url = document.getElementById("cfgHermesTunnelUrl").value.trim();
+            if (!url) {
+                alert("Masukkan URL SSE Publik Hermes / Cloudflare Tunnel!");
+                return;
+            }
+
+            document.getElementById("hermesCliCommand").value = `hermes mcp add vidora --url "${url}"`;
+            appendHermesLog(`Menyimpan konfigurasi URL Hermes: ${url}...`, "info");
+
+            try {
+                const res = await fetch("/api/hermes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "save_config", mcp_tunnel_url: url })
+                });
+                if (res.ok) {
+                    appendHermesLog(`URL Hermes berhasil disimpan di database sistem.`, "success");
+                    alert("✅ Konfigurasi URL Hermes MCP berhasil disimpan!");
+                } else {
+                    appendHermesLog(`Gagal menyimpan ke serverless endpoint.`, "error");
+                }
+            } catch (err) {
+                appendHermesLog(`Gagal simpan URL: ${err.message}`, "error");
+            }
+        });
+
+        // Copy MCP JSON (Claude Desktop / Cursor)
+        document.getElementById("btnCopyMcpJson")?.addEventListener("click", () => {
+            const url = document.getElementById("cfgHermesTunnelUrl").value.trim() || "http://127.0.0.1:8000/sse";
+            const snippet = {
+                mcpServers: {
+                    vidora: {
+                        url: url
+                    }
+                }
+            };
+            const jsonText = JSON.stringify(snippet, null, 2);
+            navigator.clipboard.writeText(jsonText).then(() => {
+                appendHermesLog("JSON Config MCP berhasil disalin.", "success");
+                alert("📋 Konfigurasi JSON MCP disalin!\n\n" + jsonText);
+            });
+        });
+
+        // Ping MCP Server
+        document.getElementById("btnPingHermesMcp")?.addEventListener("click", async () => {
+            const url = document.getElementById("cfgHermesTunnelUrl").value.trim() || "http://127.0.0.1:8000/sse";
+            const statusPill = document.getElementById("hermesConnectionPill");
+            const statusText = document.getElementById("hermesStatusText");
+
+            statusText.textContent = "Melakukan Ping...";
+            appendHermesLog(`Mengirim Ping ke endpoint: ${url}...`, "info");
+
+            try {
+                const res = await fetch("/api/hermes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "ping_mcp", url: url })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.online) {
+                        statusPill.style.background = "rgba(16, 185, 129, 0.2)";
+                        statusPill.style.color = "#34d399";
+                        statusPill.style.borderColor = "rgba(16, 185, 129, 0.4)";
+                        statusText.textContent = `Online (${data.latency_ms}ms)`;
+                        appendHermesLog(`MCP Server ONLINE! Latency: ${data.latency_ms}ms (Status ${data.status_code || 200})`, "success");
+                        alert(`✅ KONEKSI MCP TERHUBUNG!\n\nEndpoint: ${url}\nLatency: ${data.latency_ms}ms\nStatus: Aktif & Siap Menerima Perintah dari Hermes Agent.`);
+                    } else {
+                        statusPill.style.background = "rgba(244, 63, 94, 0.2)";
+                        statusPill.style.color = "#f43f5e";
+                        statusPill.style.borderColor = "rgba(244, 63, 94, 0.4)";
+                        statusText.textContent = "Offline (Periksa Server)";
+                        appendHermesLog(`MCP Server Offline atau belum dimulai: ${data.message}`, "error");
+                        alert(`⚠️ MCP SERVER OFFLINE:\n\n${data.message}\n\nLangkah perbaikan:\n1. Buka folder d:\\VIDORA\n2. Klik 2x start_mcp_hermes.bat\n3. Salin URL publik Cloudflare Tunnel ke form URL di atas.`);
+                    }
+                }
+            } catch (err) {
+                appendHermesLog(`Ping error: ${err.message}`, "error");
+                statusText.textContent = "Error Koneksi";
+            }
+        });
+
+        // Clear Log
+        document.getElementById("btnClearHermesLog")?.addEventListener("click", () => {
+            const box = document.getElementById("hermesConsoleLog");
+            if (box) box.textContent = "[Hermes MCP] Log dibersihkan.";
+        });
+
+        // Load Hermes Status on startup
+        loadHermesStatus();
 
         // Startup
         document.addEventListener("DOMContentLoaded", async () => {

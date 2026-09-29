@@ -338,16 +338,17 @@ class VidoraDataBridge {
         return data;
     }
 
-    async signUp(email, password, fullName) {
+    async signUp(email, password, fullName, phone = "") {
         const isOwner = email === "winalislam@gmail.com" || 
                         (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(email));
 
         if (!this.isLive) {
-            this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: fullName } };
+            this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: fullName, phone: phone } };
             this.currentProfile = {
                 id: this.currentUser.id,
                 email: email,
                 full_name: fullName,
+                phone: phone,
                 role: (isOwner || email.includes("admin")) ? "superadmin" : "user",
                 max_google_accounts: (isOwner || email.includes("admin")) ? 99999 : 5
             };
@@ -357,9 +358,17 @@ class VidoraDataBridge {
         const { data, error } = await this.client.auth.signUp({
             email,
             password,
-            options: { data: { full_name: fullName } }
+            options: { data: { full_name: fullName, phone: phone } }
         });
         if (error) throw error;
+
+        // Upstream phone ke profile jika kolom ada
+        if (data && data.user && phone) {
+            try {
+                await this.client.from("profiles").update({ phone: phone }).eq("id", data.user.id);
+            } catch (_) {}
+        }
+
         await this.getSession();
         return data;
     }
@@ -564,14 +573,36 @@ class VidoraDataBridge {
             localStorage.setItem("vidora_demo_users", JSON.stringify(defaultUsers));
             return defaultUsers;
         }
+
+        // Coba lewat backend serverless bypass RLS lebih dulu (Super Admin Privilege)
+        try {
+            const apiRes = await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "list_users" })
+            });
+            if (apiRes.ok) {
+                const json = await apiRes.json();
+                if (json.success && Array.isArray(json.users) && json.users.length > 0) {
+                    localStorage.setItem("vidora_demo_users", JSON.stringify(json.users));
+                    return json.users;
+                }
+            }
+        } catch (_) {}
+
         try {
             const { data, error } = await this.client.from("profiles").select("*").order("created_at", { ascending: false });
             if (error) throw error;
-            return data || [];
+            if (data && data.length > 0) {
+                localStorage.setItem("vidora_demo_users", JSON.stringify(data));
+                return data;
+            }
         } catch (e) {
-            const raw = localStorage.getItem("vidora_demo_users") || "[]";
-            return JSON.parse(raw);
+            console.warn("[VIDORA] Gagal query profiles langsung:", e.message);
         }
+
+        const raw = localStorage.getItem("vidora_demo_users") || "[]";
+        return JSON.parse(raw);
     }
 
     async updateUserRole(userId, newRole) {
@@ -597,30 +628,83 @@ class VidoraDataBridge {
         return true;
     }
 
-    async toggleUserSubscription(userId, isSubscribed) {
-        if (!this.isLive) {
-            const raw = localStorage.getItem("vidora_demo_users") || "[]";
+    // Fitur Super Admin: Beri Akses Creator Pass (Aktifkan Lisensi)
+    async grantUserAccess(userId, maxAccounts = 5) {
+        // 1. Simpan di local cache
+        const raw = localStorage.getItem("vidora_demo_users") || "[]";
+        try {
             const users = JSON.parse(raw);
             const target = users.find(u => u.id === userId);
             if (target) {
-                target.is_subscribed = isSubscribed;
+                target.is_subscribed = true;
+                target.max_google_accounts = maxAccounts;
                 localStorage.setItem("vidora_demo_users", JSON.stringify(users));
             }
-            if (this.currentProfile && this.currentProfile.id === userId) {
-                this.currentProfile.is_subscribed = isSubscribed;
-                localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
-            }
-            return true;
-        }
+        } catch (_) {}
+
+        // 2. Kirim ke serverless bypass RLS
         try {
-            const { error } = await this.client.from("profiles").update({ is_subscribed: isSubscribed }).eq("id", userId);
-            if (error) throw error;
-            if (this.currentProfile && this.currentProfile.id === userId) {
-                this.currentProfile.is_subscribed = isSubscribed;
+            const res = await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "grant_access",
+                    user_id: userId,
+                    max_google_accounts: maxAccounts
+                })
+            });
+            if (res.ok) return true;
+        } catch (_) {}
+
+        // 3. Fallback direct client update jika session admin aktif
+        if (this.isLive) {
+            try {
+                await this.client.from("profiles").update({
+                    is_subscribed: true,
+                    max_google_accounts: maxAccounts
+                }).eq("id", userId);
+            } catch (_) {}
+        }
+        return true;
+    }
+
+    // Fitur Super Admin: Cabut Akses Lisensi
+    async revokeUserAccess(userId) {
+        const raw = localStorage.getItem("vidora_demo_users") || "[]";
+        try {
+            const users = JSON.parse(raw);
+            const target = users.find(u => u.id === userId);
+            if (target) {
+                target.is_subscribed = false;
+                localStorage.setItem("vidora_demo_users", JSON.stringify(users));
             }
-            return true;
-        } catch (e) {
-            return false;
+        } catch (_) {}
+
+        try {
+            const res = await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "revoke_access",
+                    user_id: userId
+                })
+            });
+            if (res.ok) return true;
+        } catch (_) {}
+
+        if (this.isLive) {
+            try {
+                await this.client.from("profiles").update({ is_subscribed: false }).eq("id", userId);
+            } catch (_) {}
+        }
+        return true;
+    }
+
+    async toggleUserSubscription(userId, isSubscribed, maxAccounts = 5) {
+        if (isSubscribed) {
+            return await this.grantUserAccess(userId, maxAccounts);
+        } else {
+            return await this.revokeUserAccess(userId);
         }
     }
 

@@ -287,17 +287,21 @@
                 document.getElementById("btnSubmitRegText").textContent = "Mendaftarkan...";
 
                 try {
-                    await window.vidoraData.signUp(email, password, name);
+                    await window.vidoraData.signUp(email, password, name, phone);
                     if (phone) localStorage.setItem("vidora_user_phone", phone);
                     localStorage.setItem("vidora_user_name", name);
 
                     // Kirim Notifikasi Sambutan WhatsApp (xsender.id)
                     if (window.xsender && phone) {
-                        window.xsender.notifyUserLogin({
-                            name: name,
-                            email: email,
-                            phone: phone
-                        }).catch(err => console.warn("[Xsender] Notif error:", err));
+                        try {
+                            await window.xsender.notifyUserLogin({
+                                name: name,
+                                email: email,
+                                phone: phone
+                            });
+                        } catch (err) {
+                            console.warn("[Xsender] Notif error:", err);
+                        }
                     }
 
                     window.location.href = "/app";

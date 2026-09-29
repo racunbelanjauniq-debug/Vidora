@@ -154,73 +154,74 @@ Terima kasih telah menjadi bagian dari Kreator VIDORA! 🎬`,
             return { success: false, message: "Nomor WhatsApp tujuan tidak valid." };
         }
 
-        if (!this.config.apiKey) {
-            console.log(`[Xsender Mock / Belum Ada API Key] Kirim ke ${targetPhone}:\n${message}`);
-            return {
-                success: true,
-                simulated: true,
-                message: `[Simulasi] API Key belum diisi di dashboard admin. Pesan tercatat untuk ${targetPhone}.`
-            };
-        }
-
-        if (!this.config.sender) {
-            return {
-                success: false,
-                message: "Nomor Sender WhatsApp belum diisi. Masukkan nomor WhatsApp yang di-scan di xsender.id."
-            };
-        }
-
+        // 1. Coba lewat proxy serverless /api/send-wa terlebih dahulu
+        // Endpoint serverless bisa mengambil API Key & Sender langsung dari system_settings database
         try {
-            // Coba lewat proxy serverless /api/send-wa terlebih dahulu untuk menghindari CORS
             const proxyRes = await fetch("/api/send-wa", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    api_key: this.config.apiKey,
-                    sender: this.formatPhone(this.config.sender),
+                    api_key: this.config.apiKey || undefined,
+                    sender: this.config.sender ? this.formatPhone(this.config.sender) : undefined,
                     number: targetPhone,
                     message: message,
                     footer: "Sent via VIDORA Studio"
                 })
             }).catch(() => null);
 
-            if (proxyRes && proxyRes.ok) {
-                const proxyData = await proxyRes.json();
-                return { success: true, data: proxyData, message: proxyData.message || "Pesan WhatsApp berhasil terkirim!" };
-            } else if (proxyRes && !proxyRes.ok) {
-                const errData = await proxyRes.json().catch(() => ({}));
-                return { success: false, message: errData.message || `Gagal kirim pesan (HTTP ${proxyRes.status})` };
+            if (proxyRes) {
+                const proxyData = await proxyRes.json().catch(() => ({}));
+                if (proxyRes.ok && proxyData.success !== false) {
+                    return { success: true, data: proxyData, message: proxyData.message || "Pesan WhatsApp berhasil terkirim!" };
+                } else if (proxyData && proxyData.message) {
+                    // Gateway merespon dengan pesan spesifik (misal device disconnect atau limit)
+                    console.warn("[Xsender Gateway Warning]", proxyData.message);
+                    return { success: false, message: proxyData.message };
+                }
             }
-
-            // Fallback direct call ke https://xsender.id/send-message jika serverless route belum aktif
-            const payload = {
-                api_key: this.config.apiKey,
-                sender: this.formatPhone(this.config.sender),
-                number: targetPhone,
-                message: message,
-                footer: "Sent via VIDORA Studio"
-            };
-
-            const directRes = await fetch("https://xsender.id/send-message", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await directRes.json().catch(() => null);
-            if (data && data.status === true) {
-                return { success: true, data: data, message: data.msg || "Pesan WhatsApp berhasil terkirim!" };
-            } else {
-                return { success: false, message: data?.msg || "Gagal mengirim pesan via XSender." };
-            }
-
         } catch (err) {
-            console.error("[Xsender Error]", err);
-            return { success: false, message: "Gagal memanggil gateway xsender.id: " + err.message };
+            console.warn("[Xsender Proxy Exception]", err);
         }
+
+        // 2. Fallback direct call ke https://xsender.id/send-message jika serverless offline dan ada local key
+        if (this.config.apiKey && this.config.sender) {
+            try {
+                const payload = {
+                    api_key: this.config.apiKey,
+                    sender: this.formatPhone(this.config.sender),
+                    number: targetPhone,
+                    message: message,
+                    footer: "Sent via VIDORA Studio"
+                };
+
+                const directRes = await fetch("https://xsender.id/send-message", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await directRes.json().catch(() => null);
+                if (data && data.status === true) {
+                    return { success: true, data: data, message: data.msg || "Pesan WhatsApp berhasil terkirim!" };
+                } else {
+                    return { success: false, message: data?.msg || "Gagal mengirim pesan via XSender." };
+                }
+            } catch (directErr) {
+                console.error("[Xsender Direct Call Error]", directErr);
+                return { success: false, message: "Gagal memanggil gateway xsender.id: " + directErr.message };
+            }
+        }
+
+        // 3. Jika API key belum terkonfigurasi di server maupun lokal
+        console.log(`[Xsender Mock / Belum Ada API Key] Pesan untuk ${targetPhone}:\n${message}`);
+        return {
+            success: true,
+            simulated: true,
+            message: `[Simulasi] API Key belum diisi di dashboard admin. Pesan disimulasikan untuk ${targetPhone}.`
+        };
     }
 
     // Helper untuk kompatibilitas sendMessage

@@ -20,8 +20,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Ensure column exists if table was already created
+-- Ensure columns exist if table was already created
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_subscribed BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
 
 -- Helper function to check if current user is admin without recursion
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -52,11 +53,12 @@ BEGIN
         is_sub := TRUE;
     END IF;
 
-    INSERT INTO public.profiles (id, email, full_name, role, max_google_accounts, is_subscribed)
+    INSERT INTO public.profiles (id, email, full_name, phone, role, max_google_accounts, is_subscribed)
     VALUES (
         NEW.id,
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+        COALESCE(NEW.raw_user_meta_data->>'phone', NEW.phone, ''),
         user_role,
         acc_limit,
         is_sub
@@ -66,7 +68,8 @@ BEGIN
         role = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN 'superadmin' ELSE public.profiles.role END,
         max_google_accounts = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN 99999 ELSE public.profiles.max_google_accounts END,
         is_subscribed = CASE WHEN EXCLUDED.email = 'winalislam@gmail.com' THEN TRUE ELSE public.profiles.is_subscribed END,
-        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name);
+        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name),
+        phone = COALESCE(EXCLUDED.phone, public.profiles.phone);
         
     RETURN NEW;
 END;
