@@ -24,6 +24,12 @@
       ]
     }
   ],
+  "redirects": [
+    { "source": "/app.html", "destination": "/app", "permanent": true },
+    { "source": "/login.html", "destination": "/login", "permanent": true },
+    { "source": "/admin.html", "destination": "/admin", "permanent": true },
+    { "source": "/index.html", "destination": "/", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/login", "destination": "/login.html" },
     { "source": "/register", "destination": "/login.html?tab=signup" },

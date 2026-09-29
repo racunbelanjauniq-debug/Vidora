@@ -15,7 +15,7 @@ Akun Anda telah aktif dan siap digunakan:
 
 📧 Email: *{email}*
 📱 WhatsApp: *{phone}*
-🌐 Akses Studio: https://vidora.biz.id/app.html
+🌐 Akses Studio: https://vidora.biz.id/app
 
 Mulai kreasi video produk AI tanpa batas dengan multi-sudut, subtitle otomatis, dan render cloud secepat kilat!
 
@@ -72,7 +72,7 @@ Halo *{nama}* 👋,
 Selamat! Pembayaran Anda untuk *{paket}* (\`{invoice}\`) telah diverifikasi.
 
 ✨ *Akun 5 Profil Google Anda kini telah AKTIF PENUH!*
-🌐 Buka VIDORA Studio: https://vidora.biz.id/app.html
+🌐 Buka VIDORA Studio: https://vidora.biz.id/app
 
 Fitur yang terbuka:
 • Hingga 5 Profil Akun Google Terisolasi

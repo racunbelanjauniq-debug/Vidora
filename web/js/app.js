@@ -564,7 +564,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Jika QRIS dipilih, alihkan langsung ke halaman pembayaran Pakasir
             if (selectedPaymentMethod === "qris") {
                 const slug = localStorage.getItem("cfg_pakasir_slug") || "vidora";
-                const redirectTarget = window.location.origin + "/app.html?order_id=" + order.id + "&status=success";
+                const redirectTarget = window.location.origin + "/app?order_id=" + order.id + "&status=success";
                 const pakasirPayUrl = `https://app.pakasir.com/pay/${slug}/${planPrice}?order_id=${order.id}&redirect=${encodeURIComponent(redirectTarget)}&qris_only=1&method=qris`;
 
                 modalCheckout.classList.remove("open");

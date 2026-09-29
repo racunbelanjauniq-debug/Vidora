@@ -20,7 +20,7 @@ Akun kreator Anda telah aktif dan siap digunakan:
 
 📧 Email: *{email}*
 📱 WhatsApp: *{phone}*
-🌐 Akses Studio: https://vidora.biz.id/app.html
+🌐 Akses Studio: https://vidora.biz.id/app
 
 Mulai kreasi video produk AI tanpa batas dengan multi-sudut, audio voiceover, dan render cloud secepat kilat!
 
@@ -77,7 +77,7 @@ Halo *{nama}* 👋,
 Selamat! Pembayaran Anda untuk *{paket}* (\`{invoice}\`) telah berhasil kami terima.
 
 ✨ *Akun 5 Profil Google Anda kini telah AKTIF PENUH!*
-🌐 Buka VIDORA Studio: https://vidora.biz.id/app.html
+🌐 Buka VIDORA Studio: https://vidora.biz.id/app
 
 Fitur terbuka:
 • Hingga 5 Profil Akun Google Terisolasi
@@ -238,7 +238,7 @@ Terima kasih telah menjadi bagian dari Kreator VIDORA! 🎬`,
     getPakasirPaymentUrl(order) {
         if (order.payment_url) return order.payment_url;
         const slug = localStorage.getItem("cfg_pakasir_slug") || "vidora";
-        const redirectTarget = window.location.origin + "/app.html?order_id=" + (order.id || "") + "&status=success";
+        const redirectTarget = window.location.origin + "/app?order_id=" + (order.id || "") + "&status=success";
         return `https://app.pakasir.com/pay/${slug}/${order.price || 75000}?order_id=${order.id || ""}&redirect=${encodeURIComponent(redirectTarget)}&qris_only=1&method=qris`;
     }
 

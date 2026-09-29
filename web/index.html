@@ -66,7 +66,7 @@
                 </a>
                 <div class="nav-actions">
                     <a href="login" class="btn-nav-login">Masuk</a>
-                    <a href="app.html" class="btn-nav-studio">
+                    <a href="/app" class="btn-nav-studio">
                         <span>Studio</span>
                         <i data-lucide="arrow-right" style="width: 13px; height: 13px;"></i>
                     </a>
@@ -94,7 +94,7 @@
                         <i data-lucide="crown" style="width: 16px; height: 16px;"></i>
                         <span>Mulai Berlangganan — Rp 75.000 / bln</span>
                     </button>
-                    <a href="app.html" class="btn-apple-secondary">
+                    <a href="/app" class="btn-apple-secondary">
                         <i data-lucide="sparkles" style="width: 15px; height: 15px;"></i>
                         <span>Buka Studio AI</span>
                     </a>
@@ -130,37 +130,37 @@
 
             <!-- Quick Category Grid -->
             <div class="category-grid-card">
-                <a href="app.html" class="cat-item">
+                <a href="/app" class="cat-item">
                     <div class="cat-icon-circle" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
                         🎬
                     </div>
                     <span class="cat-label">Semua Rasio</span>
                 </a>
-                <a href="app.html" class="cat-item">
+                <a href="/app" class="cat-item">
                     <div class="cat-icon-circle" style="background: linear-gradient(135deg, #00f2fe, #4facfe);">
                         📸
                     </div>
                     <span class="cat-label">Gambar AI</span>
                 </a>
-                <a href="app.html" class="cat-item">
+                <a href="/app" class="cat-item">
                     <div class="cat-icon-circle" style="background: linear-gradient(135deg, #f59e0b, #ea580c);">
                         💡
                     </div>
                     <span class="cat-label">17+ Gaya</span>
                 </a>
-                <a href="app.html" class="cat-item">
+                <a href="/app" class="cat-item">
                     <div class="cat-icon-circle" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">
                         🎛️
                     </div>
                     <span class="cat-label">Video Mixer</span>
                 </a>
-                <a href="app.html" class="cat-item">
+                <a href="/app" class="cat-item">
                     <div class="cat-icon-circle" style="background: linear-gradient(135deg, #10b981, #059669);">
                         🛡️
                     </div>
                     <span class="cat-label">Vault 5 Akun</span>
                 </a>
-                <a href="app.html" class="cat-item">
+                <a href="/app" class="cat-item">
                     <div class="cat-icon-circle" style="background: linear-gradient(135deg, #8b5cf6, #6366f1);">
                         ⚡
                     </div>
@@ -304,7 +304,7 @@
                 </div>
                 <div>&copy; 2026 VIDORA. Platform AI Video &amp; Konten Kreator Indonesia.</div>
                 <div class="footer-links">
-                    <a href="app.html">Buka Studio</a>
+                    <a href="/app">Buka Studio</a>
                     <span>&bull;</span>
                     <a href="https://wa.me/6281234567890?text=Halo%20Admin%20VIDORA,%20saya%20butuh%20bantuan." target="_blank">Bantuan WhatsApp</a>
                 </div>
@@ -328,7 +328,7 @@
                 <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i>
                 <span>Alur</span>
             </a>
-            <a href="app.html" class="landing-nav-item">
+            <a href="/app" class="landing-nav-item">
                 <i data-lucide="video" style="width: 18px; height: 18px;"></i>
                 <span>Studio</span>
             </a>
@@ -651,7 +651,7 @@
             }
 
             const slug = localStorage.getItem("cfg_pakasir_slug") || "vidora";
-            const redirectTarget = window.location.origin + "/app.html?order_id=" + orderId + "&status=success";
+            const redirectTarget = window.location.origin + "/app?order_id=" + orderId + "&status=success";
             const pakasirPayUrl = `https://app.pakasir.com/pay/${slug}/${planPrice}?order_id=${orderId}&redirect=${encodeURIComponent(redirectTarget)}&qris_only=1&method=qris`;
 
             if (method === 'qris') {
