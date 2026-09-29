@@ -1690,7 +1690,6 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
                             };
                         }
                     }
-                }
             } catch (err) {
                 console.warn("[Storyboard Gemini fallback]", err);
             }
