@@ -584,16 +584,19 @@
 
                     <!-- Upload / Add Clips Area -->
                     <div class="form-group">
-                        <label class="form-label">Tambahkan Klip Video:</label>
-                        <div class="upload-dropzone" id="mixerDropzone" style="min-height: 120px; border: 2px dashed rgba(236,72,153,0.45); cursor: pointer; text-align: center; padding: 20px 16px;">
-                            <i data-lucide="folder-plus" style="width: 34px; height: 34px; color: #f472b6; margin-bottom: 6px;"></i>
-                            <div style="font-size: 13.5px; font-weight: 700; color: white;">Ketuk untuk Tambah Video (Bisa Pilih Banyak)</div>
-                            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Mendukung format MP4, WebM, MOV (bisa pilih banyak sekaligus)</div>
-                            <button type="button" class="btn-secondary" style="margin-top: 10px; pointer-events: none; border-color: #ec4899; color: #f472b6; font-size: 11.5px; font-weight: 700; padding: 5px 14px;">
-                                <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Pilih File Video
-                            </button>
+                        <label class="form-label" for="mixerFileInput">Tambahkan Klip Video (Bisa Pilih Banyak Sekaligus):</label>
+                        
+                        <!-- Input File Native (Sama seperti Musik Latar, langsung memicu jendela pilih file OS) -->
+                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                            <input type="file" id="mixerFileInput" accept="video/*" multiple class="form-input" style="padding: 8px 12px; font-size: 12px; border-color: rgba(236,72,153,0.4); cursor: pointer; background: rgba(236,72,153,0.06); width: 100%;">
                         </div>
-                        <input type="file" id="mixerFileInput" accept="video/*" multiple style="display: none;">
+
+                        <!-- Dropzone & Area Tap dengan Native Label untuk mixerFileInput -->
+                        <label for="mixerFileInput" class="upload-dropzone" id="mixerDropzone" style="display: block; min-height: 90px; border: 2px dashed rgba(236,72,153,0.45); cursor: pointer; text-align: center; padding: 14px 16px; border-radius: 12px; background: rgba(0,0,0,0.2);">
+                            <i data-lucide="folder-plus" style="width: 28px; height: 28px; color: #f472b6; margin-bottom: 4px; pointer-events: none;"></i>
+                            <div style="font-size: 13px; font-weight: 700; color: white; pointer-events: none;">Atau Drag & Drop Video ke Sini</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 2px; pointer-events: none;">Mendukung format MP4, WebM, MOV (bisa pilih banyak video sekaligus)</div>
+                        </label>
                     </div>
 
                     <!-- Clips Queue List -->
@@ -1608,9 +1611,9 @@
     </div>
 
     <!-- Scripts -->
-    <script src="/js/config.js?v=3.5"></script>
-    <script src="/js/supabase-client.js?v=3.5"></script>
-    <script src="/js/xsender-service.js?v=3.5"></script>
-    <script src="/js/app.js?v=3.5"></script>
+    <script src="/js/config.js?v=3.7"></script>
+    <script src="/js/supabase-client.js?v=3.7"></script>
+    <script src="/js/xsender-service.js?v=3.7"></script>
+    <script src="/js/app.js?v=3.7"></script>
 </body>
 </html>

@@ -2136,25 +2136,35 @@ Requirements for the generated prompt:
     }
 
     // Mixer Dropzone & File Input
-    if (mixerDropzone && mixerFileInput) {
-        mixerDropzone.addEventListener("click", () => mixerFileInput.click());
-        mixerDropzone.addEventListener("dragover", (e) => { e.preventDefault(); mixerDropzone.style.borderColor = "#ec4899"; });
-        mixerDropzone.addEventListener("dragleave", () => { mixerDropzone.style.borderColor = "rgba(236,72,153,0.35)"; });
-        mixerDropzone.addEventListener("drop", async (e) => {
-            e.preventDefault();
-            mixerDropzone.style.borderColor = "rgba(236,72,153,0.35)";
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("video/") || /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(f.name));
-            for (const file of files) {
-                await addClipToMixer(file, file.name);
-            }
-        });
-
+    if (mixerFileInput) {
         mixerFileInput.addEventListener("change", async (e) => {
-            const files = Array.from(e.target.files);
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
             for (const file of files) {
                 await addClipToMixer(file, file.name);
             }
             mixerFileInput.value = "";
+        });
+    }
+
+    if (mixerDropzone) {
+        mixerDropzone.addEventListener("dragover", (e) => { 
+            e.preventDefault(); 
+            mixerDropzone.style.borderColor = "#ec4899"; 
+            mixerDropzone.style.background = "rgba(236,72,153,0.1)"; 
+        });
+        mixerDropzone.addEventListener("dragleave", () => { 
+            mixerDropzone.style.borderColor = "rgba(236,72,153,0.45)"; 
+            mixerDropzone.style.background = "rgba(0,0,0,0.2)"; 
+        });
+        mixerDropzone.addEventListener("drop", async (e) => {
+            e.preventDefault();
+            mixerDropzone.style.borderColor = "rgba(236,72,153,0.45)";
+            mixerDropzone.style.background = "rgba(0,0,0,0.2)";
+            const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith("video/") || /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(f.name));
+            for (const file of files) {
+                await addClipToMixer(file, file.name);
+            }
         });
     }
 
