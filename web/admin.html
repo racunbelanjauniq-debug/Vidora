@@ -1492,8 +1492,17 @@
 
             document.querySelectorAll(".btn-del-order").forEach(b => {
                 b.addEventListener("click", async () => {
-                    if (!confirm("Hapus pesanan ini?")) return;
-                    await window.vidoraData.deleteOrder(b.getAttribute("data-oid"));
+                    const oid = b.getAttribute("data-oid");
+                    if (!confirm(`Hapus pesanan ${oid} secara permanen?`)) return;
+
+                    b.disabled = true;
+                    // Hapus langsung dari memori tampilan (instant feedback)
+                    cachedOrders = cachedOrders.filter(o => o.id !== oid);
+                    renderOrdersTable();
+                    renderMetrics();
+                    renderOmsetRecent();
+
+                    await window.vidoraData.deleteOrder(oid);
                     await refreshAllAdminData();
                 });
             });
@@ -1574,8 +1583,16 @@
 
             document.querySelectorAll(".btn-user-del").forEach(b => {
                 b.addEventListener("click", async () => {
-                    if (!confirm("Hapus pengguna ini?")) return;
-                    await window.vidoraData.deleteUser(b.getAttribute("data-uid"));
+                    const uid = b.getAttribute("data-uid");
+                    if (!confirm("Hapus pengguna ini? Akses lisensi akan dicabut.")) return;
+
+                    b.disabled = true;
+                    // Hapus langsung dari memori tampilan (instant feedback)
+                    cachedUsers = cachedUsers.filter(u => u.id !== uid);
+                    renderUsersTable();
+                    renderMetrics();
+
+                    await window.vidoraData.deleteUser(uid);
                     await refreshAllAdminData();
                 });
             });

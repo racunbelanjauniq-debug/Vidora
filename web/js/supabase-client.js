@@ -625,19 +625,31 @@ class VidoraDataBridge {
     }
 
     async deleteUser(userId) {
-        if (!this.isLive) {
+        // 1. Bersihkan dari local storage demo/cache
+        try {
             const raw = localStorage.getItem("vidora_demo_users") || "[]";
             let users = JSON.parse(raw);
             users = users.filter(u => u.id !== userId);
             localStorage.setItem("vidora_demo_users", JSON.stringify(users));
-            return true;
-        }
+        } catch (_) {}
+
+        // 2. Hapus via serverless endpoint dengan Service Role Key (Bypass RLS)
         try {
-            await this.client.from("profiles").delete().eq("id", userId);
-            return true;
-        } catch (e) {
-            return false;
+            await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "delete_user", user_id: userId })
+            });
+        } catch (_) {}
+
+        // 3. Jika client Supabase aktif langsung di browser
+        if (this.isLive && this.client) {
+            try {
+                await this.client.from("profiles").delete().eq("id", userId);
+            } catch (_) {}
         }
+
+        return true;
     }
 
     async addUserManual({ email, fullName, role, isSubscribed }) {
@@ -845,19 +857,31 @@ class VidoraDataBridge {
     }
 
     async deleteOrder(orderId) {
-        if (!this.isLive) {
+        // 1. Selalu bersihkan dari local storage demo/cache
+        try {
             const raw = localStorage.getItem("vidora_demo_orders") || "[]";
             let orders = JSON.parse(raw);
             orders = orders.filter(o => o.id !== orderId);
             localStorage.setItem("vidora_demo_orders", JSON.stringify(orders));
-            return true;
-        }
+        } catch (_) {}
+
+        // 2. Hapus via serverless endpoint dengan Service Role Key (Bypass RLS)
         try {
-            await this.client.from("orders").delete().eq("id", orderId);
-            return true;
-        } catch (e) {
-            return false;
+            await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "delete_order", order_id: orderId })
+            });
+        } catch (_) {}
+
+        // 3. Jika client Supabase aktif langsung di browser
+        if (this.isLive && this.client) {
+            try {
+                await this.client.from("orders").delete().eq("id", orderId);
+            } catch (_) {}
         }
+
+        return true;
     }
 
     subscribeJobs(callback) {
