@@ -445,6 +445,125 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, message: `Akses berhasil dicabut` });
     }
 
+    // ========================================
+    // ACTION: SAVE USER GEMINI KEY (Cross-Device Sync)
+    // ========================================
+    if (action === 'save_user_gemini_key') {
+      const targetId = userId || body.id;
+      const targetEmail = body.email;
+      const geminiKey = body.key || body.gemini_key || body.gemini_api_key || '';
+      if (!targetId && !targetEmail) return res.status(400).json({ error: 'user_id atau email wajib diisi' });
+
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        // 1. Simpan di auth user metadata via admin API jika ada targetId
+        if (targetId) {
+          try {
+            await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${targetId}`, {
+              method: 'PUT',
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                user_metadata: { gemini_api_key: geminiKey }
+              })
+            });
+          } catch (e) {
+            console.warn('[Manage Order] update user_metadata error:', e.message);
+          }
+        }
+
+        // 2. Simpan di public.system_settings sebagai cadangan permanen
+        try {
+          const settingKey = `gemini_key_${targetId || (targetEmail ? targetEmail.replace(/[^a-zA-Z0-9]/g, '_') : '')}`;
+          const settingVal = JSON.stringify({ key: geminiKey, email: targetEmail, updated_at: new Date().toISOString() });
+          
+          await fetch(`${SUPABASE_URL}/rest/v1/system_settings?key=eq.${encodeURIComponent(settingKey)}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': SUPABASE_SERVICE_ROLE_KEY,
+              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ value: settingVal, updated_at: new Date().toISOString() })
+          }).then(async (r) => {
+            if (r.status === 404 || (await r.clone().text()).includes('[]')) {
+              await fetch(`${SUPABASE_URL}/rest/v1/system_settings`, {
+                method: 'POST',
+                headers: {
+                  'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                  'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'resolution=merge-duplicates'
+                },
+                body: JSON.stringify({ key: settingKey, value: settingVal, updated_at: new Date().toISOString() })
+              });
+            }
+          });
+        } catch (e) {
+          console.warn('[Manage Order] save system_settings error:', e.message);
+        }
+      }
+
+      return res.status(200).json({ success: true, message: 'API Key Gemini berhasil disinkronkan' });
+    }
+
+    // ========================================
+    // ACTION: GET USER GEMINI KEY (Cross-Device Sync)
+    // ========================================
+    if (action === 'get_user_gemini_key') {
+      const targetId = userId || query.id;
+      const targetEmail = query.email || body.email;
+      if (!targetId && !targetEmail) return res.status(400).json({ error: 'user_id atau email wajib diisi' });
+
+      let foundKey = '';
+
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        // 1. Coba ambil dari system_settings
+        try {
+          const settingKey = `gemini_key_${targetId || (targetEmail ? targetEmail.replace(/[^a-zA-Z0-9]/g, '_') : '')}`;
+          const sRes = await fetch(`${SUPABASE_URL}/rest/v1/system_settings?key=eq.${encodeURIComponent(settingKey)}&select=value`, {
+            headers: {
+              'apikey': SUPABASE_SERVICE_ROLE_KEY,
+              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+            }
+          });
+          if (sRes.ok) {
+            const rows = await sRes.json();
+            if (rows && rows.length > 0 && rows[0].value) {
+              const parsed = typeof rows[0].value === 'string' ? JSON.parse(rows[0].value) : rows[0].value;
+              if (parsed && parsed.key) foundKey = parsed.key;
+            }
+          }
+        } catch (e) {
+          console.warn('[Manage Order] get system_settings error:', e.message);
+        }
+
+        // 2. Jika belum ketemu, coba cek auth.users
+        if (!foundKey && targetId) {
+          try {
+            const uRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${targetId}`, {
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+              }
+            });
+            if (uRes.ok) {
+              const uData = await uRes.json();
+              if (uData && uData.user_metadata && uData.user_metadata.gemini_api_key) {
+                foundKey = uData.user_metadata.gemini_api_key;
+              }
+            }
+          } catch (e) {
+            console.warn('[Manage Order] get auth user error:', e.message);
+          }
+        }
+      }
+
+      return res.status(200).json({ success: true, key: foundKey });
+    }
+
     return res.status(400).json({ error: 'Aksi tidak valid' });
   } catch (err) {
     console.error('[Manage Order Fatal Error]:', err);

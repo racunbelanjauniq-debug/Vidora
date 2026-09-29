@@ -207,6 +207,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Check connection pill in admin tab
         updateConnectionStatusPill();
+
+        // Sinkronkan API Key Gemini antar perangkat (HP <-> PC)
+        try {
+            await loadUserGeminiKey();
+        } catch (gkErr) {
+            console.warn("loadUserGeminiKey error:", gkErr);
+        }
     }
 
     function updateHeaderUI() {
@@ -1312,7 +1319,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     // =========================================================================
-    // 7. BYOK: Gemini API Key Handling (Browser LocalStorage)
+    // 7. BYOK: Gemini API Key Handling (Sinkronisasi Antar Perangkat HP & PC)
     // =========================================================================
     const userGeminiKeyInput = document.getElementById("userGeminiKeyInput");
     const btnSaveGeminiKey = document.getElementById("btnSaveGeminiKey");
@@ -1320,33 +1327,98 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnToggleShowGeminiKey = document.getElementById("btnToggleShowGeminiKey");
     const eyeIconGemini = document.getElementById("eyeIconGemini");
 
-    function loadUserGeminiKey() {
-        const savedKey = localStorage.getItem("vidora_user_gemini_key") || "";
+    async function syncGeminiKeyToCloud(key) {
+        if (!currentUser) return;
+        try {
+            if (window.vidoraData?.client) {
+                await window.vidoraData.client.auth.updateUser({
+                    data: { gemini_api_key: key }
+                });
+            }
+            await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "save_user_gemini_key",
+                    userId: currentUser.id,
+                    email: currentUser.email,
+                    key: key
+                })
+            });
+        } catch (err) {
+            console.warn("[Gemini Key] Cloud sync error:", err);
+        }
+    }
+
+    async function loadUserGeminiKey() {
+        let savedKey = (localStorage.getItem("vidora_user_gemini_key") || "").trim();
+
+        // 1. Jika belum ada di localStorage perangkat ini, ambil dari Cloud (HP <-> PC sync)
+        if (!savedKey && currentUser) {
+            if (currentUser.user_metadata?.gemini_api_key) {
+                savedKey = currentUser.user_metadata.gemini_api_key.trim();
+                localStorage.setItem("vidora_user_gemini_key", savedKey);
+            } else {
+                try {
+                    const res = await fetch(`/api/manage-order?action=get_user_gemini_key&userId=${currentUser.id}&email=${encodeURIComponent(currentUser.email || "")}`);
+                    const data = await res.json();
+                    if (data && data.key) {
+                        savedKey = data.key.trim();
+                        localStorage.setItem("vidora_user_gemini_key", savedKey);
+                    }
+                } catch (e) {
+                    console.warn("[Gemini Key] Cloud fetch error:", e);
+                }
+            }
+        } else if (savedKey && currentUser) {
+            // 2. Jika di perangkat ini sudah ada key (misal di HP), otomatis sinkronkan ke Cloud agar PC juga langsung dapat
+            if (!currentUser.user_metadata?.gemini_api_key) {
+                syncGeminiKeyToCloud(savedKey);
+            }
+        }
+
         if (savedKey) {
-            userGeminiKeyInput.value = savedKey;
-            geminiKeyStatusBadge.textContent = "Aktif & Siap";
-            geminiKeyStatusBadge.style.background = "rgba(16, 185, 129, 0.15)";
-            geminiKeyStatusBadge.style.color = "#10b981";
+            if (userGeminiKeyInput) userGeminiKeyInput.value = savedKey;
+            if (geminiKeyStatusBadge) {
+                geminiKeyStatusBadge.textContent = "Aktif & Siap";
+                geminiKeyStatusBadge.style.background = "rgba(16, 185, 129, 0.15)";
+                geminiKeyStatusBadge.style.color = "#10b981";
+            }
         } else {
-            userGeminiKeyInput.value = "";
-            geminiKeyStatusBadge.textContent = "Belum Diisi";
-            geminiKeyStatusBadge.style.background = "rgba(239, 68, 68, 0.15)";
-            geminiKeyStatusBadge.style.color = "#f87171";
+            if (userGeminiKeyInput) userGeminiKeyInput.value = "";
+            if (geminiKeyStatusBadge) {
+                geminiKeyStatusBadge.textContent = "Belum Diisi";
+                geminiKeyStatusBadge.style.background = "rgba(239, 68, 68, 0.15)";
+                geminiKeyStatusBadge.style.color = "#f87171";
+            }
         }
     }
     loadUserGeminiKey();
 
-    btnSaveGeminiKey.addEventListener("click", () => {
+    btnSaveGeminiKey.addEventListener("click", async () => {
         const key = userGeminiKeyInput.value.trim();
         if (!key) {
             localStorage.removeItem("vidora_user_gemini_key");
-            loadUserGeminiKey();
-            alert("API Key Gemini dihapus.");
+            await syncGeminiKeyToCloud("");
+            await loadUserGeminiKey();
+            alert("API Key Gemini dihapus dari perangkat dan akun Anda.");
             return;
         }
+
         localStorage.setItem("vidora_user_gemini_key", key);
-        loadUserGeminiKey();
-        alert("API Key Gemini Anda berhasil disimpan secara aman di browser!");
+        await loadUserGeminiKey();
+
+        const origHtml = btnSaveGeminiKey.innerHTML;
+        btnSaveGeminiKey.disabled = true;
+        btnSaveGeminiKey.innerHTML = `<span>Menyinkronkan ke Akun...</span>`;
+
+        await syncGeminiKeyToCloud(key);
+
+        btnSaveGeminiKey.disabled = false;
+        btnSaveGeminiKey.innerHTML = origHtml;
+        if (window.lucide && typeof lucide.createIcons === "function") lucide.createIcons();
+
+        alert("API Key Gemini Anda berhasil disimpan dan disinkronkan ke akun Anda (otomatis aktif di HP & PC)!");
     });
 
     btnToggleShowGeminiKey.addEventListener("click", () => {
