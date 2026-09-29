@@ -1506,13 +1506,28 @@ Requirements for the generated prompt:
     // =========================================================================
     function updateStoryboardVisibility() {
         const isStoryboard = videoApStyleSelect?.value === "storyboard";
+        const isHybridAccount = videoAccountSelect?.value === "hybrid";
+
         if (wrapSinglePrompt && wrapStoryboardPrompt) {
             wrapSinglePrompt.style.display = isStoryboard ? "none" : "block";
             wrapStoryboardPrompt.style.display = isStoryboard ? "block" : "none";
         }
+
+        const wrapVideoAccountSelect = document.getElementById("wrapVideoAccountSelect");
+        const sbHybridNotice = document.getElementById("sbHybridNotice");
+        if (wrapVideoAccountSelect) {
+            // Sembunyikan dropdown Google Account saat Storyboard aktif karena Storyboard 100% Mode Hybrid!
+            wrapVideoAccountSelect.style.display = isStoryboard ? "none" : "block";
+        }
+        if (sbHybridNotice) {
+            sbHybridNotice.style.display = isStoryboard ? "block" : "none";
+        }
+
         if (btnGenerateVideo) {
             if (isStoryboard) {
                 btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate 3 Adegan Storyboard (Mode Hybrid)</span>`;
+            } else if (isHybridAccount) {
+                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Video (Mode Hybrid Instan)</span>`;
             } else {
                 btnGenerateVideo.innerHTML = `<i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Generate Video (Omni Flash)</span>`;
             }
@@ -1892,6 +1907,43 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         }
     }
 
+    async function generateSingleHybridClip({ prompt, targetRatio = "9:16", onProgress }) {
+        let width = 720;
+        let height = 1280;
+        if (targetRatio === "16:9") {
+            width = 1280;
+            height = 720;
+        } else if (targetRatio === "1:1") {
+            width = 720;
+            height = 720;
+        }
+
+        if (onProgress) onProgress("Menyiapkan visual fotorealistik...");
+
+        let imgElement = null;
+        if (uploadedProductImage) {
+            imgElement = await loadImageFromSrc(uploadedProductImage);
+        } else {
+            const seed = Math.floor(Math.random() * 1000000);
+            const cleanPrompt = encodeURIComponent(`${prompt}, cinematic lighting, photorealistic, 4k 60fps, high detail`);
+            const imgUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+            imgElement = await loadImageFromSrc(imgUrl);
+        }
+
+        if (onProgress) onProgress("Merender gerakan sinematik (Hybrid Engine)...");
+
+        const blob = await renderImageToCinematicVideoBlob({
+            img: imgElement,
+            durationSec: 5.0,
+            motionType: "hook_push",
+            width,
+            height,
+            fps: 30
+        });
+
+        await addClipToMixer(blob, "Klip Video Hybrid");
+    }
+
     // =========================================================================
     // 8. Auto Prompt Generation Handlers
     // =========================================================================
@@ -2065,6 +2117,46 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             return;
         }
 
+        // Single Video Mode Hybrid (Jika dipilih di dropdown atau tanpa akun Google)
+        if (videoAccountSelect?.value === "hybrid") {
+            const prompt = videoPromptInput.value.trim();
+            if (!prompt) {
+                alert("Harap masukkan prompt video atau gunakan 'Auto Prompt dari Foto' terlebih dahulu!");
+                videoPromptInput.focus();
+                return;
+            }
+
+            btnGenerateVideo.disabled = true;
+            btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Video Hybrid...</span>`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                await generateSingleHybridClip({
+                    prompt,
+                    targetRatio: videoRatio || "9:16",
+                    onProgress: (msg) => {
+                        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span style="font-size:12px;">${msg}</span>`;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                });
+
+                btnGenerateVideo.disabled = false;
+                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Video (Mode Hybrid Instan)</span>`;
+                if (window.lucide) lucide.createIcons();
+
+                switchTab("studio");
+                switchSubTab("mixer");
+                alert("🎉 Berhasil!\n\nVideo Hybrid telah dibuat dan otomatis dimasukkan ke Antrian Mixer.\n\nAnda dapat memutar video, menambahkan audio, atau menggabungkannya dengan klip lain!");
+            } catch (err) {
+                console.error("Hybrid Single Clip Generation Error:", err);
+                btnGenerateVideo.disabled = false;
+                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Video (Mode Hybrid Instan)</span>`;
+                if (window.lucide) lucide.createIcons();
+                alert("Gagal memproses Video Hybrid: " + err.message);
+            }
+            return;
+        }
+
         const prompt = videoPromptInput.value.trim();
         if (!prompt) {
             alert("Harap masukkan prompt video atau gunakan 'Auto Prompt dari Foto' terlebih dahulu!");
@@ -2201,14 +2293,25 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         const updateDropdown = (selectElem) => {
             if (!selectElem) return;
             const currentVal = selectElem.value;
-            selectElem.innerHTML = `<option value="">-- Rotasi Otomatis Semua Akun Aktif (${userAccounts.length} Akun) --</option>`;
+            if (selectElem === videoAccountSelect) {
+                const isHybrid = !currentVal || currentVal === "hybrid";
+                selectElem.innerHTML = `
+                    <option value="hybrid" ${isHybrid ? 'selected' : ''}>⚡ Mode Hybrid (Instan &amp; Gratis - Tanpa Akun Google)</option>
+                    <option value="" ${currentVal === "" ? 'selected' : ''}>-- Rotasi Otomatis Akun Google (${userAccounts.length} Akun) --</option>
+                `;
+            } else {
+                selectElem.innerHTML = `<option value="">-- Rotasi Otomatis Semua Akun Aktif (${userAccounts.length} Akun) --</option>`;
+            }
             userAccounts.forEach(acc => {
                 const opt = document.createElement("option");
                 opt.value = acc.id;
                 opt.textContent = `${acc.email} (${acc.label || 'Akun'}) - ${acc.credit_status === 'ready' ? 'Siap' : 'Cooldown'}`;
+                if (currentVal === acc.id) opt.selected = true;
                 selectElem.appendChild(opt);
             });
-            selectElem.value = currentVal;
+            if (currentVal && selectElem.querySelector(`option[value="${currentVal}"]`)) {
+                selectElem.value = currentVal;
+            }
         };
 
         updateDropdown(videoAccountSelect);
@@ -2931,6 +3034,9 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
     // Storyboard Event Listeners & Initial State
     if (videoApStyleSelect) {
         videoApStyleSelect.addEventListener("change", updateStoryboardVisibility);
+    }
+    if (videoAccountSelect) {
+        videoAccountSelect.addEventListener("change", updateStoryboardVisibility);
     }
     if (btnStoryboardAutoPrompt) {
         btnStoryboardAutoPrompt.addEventListener("click", async () => {

@@ -107,12 +107,26 @@
                         </div>
                     </div>
 
-                    <!-- Pilihan Akun Google -->
-                    <div class="form-group">
-                        <label class="form-label" for="videoAccountSelect">Pilih Akun Google:</label>
+                    <!-- Pilihan Akun Google / Engine -->
+                    <div class="form-group" id="wrapVideoAccountSelect">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0;" for="videoAccountSelect">Engine Video / Akun:</label>
+                            <span style="font-size: 11px; color: #10b981; font-weight: 600;">⚡ Bebas Tanpa Akun Google</span>
+                        </div>
                         <select class="form-select account-dropdown" id="videoAccountSelect">
-                            <option value="">-- Rotasi Otomatis Semua Akun Aktif --</option>
+                            <option value="hybrid" selected>⚡ Mode Hybrid (Instan &amp; Gratis - Tanpa Akun Google)</option>
+                            <option value="">-- Rotasi Otomatis Akun Google (Omni Flash) --</option>
                         </select>
+                    </div>
+
+                    <!-- Notice Banner Saat Storyboard Aktif -->
+                    <div id="sbHybridNotice" style="display: none; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="zap" style="width: 16px; height: 16px; color: #a78bfa; flex-shrink: 0;"></i>
+                            <div style="font-size: 12px; color: #e9d5ff; line-height: 1.4;">
+                                <strong>Mode Hybrid Aktif (100% Free):</strong> Tidak memerlukan Akun Google, Flow, atau Veo. Ketiga adegan video langsung diproses instan dan otomatis dimasukkan ke antrian Mixer!
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Gaya Auto Prompt -->
