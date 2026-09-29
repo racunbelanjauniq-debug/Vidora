@@ -1364,6 +1364,72 @@ document.addEventListener("DOMContentLoaded", async () => {
         return (localStorage.getItem("vidora_user_gemini_key") || "").trim();
     }
 
+    // Robust Cascade Gemini API Caller (Mencoba Gemini 2.0 Flash, 1.5 Flash Latest, dsb secara otomatis)
+    async function callGeminiGenerateContent(apiKey, requestBody) {
+        const candidateModels = [
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent"
+        ];
+
+        let lastError = null;
+        for (const endpoint of candidateModels) {
+            try {
+                const response = await fetch(`${endpoint}?key=${apiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                }
+
+                const errData = await response.json().catch(() => ({}));
+                const msg = errData.error?.message || `HTTP ${response.status}`;
+                lastError = new Error(msg);
+
+                // Jika error adalah kuota habis atau key invalid, hentikan langsung
+                if (response.status === 400 && !msg.toLowerCase().includes("not found") && !msg.toLowerCase().includes("not supported")) {
+                    throw lastError;
+                }
+            } catch (err) {
+                lastError = err;
+                if (err.message && !err.message.toLowerCase().includes("not found") && !err.message.toLowerCase().includes("not supported") && !err.message.includes("404")) {
+                    throw err;
+                }
+            }
+        }
+
+        // Jika semua model standar gagal, gunakan ListModels API untuk menemukan model yang didukung oleh API key ini
+        try {
+            const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+            if (listResp.ok) {
+                const listData = await listResp.json();
+                const available = listData.models?.find(m => 
+                    m.supportedGenerationMethods?.includes("generateContent") &&
+                    (m.name?.includes("flash") || m.name?.includes("pro") || m.name?.includes("gemini"))
+                );
+                if (available && available.name) {
+                    const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/${available.name}:generateContent?key=${apiKey}`;
+                    const resp = await fetch(fallbackUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(requestBody)
+                    });
+                    if (resp.ok) {
+                        return await resp.json();
+                    }
+                }
+            }
+        } catch (_) {}
+
+        throw lastError || new Error("Model Gemini tidak ditemukan untuk API Key ini.");
+    }
+
     // Gemini Vision API Caller
     async function analyzeProductImageWithGemini(base64Data, mode, style, platform, extra = "", ctaType = "auto", customCta = "") {
         const apiKey = getUserGeminiKey();
@@ -1491,26 +1557,13 @@ Requirements for the generated prompt:
             }
         };
 
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
         try {
-            const response = await fetch(endpoint, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestBody)
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.error?.message || `HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = await callGeminiGenerateContent(apiKey, requestBody);
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
             return generatedText || null;
         } catch (error) {
             console.error("[Gemini API Error]", error);
-            alert(`Gagal menganalisa foto dengan Gemini: ${error.message}\n\nPastikan API Key Gemini Anda valid.`);
+            alert(`Gagal menganalisa foto dengan Gemini: ${error.message}\n\nPastikan API Key Gemini Anda valid & aktif di aistudio.google.com.`);
             return null;
         }
     }
@@ -1618,17 +1671,10 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
                     });
                 }
 
-                const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{ parts }],
-                        generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
-                    })
+                const data = await callGeminiGenerateContent(apiKey, {
+                    contents: [{ parts }],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
                 });
-
-                if (resp.ok) {
-                    const data = await resp.json();
                     let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
                     rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
                     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
