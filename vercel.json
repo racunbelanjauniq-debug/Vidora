@@ -23,20 +23,5 @@
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     }
-  ],
-  "redirects": [
-    { "source": "/app.html", "destination": "/app", "permanent": true },
-    { "source": "/login.html", "destination": "/login", "permanent": true },
-    { "source": "/admin.html", "destination": "/admin", "permanent": true },
-    { "source": "/index.html", "destination": "/", "permanent": true }
-  ],
-  "rewrites": [
-    { "source": "/login", "destination": "/login.html" },
-    { "source": "/register", "destination": "/login.html?tab=signup" },
-    { "source": "/admin/login", "destination": "/admin/login.html" },
-    { "source": "/admin/dashboard", "destination": "/admin.html" },
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/app", "destination": "/app.html" },
-    { "source": "/studio", "destination": "/app.html" }
   ]
 }
