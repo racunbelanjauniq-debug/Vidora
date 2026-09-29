@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "cleanUrls": true,
+  "cleanUrls": false,
   "headers": [
     {
       "source": "/api/(.*)",
@@ -24,10 +24,11 @@
       ]
     }
   ],
-  "redirects": [
-    { "source": "/app.html", "destination": "/app", "permanent": true },
-    { "source": "/login.html", "destination": "/login", "permanent": true },
-    { "source": "/admin.html", "destination": "/admin", "permanent": true },
-    { "source": "/studio", "destination": "/app", "permanent": true }
+  "rewrites": [
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/studio", "destination": "/app.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/login", "destination": "/admin/login.html" },
+    { "source": "/login", "destination": "/login.html" }
   ]
 }
