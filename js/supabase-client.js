@@ -317,60 +317,158 @@ class VidoraDataBridge {
     }
 
     async signIn(email, password) {
-        const isOwner = email === "winalislam@gmail.com" || 
-                        (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(email));
+        const cleanEmail = (email || "").trim().toLowerCase();
+        const isOwner = cleanEmail === "winalislam@gmail.com" || 
+                        (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(cleanEmail));
 
         if (!this.isLive) {
-            this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: email.split("@")[0] } };
+            this.currentUser = { id: "demo-user-" + Date.now(), email: cleanEmail, user_metadata: { full_name: cleanEmail.split("@")[0] } };
             this.currentProfile = {
                 id: this.currentUser.id,
-                email: email,
-                full_name: email.split("@")[0],
-                role: (isOwner || email.includes("admin")) ? "superadmin" : "user",
-                max_google_accounts: (isOwner || email.includes("admin")) ? 99999 : 5
+                email: cleanEmail,
+                full_name: cleanEmail.split("@")[0],
+                role: (isOwner || cleanEmail.includes("admin")) ? "superadmin" : "user",
+                max_google_accounts: (isOwner || cleanEmail.includes("admin")) ? 99999 : 5
             };
             localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
             return { user: this.currentUser, profile: this.currentProfile };
         }
-        const { data, error } = await this.client.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+
+        let { data, error } = await this.client.auth.signInWithPassword({ email: cleanEmail, password });
+        if (error) {
+            const errMsg = (error.message || "").toLowerCase();
+            // Jika error adalah "Email not confirmed", lakukan auto-confirm instan via Serverless Admin API
+            if (errMsg.includes("email not confirmed") || errMsg.includes("email_not_confirmed")) {
+                console.log("[VIDORA Auth] Email belum diverifikasi di Supabase, melakukan auto-confirm instan...");
+                try {
+                    const confirmRes = await fetch("/api/manage-order", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "confirm_email", email: cleanEmail })
+                    });
+                    const confirmJson = await confirmRes.json();
+                    if (confirmJson.success) {
+                        console.log("[VIDORA Auth] Auto-confirm berhasil, mengulang login...");
+                        const retry = await this.client.auth.signInWithPassword({ email: cleanEmail, password });
+                        if (retry.error) throw retry.error;
+                        data = retry.data;
+                        error = null;
+                    } else {
+                        throw error;
+                    }
+                } catch (retryErr) {
+                    throw retryErr;
+                }
+            } else {
+                throw error;
+            }
+        }
         await this.getSession();
         return data;
     }
 
     async signUp(email, password, fullName, phone = "") {
-        const isOwner = email === "winalislam@gmail.com" || 
-                        (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(email));
+        const cleanEmail = (email || "").trim().toLowerCase();
+        const cleanName = (fullName || cleanEmail.split("@")[0]).trim();
+        const cleanPhone = (phone || "").trim();
+        const isOwner = cleanEmail === "winalislam@gmail.com" || 
+                        (window.VIDORA_CONFIG.SUPERADMIN_EMAILS && window.VIDORA_CONFIG.SUPERADMIN_EMAILS.includes(cleanEmail));
 
         if (!this.isLive) {
-            this.currentUser = { id: "demo-user-" + Date.now(), email, user_metadata: { full_name: fullName, phone: phone } };
+            this.currentUser = { id: "demo-user-" + Date.now(), email: cleanEmail, user_metadata: { full_name: cleanName, phone: cleanPhone } };
             this.currentProfile = {
                 id: this.currentUser.id,
-                email: email,
-                full_name: fullName,
-                phone: phone,
-                role: (isOwner || email.includes("admin")) ? "superadmin" : "user",
-                max_google_accounts: (isOwner || email.includes("admin")) ? 99999 : 5
+                email: cleanEmail,
+                full_name: cleanName,
+                phone: cleanPhone,
+                role: (isOwner || cleanEmail.includes("admin")) ? "superadmin" : "user",
+                max_google_accounts: (isOwner || cleanEmail.includes("admin")) ? 99999 : 5
             };
             localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
             return { user: this.currentUser, profile: this.currentProfile };
         }
-        const { data, error } = await this.client.auth.signUp({
-            email,
-            password,
-            options: { data: { full_name: fullName, phone: phone } }
-        });
-        if (error) throw error;
 
-        // Upstream phone ke profile jika kolom ada
-        if (data && data.user && phone) {
+        // 1. Daftarkan akun via Serverless Admin API agar langsung terverifikasi (email_confirm: true)
+        let registeredViaApi = false;
+        try {
+            const apiRes = await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "register_user",
+                    email: cleanEmail,
+                    password: password,
+                    full_name: cleanName,
+                    phone: cleanPhone
+                })
+            });
+            const apiData = await apiRes.json();
+            if (apiData && apiData.success) {
+                registeredViaApi = true;
+            }
+        } catch (apiErr) {
+            console.warn("[VIDORA Auth] register_user API warning:", apiErr);
+        }
+
+        // 2. Fallback Supabase Client jika API tidak merespons
+        if (!registeredViaApi) {
+            const { error: supErr } = await this.client.auth.signUp({
+                email: cleanEmail,
+                password,
+                options: { data: { full_name: cleanName, phone: cleanPhone } }
+            });
+            if (supErr) {
+                const errMsg = (supErr.message || "").toLowerCase();
+                if (!errMsg.includes("already registered") && !errMsg.includes("already been registered")) {
+                    throw supErr;
+                }
+            }
+            // Auto confirm email agar akun langsung aktif
             try {
-                await this.client.from("profiles").update({ phone: phone }).eq("id", data.user.id);
+                await fetch("/api/manage-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "confirm_email", email: cleanEmail })
+                });
+            } catch (_) {}
+        }
+
+        // 3. Login otomatis dengan password agar sesi Supabase client tersimpan di browser
+        let { data: signData, error: signErr } = await this.client.auth.signInWithPassword({ email: cleanEmail, password });
+        if (signErr) {
+            const errMsg = (signErr.message || "").toLowerCase();
+            if (errMsg.includes("email not confirmed") || errMsg.includes("email_not_confirmed")) {
+                await fetch("/api/manage-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "confirm_email", email: cleanEmail })
+                });
+                const retrySign = await this.client.auth.signInWithPassword({ email: cleanEmail, password });
+                if (retrySign.error) throw retrySign.error;
+                signData = retrySign.data;
+            } else {
+                throw signErr;
+            }
+        }
+
+        // 4. Pastikan data profile (nama & nomor HP) tersimpan di public.profiles
+        if (cleanPhone || cleanName) {
+            try {
+                const { data: uData } = await this.client.auth.getUser();
+                if (uData && uData.user && uData.user.id) {
+                    await this.client.from("profiles").upsert({
+                        id: uData.user.id,
+                        email: cleanEmail,
+                        full_name: cleanName,
+                        phone: cleanPhone,
+                        updated_at: new Date().toISOString()
+                    });
+                }
             } catch (_) {}
         }
 
         await this.getSession();
-        return data;
+        return { user: this.currentUser, profile: this.currentProfile };
     }
 
     async signOut() {

@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Subscription Gate Helpers
     // =========================================================================
     function isUserSubscribed() {
-        if (!currentUser || currentUser.id === "guest") return false;
+        if (!currentUser) return false;
         if (activeProfile?.role === "superadmin" || activeProfile?.role === "admin") return true;
         if (currentUser.email === "winalislam@gmail.com") return true;
         return activeProfile?.is_subscribed === true;
@@ -164,19 +164,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentUser = session?.user || null;
         activeProfile = session?.profile || null;
 
-        // Mode Tamu: Pengunjung belum login tetap bisa langsung melihat & menjelajahi Studio AI
+        // TIDAK ADA MODE TAMU SAMA SEKALI: Pengunjung yang belum login langsung dialihkan ke Halaman Login
         if (!currentUser) {
-            currentUser = {
-                id: "guest",
-                email: "tamu@vidora.biz.id",
-                user_metadata: { full_name: "Tamu Studio" }
-            };
-            activeProfile = { 
-                role: "guest", 
-                full_name: "Tamu Studio",
-                max_google_accounts: 5, 
-                is_subscribed: false 
-            };
+            window.location.replace("/login");
+            return;
         }
 
         const btnCloseAuth = document.getElementById("btnCloseAuth");
@@ -184,7 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Proteksi Tab Admin -> Alihkan langsung ke Dedicated Super Admin Portal
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get("tab") === "admin") {
-            if (activeProfile.role === "superadmin" || activeProfile.role === "admin") {
+            if (activeProfile?.role === "superadmin" || activeProfile?.role === "admin") {
                 window.location.replace("/admin");
                 return;
             } else {
@@ -219,53 +210,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     function updateHeaderUI() {
-        if (!currentUser || currentUser.id === "guest") {
-            if (btnHeaderAuth) btnHeaderAuth.style.display = "inline-flex";
-            if (userRoleBadge) {
-                userRoleBadge.style.display = "inline-flex";
-                userRoleBadge.innerHTML = `<i data-lucide="eye" style="width:13px;height:13px;color:#94a3b8;"></i> <span id="userRoleText">Mode Tamu</span>`;
-                userRoleBadge.style.borderColor = "rgba(148, 163, 184, 0.3)";
-                userRoleBadge.style.color = "#cbd5e1";
-                userRoleBadge.style.background = "rgba(148, 163, 184, 0.12)";
-                userRoleBadge.title = "Mode Tamu / Preview — Klik untuk Masuk";
-                userRoleBadge.onclick = () => { window.location.href = "login"; };
-            }
-            if (navItemAdmin) navItemAdmin.style.display = "none";
-        } else {
-            if (btnHeaderAuth) btnHeaderAuth.style.display = "none";
-            if (userRoleBadge) {
-                userRoleBadge.style.display = "inline-flex";
+        if (btnHeaderAuth) btnHeaderAuth.style.display = "none";
+        if (userRoleBadge) {
+            userRoleBadge.style.display = "inline-flex";
 
-                if (activeProfile.role === "admin" || activeProfile.role === "superadmin") {
-                    userRoleBadge.innerHTML = `<i data-lucide="crown" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">Super Admin</span>`;
-                    userRoleBadge.style.borderColor = "rgba(251, 191, 36, 0.4)";
-                    userRoleBadge.style.color = "#fef08a";
-                    userRoleBadge.style.background = "rgba(251, 191, 36, 0.15)";
-                    userRoleBadge.style.cursor = "pointer";
-                    userRoleBadge.title = "Buka Portal Super Admin";
-                    userRoleBadge.onclick = () => { window.location.href = "/admin"; };
-                    if (navItemAdmin) navItemAdmin.style.display = "flex";
-                    if (navItemAdmin) {
-                        navItemAdmin.onclick = (e) => {
-                            e.preventDefault();
-                            window.location.href = "/admin";
-                        };
-                    }
-                } else if (isUserSubscribed()) {
-                    userRoleBadge.innerHTML = `<i data-lucide="check-circle" style="width:13px;height:13px;color:#10b981;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Aktif)</span>`;
-                    userRoleBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
-                    userRoleBadge.style.color = "#a7f3d0";
-                    userRoleBadge.style.background = "rgba(16, 185, 129, 0.12)";
-                    userRoleBadge.onclick = null;
-                    if (navItemAdmin) navItemAdmin.style.display = "none";
-                } else {
-                    userRoleBadge.innerHTML = `<i data-lucide="alert-triangle" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">${activeProfile.full_name || 'Member'} (Belum Langganan)</span>`;
-                    userRoleBadge.style.borderColor = "rgba(245, 158, 11, 0.4)";
-                    userRoleBadge.style.color = "#fde68a";
-                    userRoleBadge.style.background = "rgba(245, 158, 11, 0.12)";
-                    userRoleBadge.onclick = null;
-                    if (navItemAdmin) navItemAdmin.style.display = "none";
+            if (activeProfile?.role === "admin" || activeProfile?.role === "superadmin") {
+                userRoleBadge.innerHTML = `<i data-lucide="crown" style="width:13px;height:13px;color:#fbbf24;"></i> <span id="userRoleText">Super Admin</span>`;
+                userRoleBadge.style.borderColor = "rgba(251, 191, 36, 0.4)";
+                userRoleBadge.style.color = "#fef08a";
+                userRoleBadge.style.background = "rgba(251, 191, 36, 0.15)";
+                userRoleBadge.style.cursor = "pointer";
+                userRoleBadge.title = "Buka Portal Super Admin";
+                userRoleBadge.onclick = () => { window.location.href = "/admin"; };
+                if (navItemAdmin) navItemAdmin.style.display = "flex";
+                if (navItemAdmin) {
+                    navItemAdmin.onclick = (e) => {
+                        e.preventDefault();
+                        window.location.href = "/admin";
+                    };
                 }
+            } else if (isUserSubscribed()) {
+                userRoleBadge.innerHTML = `<i data-lucide="check-circle" style="width:13px;height:13px;color:#10b981;"></i> <span id="userRoleText">${activeProfile?.full_name || 'Member'} (Aktif)</span>`;
+                userRoleBadge.style.borderColor = "rgba(16, 185, 129, 0.35)";
+                userRoleBadge.style.color = "#a7f3d0";
+                userRoleBadge.style.background = "rgba(16, 185, 129, 0.12)";
+                userRoleBadge.onclick = null;
+                if (navItemAdmin) navItemAdmin.style.display = "none";
+            } else {
+                userRoleBadge.innerHTML = `<i data-lucide="user-check" style="width:13px;height:13px;color:#60a5fa;"></i> <span id="userRoleText">${activeProfile?.full_name || 'Member'}</span>`;
+                userRoleBadge.style.borderColor = "rgba(96, 165, 250, 0.4)";
+                userRoleBadge.style.color = "#93c5fd";
+                userRoleBadge.style.background = "rgba(96, 165, 250, 0.12)";
+                userRoleBadge.onclick = null;
+                if (navItemAdmin) navItemAdmin.style.display = "none";
             }
         }
         if (window.lucide && typeof lucide.createIcons === "function") {

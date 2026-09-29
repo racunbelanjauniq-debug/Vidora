@@ -2054,11 +2054,16 @@
             const mandiriNumInput = document.getElementById("cfgMandiriNumber");
             const mandiriNameInput = document.getElementById("cfgMandiriName");
 
-            // Ambil dari localStorage dulu untuk render cepat
-            if (bcaNumInput && localStorage.getItem("cfg_bca_number")) bcaNumInput.value = localStorage.getItem("cfg_bca_number");
-            if (bcaNameInput && localStorage.getItem("cfg_bca_name")) bcaNameInput.value = localStorage.getItem("cfg_bca_name");
-            if (mandiriNumInput && localStorage.getItem("cfg_mandiri_number")) mandiriNumInput.value = localStorage.getItem("cfg_mandiri_number");
-            if (mandiriNameInput && localStorage.getItem("cfg_mandiri_name")) mandiriNameInput.value = localStorage.getItem("cfg_mandiri_name");
+            // Prioritaskan selalu nilai tersimpan di localStorage
+            const localBca = localStorage.getItem("cfg_bca_number");
+            const localBcaName = localStorage.getItem("cfg_bca_name");
+            const localMandiri = localStorage.getItem("cfg_mandiri_number");
+            const localMandiriName = localStorage.getItem("cfg_mandiri_name");
+
+            if (localBca && bcaNumInput) bcaNumInput.value = localBca;
+            if (localBcaName && bcaNameInput) bcaNameInput.value = localBcaName;
+            if (localMandiri && mandiriNumInput) mandiriNumInput.value = localMandiri;
+            if (localMandiriName && mandiriNameInput) mandiriNameInput.value = localMandiriName;
 
             // Pakasir Gateway Settings
             const curOrigin = window.location.origin;
@@ -2085,22 +2090,30 @@
                     const data = await res.json();
                     if (data.success && data.settings) {
                         const s = data.settings;
-                        if (s.cfg_bca_number && bcaNumInput) {
-                            bcaNumInput.value = s.cfg_bca_number;
+                        // HANYA timpa jika server memiliki konfigurasi bank yang sudah disimpan
+                        if (s.has_saved_bank && s.cfg_bca_number) {
+                            if (bcaNumInput) bcaNumInput.value = s.cfg_bca_number;
                             localStorage.setItem("cfg_bca_number", s.cfg_bca_number);
+                        } else if (localBca && bcaNumInput) {
+                            bcaNumInput.value = localBca;
                         }
-                        if (s.cfg_bca_name && bcaNameInput) {
-                            bcaNameInput.value = s.cfg_bca_name;
+
+                        if (s.has_saved_bank && s.cfg_bca_name) {
+                            if (bcaNameInput) bcaNameInput.value = s.cfg_bca_name;
                             localStorage.setItem("cfg_bca_name", s.cfg_bca_name);
+                        } else if (localBcaName && bcaNameInput) {
+                            bcaNameInput.value = localBcaName;
                         }
-                        if (s.cfg_mandiri_number && mandiriNumInput) {
-                            mandiriNumInput.value = s.cfg_mandiri_number;
+
+                        if (s.has_saved_bank && s.cfg_mandiri_number) {
+                            if (mandiriNumInput) mandiriNumInput.value = s.cfg_mandiri_number;
                             localStorage.setItem("cfg_mandiri_number", s.cfg_mandiri_number);
                         }
-                        if (s.cfg_mandiri_name && mandiriNameInput) {
-                            mandiriNameInput.value = s.cfg_mandiri_name;
+                        if (s.has_saved_bank && s.cfg_mandiri_name) {
+                            if (mandiriNameInput) mandiriNameInput.value = s.cfg_mandiri_name;
                             localStorage.setItem("cfg_mandiri_name", s.cfg_mandiri_name);
                         }
+
                         if (s.cfg_pakasir_slug && slugInput) slugInput.value = s.cfg_pakasir_slug;
                         if (s.cfg_pakasir_key && keyInput) keyInput.value = s.cfg_pakasir_key;
                         if (s.cfg_pakasir_secret && secretInput) secretInput.value = s.cfg_pakasir_secret;
@@ -2158,6 +2171,7 @@
             const mandiriNumber = document.getElementById("cfgMandiriNumber") ? document.getElementById("cfgMandiriNumber").value.trim() : "";
             const mandiriName = document.getElementById("cfgMandiriName") ? document.getElementById("cfgMandiriName").value.trim() : "";
 
+            // Simpan ke localStorage terlebih dahulu
             localStorage.setItem("cfg_bca_number", bcaNumber);
             localStorage.setItem("cfg_bca_name", bcaName);
             localStorage.setItem("cfg_mandiri_number", mandiriNumber);
@@ -2179,6 +2193,20 @@
                 });
             } catch (err) {
                 console.warn("/api/settings save warning:", err);
+            }
+
+            // 2. Simpan via /api/manage-order (backup serverless)
+            try {
+                await fetch("/api/manage-order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "save_bank_settings",
+                        ...payload
+                    })
+                });
+            } catch (err) {
+                console.warn("/api/manage-order save_bank_settings warning:", err);
             }
 
             // 2. Sync langsung ke Supabase system_settings jika client terhubung
