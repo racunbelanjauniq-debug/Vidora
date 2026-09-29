@@ -1506,30 +1506,17 @@ Requirements for the generated prompt:
     // =========================================================================
     function updateStoryboardVisibility() {
         const isStoryboard = videoApStyleSelect?.value === "storyboard";
-        const isHybridAccount = videoAccountSelect?.value === "hybrid";
 
         if (wrapSinglePrompt && wrapStoryboardPrompt) {
             wrapSinglePrompt.style.display = isStoryboard ? "none" : "block";
             wrapStoryboardPrompt.style.display = isStoryboard ? "block" : "none";
         }
 
-        const wrapVideoAccountSelect = document.getElementById("wrapVideoAccountSelect");
-        const sbHybridNotice = document.getElementById("sbHybridNotice");
-        if (wrapVideoAccountSelect) {
-            // Sembunyikan dropdown Google Account saat Storyboard aktif karena Storyboard 100% Mode Hybrid!
-            wrapVideoAccountSelect.style.display = isStoryboard ? "none" : "block";
-        }
-        if (sbHybridNotice) {
-            sbHybridNotice.style.display = isStoryboard ? "block" : "none";
-        }
-
         if (btnGenerateVideo) {
             if (isStoryboard) {
-                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate 3 Adegan Storyboard (Mode Hybrid)</span>`;
-            } else if (isHybridAccount) {
-                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Video (Mode Hybrid Instan)</span>`;
+                btnGenerateVideo.innerHTML = `<i data-lucide="film" style="width: 18px; height: 18px;"></i> <span>Generate Video Storyboard (3 Adegan)</span>`;
             } else {
-                btnGenerateVideo.innerHTML = `<i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Generate Video (Omni Flash)</span>`;
+                btnGenerateVideo.innerHTML = `<i data-lucide="play" style="width: 18px; height: 18px;"></i> <span>Generate Video</span>`;
             }
             if (window.lucide) lucide.createIcons();
         }
@@ -2070,9 +2057,9 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
     // 9. Generate Task Submission (Video & Image)
     // =========================================================================
     btnGenerateVideo.addEventListener("click", async () => {
-        if (!checkSubscriptionAccess("Generate Video AI (Omni Flash)")) return;
+        if (!checkSubscriptionAccess("Generate Video")) return;
 
-        // Storyboard Mode Hybrid Generation (100% Free, Tanpa Flow / Veo / Akun Google)
+        // Storyboard Mode (3 Adegan)
         if (videoApStyleSelect?.value === "storyboard") {
             const sc1 = (sbScene1?.value || "").trim();
             const sc2 = (sbScene2?.value || "").trim();
@@ -2085,7 +2072,7 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             }
 
             btnGenerateVideo.disabled = true;
-            btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Storyboard Hybrid...</span>`;
+            btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Video Storyboard...</span>`;
             if (window.lucide) lucide.createIcons();
 
             try {
@@ -2101,101 +2088,62 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
                 });
 
                 btnGenerateVideo.disabled = false;
-                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate 3 Adegan Storyboard (Mode Hybrid)</span>`;
+                btnGenerateVideo.innerHTML = `<i data-lucide="film" style="width: 18px; height: 18px;"></i> <span>Generate Video Storyboard (3 Adegan)</span>`;
                 if (window.lucide) lucide.createIcons();
 
                 switchTab("studio");
                 switchSubTab("mixer");
                 alert("🎉 Berhasil!\n\n3 Adegan Storyboard telah dibuat dan otomatis dimasukkan ke Antrian Mixer.\n\nSemua klip sudah tersusun berurutan (Scene 1, 2, 3). Anda bisa menambahkan musik latar, memilih transisi, dan klik 'Gabungkan Semua Klip Menjadi 1 Video'!");
             } catch (err) {
-                console.error("Hybrid Storyboard Generation Error:", err);
+                console.error("Storyboard Generation Error:", err);
                 btnGenerateVideo.disabled = false;
-                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate 3 Adegan Storyboard (Mode Hybrid)</span>`;
+                btnGenerateVideo.innerHTML = `<i data-lucide="film" style="width: 18px; height: 18px;"></i> <span>Generate Video Storyboard (3 Adegan)</span>`;
                 if (window.lucide) lucide.createIcons();
-                alert("Gagal memproses Storyboard Hybrid: " + err.message);
+                alert("Gagal memproses Video Storyboard: " + err.message);
             }
             return;
         }
 
-        // Single Video Mode Hybrid (Jika dipilih di dropdown atau tanpa akun Google)
-        if (videoAccountSelect?.value === "hybrid") {
-            const prompt = videoPromptInput.value.trim();
-            if (!prompt) {
-                alert("Harap masukkan prompt video atau gunakan 'Auto Prompt dari Foto' terlebih dahulu!");
-                videoPromptInput.focus();
-                return;
-            }
-
-            btnGenerateVideo.disabled = true;
-            btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Video Hybrid...</span>`;
-            if (window.lucide) lucide.createIcons();
-
-            try {
-                await generateSingleHybridClip({
-                    prompt,
-                    targetRatio: videoRatio || "9:16",
-                    onProgress: (msg) => {
-                        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span style="font-size:12px;">${msg}</span>`;
-                        if (window.lucide) lucide.createIcons();
-                    }
-                });
-
-                btnGenerateVideo.disabled = false;
-                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Video (Mode Hybrid Instan)</span>`;
-                if (window.lucide) lucide.createIcons();
-
-                switchTab("studio");
-                switchSubTab("mixer");
-                alert("🎉 Berhasil!\n\nVideo Hybrid telah dibuat dan otomatis dimasukkan ke Antrian Mixer.\n\nAnda dapat memutar video, menambahkan audio, atau menggabungkannya dengan klip lain!");
-            } catch (err) {
-                console.error("Hybrid Single Clip Generation Error:", err);
-                btnGenerateVideo.disabled = false;
-                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Video (Mode Hybrid Instan)</span>`;
-                if (window.lucide) lucide.createIcons();
-                alert("Gagal memproses Video Hybrid: " + err.message);
-            }
-            return;
-        }
-
+        // Single Video
         const prompt = videoPromptInput.value.trim();
         if (!prompt) {
-            alert("Harap masukkan prompt video atau gunakan 'Auto Prompt dari Foto' terlebih dahulu!");
+            alert("Harap masukkan prompt video atau gunakan 'Auto Prompt AI' terlebih dahulu!");
             videoPromptInput.focus();
             return;
         }
 
-        const accId = videoAccountSelect.value;
         btnGenerateVideo.disabled = true;
-        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Mengirim ke Antrian...</span>`;
-        lucide.createIcons();
+        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Video...</span>`;
+        if (window.lucide) lucide.createIcons();
 
         try {
-            await window.vidoraData.createGenerateJob({
+            await generateSingleHybridClip({
                 prompt,
-                model: "Omni Flash",
-                ratio: videoRatio,
-                duration: videoDuration,
-                count: 1,
-                googleAccountId: accId || null,
-                hidden: true
+                targetRatio: videoRatio || "9:16",
+                onProgress: (msg) => {
+                    btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span style="font-size:12px;">${msg}</span>`;
+                    if (window.lucide) lucide.createIcons();
+                }
             });
 
             btnGenerateVideo.disabled = false;
-            btnGenerateVideo.innerHTML = `<i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Generate Video (Omni Flash)</span>`;
-            lucide.createIcons();
+            btnGenerateVideo.innerHTML = `<i data-lucide="play" style="width: 18px; height: 18px;"></i> <span>Generate Video</span>`;
+            if (window.lucide) lucide.createIcons();
 
-            switchTab("queue");
-            refreshJobs();
-        } catch (e) {
+            switchTab("studio");
+            switchSubTab("mixer");
+            alert("🎉 Berhasil!\n\nVideo telah dibuat dan otomatis dimasukkan ke Antrian Mixer.\n\nAnda dapat memutar video, menambahkan audio, atau menggabungkannya dengan klip lain!");
+        } catch (err) {
+            console.error("Single Video Generation Error:", err);
             btnGenerateVideo.disabled = false;
-            btnGenerateVideo.innerHTML = `<i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Generate Video (Omni Flash)</span>`;
-            lucide.createIcons();
-            alert("Gagal membuat tugas antrian: " + e.message);
+            btnGenerateVideo.innerHTML = `<i data-lucide="play" style="width: 18px; height: 18px;"></i> <span>Generate Video</span>`;
+            if (window.lucide) lucide.createIcons();
+            alert("Gagal memproses Video: " + err.message);
         }
     });
 
     btnGenerateImage.addEventListener("click", async () => {
-        if (!checkSubscriptionAccess("Generate Gambar Produk (Nano Banana)")) return;
+        if (!checkSubscriptionAccess("Generate Gambar")) return;
 
         const prompt = imagePromptInput.value.trim();
         if (!prompt) {
@@ -2204,175 +2152,50 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             return;
         }
 
-        const accId = imageAccountSelect.value;
-        const count = parseInt(document.getElementById("imageCountSelect").value) || 1;
-
         btnGenerateImage.disabled = true;
-        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Mengirim ke Antrian...</span>`;
-        lucide.createIcons();
+        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Gambar...</span>`;
+        if (window.lucide) lucide.createIcons();
 
         try {
-            await window.vidoraData.createGenerateJob({
-                prompt,
-                model: "Nano Banana",
-                ratio: imageRatio,
-                duration: "photo",
-                count: count,
-                googleAccountId: accId || null,
-                hidden: true
-            });
+            let width = 1024;
+            let height = 1024;
+            if (imageRatio === "9:16") {
+                width = 720;
+                height = 1280;
+            } else if (imageRatio === "16:9") {
+                width = 1280;
+                height = 720;
+            }
+
+            const seed = Math.floor(Math.random() * 1000000);
+            const style = selectedImageStyle || "studio";
+            const cleanPrompt = encodeURIComponent(`${prompt}, ${style} photography, high resolution, 8k uhd, photorealistic, masterpiece`);
+            const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+
+            await loadImageFromSrc(imageUrl);
 
             btnGenerateImage.disabled = false;
-            btnGenerateImage.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Gambar Produk</span>`;
-            lucide.createIcons();
+            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar</span>`;
+            if (window.lucide) lucide.createIcons();
 
-            switchTab("queue");
-            refreshJobs();
+            openPlayerModal({
+                url: imageUrl,
+                title: prompt.substring(0, 40) + "...",
+                type: "image"
+            });
         } catch (e) {
             btnGenerateImage.disabled = false;
-            btnGenerateImage.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate Gambar Produk</span>`;
-            lucide.createIcons();
-            alert("Gagal membuat tugas antrian: " + e.message);
+            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar</span>`;
+            if (window.lucide) lucide.createIcons();
+            alert("Gagal memproses gambar: " + e.message);
         }
     });
 
     // =========================================================================
-    // 10. Accounts Management
+    // 10. Accounts Management (Dinonaktifkan - Sistem 100% Bebas Akun Google)
     // =========================================================================
-    const btnAddAccount = document.getElementById("btnAddAccount");
-    const btnCloseAddAccount = document.getElementById("btnCloseAddAccount");
-    const formAddAccount = document.getElementById("formAddAccount");
-    const newAccountEmail = document.getElementById("newAccountEmail");
-    const newAccountLabel = document.getElementById("newAccountLabel");
-
-    btnAddAccount.addEventListener("click", () => {
-        if (!checkSubscriptionAccess("Tambah Akun Google")) return;
-
-        const limit = activeProfile?.max_google_accounts || 5;
-        if (activeProfile?.role !== "superadmin" && userAccounts.length >= limit) {
-            if (confirm(`Batas kuota ${limit} akun Google tercapai!\n\nIngin upgrade ke paket Pro / Agency untuk menambah slot akun?`)) {
-                openCheckoutModal("pro");
-            }
-            return;
-        }
-        modalAddAccount.classList.add("open");
-    });
-
-    btnCloseAddAccount.addEventListener("click", () => {
-        modalAddAccount.classList.remove("open");
-    });
-
-    formAddAccount.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const email = newAccountEmail.value.trim();
-        const label = newAccountLabel.value.trim();
-
-        if (!email) return;
-
-        try {
-            await window.vidoraData.addGoogleAccount(email, label);
-            newAccountEmail.value = "";
-            newAccountLabel.value = "";
-            modalAddAccount.classList.remove("open");
-            await refreshAccounts();
-            alert(`Akun Google ${email} berhasil didaftarkan ke vault!`);
-        } catch (err) {
-            alert(err.message);
-        }
-    });
-
     async function refreshAccounts() {
-        try {
-            userAccounts = (await window.vidoraData.getGoogleAccounts()) || [];
-        } catch (err) {
-            console.warn("getGoogleAccounts fallback:", err);
-            userAccounts = [];
-        }
-
-        // Update dropdowns
-        const updateDropdown = (selectElem) => {
-            if (!selectElem) return;
-            const currentVal = selectElem.value;
-            if (selectElem === videoAccountSelect) {
-                const isHybrid = !currentVal || currentVal === "hybrid";
-                selectElem.innerHTML = `
-                    <option value="hybrid" ${isHybrid ? 'selected' : ''}>⚡ Mode Hybrid (Instan &amp; Gratis - Tanpa Akun Google)</option>
-                    <option value="" ${currentVal === "" ? 'selected' : ''}>-- Rotasi Otomatis Akun Google (${userAccounts.length} Akun) --</option>
-                `;
-            } else {
-                selectElem.innerHTML = `<option value="">-- Rotasi Otomatis Semua Akun Aktif (${userAccounts.length} Akun) --</option>`;
-            }
-            userAccounts.forEach(acc => {
-                const opt = document.createElement("option");
-                opt.value = acc.id;
-                opt.textContent = `${acc.email} (${acc.label || 'Akun'}) - ${acc.credit_status === 'ready' ? 'Siap' : 'Cooldown'}`;
-                if (currentVal === acc.id) opt.selected = true;
-                selectElem.appendChild(opt);
-            });
-            if (currentVal && selectElem.querySelector(`option[value="${currentVal}"]`)) {
-                selectElem.value = currentVal;
-            }
-        };
-
-        updateDropdown(videoAccountSelect);
-        updateDropdown(imageAccountSelect);
-
-        // Update Quota limits bar
-        const limit = activeProfile?.max_google_accounts || 5;
-        if (activeProfile?.role === "superadmin") {
-            accountLimitText.textContent = `${userAccounts.length} / Unlimited (Super Admin)`;
-            accountLimitFill.style.width = "100%";
-            accountLimitFill.style.background = "#fbbf24";
-        } else {
-            accountLimitText.textContent = `${userAccounts.length} / ${limit} Akun`;
-            const pct = Math.min(100, Math.round((userAccounts.length / limit) * 100));
-            accountLimitFill.style.width = `${pct}%`;
-            accountLimitFill.style.background = pct >= 100 ? "#f43f5e" : "var(--primary)";
-        }
-
-        // Render List
-        accountsList.innerHTML = "";
-        if (userAccounts.length === 0) {
-            accountsList.innerHTML = `
-                <div style="text-align: center; padding: 30px; color: var(--text-tertiary);">
-                    <i data-lucide="user-plus" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
-                    <p>Belum ada akun Google terdaftar. Ketuk "+ Tambah Akun Google" di atas.</p>
-                </div>
-            `;
-        } else {
-            userAccounts.forEach(acc => {
-                const item = document.createElement("div");
-                item.className = "account-item";
-                item.innerHTML = `
-                    <div class="account-info">
-                        <div class="account-email">${acc.email}</div>
-                        <div class="account-meta">
-                            <span>${acc.label || 'Google Flow Profile'}</span> &bull; 
-                            <span style="color: ${acc.credit_status === 'ready' ? '#10b981' : '#f59e0b'};">
-                                ${acc.credit_status === 'ready' ? '● Siap Generate' : '● Cooldown'}
-                            </span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn-remove-account" data-id="${acc.id}" title="Hapus Akun">
-                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
-                    </button>
-                `;
-                accountsList.appendChild(item);
-            });
-
-            // Wire delete buttons
-            document.querySelectorAll(".btn-remove-account").forEach(btn => {
-                btn.addEventListener("click", async (e) => {
-                    e.stopPropagation();
-                    const accId = btn.getAttribute("data-id");
-                    if (confirm("Hapus akun Google ini dari VIDORA?")) {
-                        await window.vidoraData.deleteGoogleAccount(accId);
-                        await refreshAccounts();
-                    }
-                });
-            });
-        }
-        lucide.createIcons();
+        return;
     }
 
     // =========================================================================
@@ -3034,9 +2857,6 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
     // Storyboard Event Listeners & Initial State
     if (videoApStyleSelect) {
         videoApStyleSelect.addEventListener("change", updateStoryboardVisibility);
-    }
-    if (videoAccountSelect) {
-        videoAccountSelect.addEventListener("change", updateStoryboardVisibility);
     }
     if (btnStoryboardAutoPrompt) {
         btnStoryboardAutoPrompt.addEventListener("click", async () => {
