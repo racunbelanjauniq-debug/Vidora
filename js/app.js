@@ -1992,12 +1992,27 @@ Requirements for the generated prompt:
         if (source instanceof File) {
             url = URL.createObjectURL(source);
         } else if (typeof source === "string") {
-            url = source;
+            try {
+                if (source.startsWith("http")) {
+                    const resp = await fetch(source, { mode: "cors" });
+                    if (resp.ok) {
+                        const blob = await resp.blob();
+                        url = URL.createObjectURL(blob);
+                    } else {
+                        url = source;
+                    }
+                } else {
+                    url = source;
+                }
+            } catch (_) {
+                url = source;
+            }
         }
 
         // Get metadata & generate thumbnail
         const v = document.createElement("video");
-        v.crossOrigin = "anonymous";
+        v.playsInline = true;
+        v.setAttribute("playsinline", "");
         v.preload = "metadata";
         v.src = url;
 
@@ -2212,6 +2227,9 @@ Requirements for the generated prompt:
             // Audio Context & Destination
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             const audioCtx = new AudioCtx();
+            if (audioCtx.state === "suspended") {
+                try { await audioCtx.resume(); } catch (_) {}
+            }
             const audioDest = audioCtx.createMediaStreamDestination();
 
             // Background Audio if provided
@@ -2220,11 +2238,13 @@ Requirements for the generated prompt:
                 bgmElem = document.createElement("audio");
                 bgmElem.src = URL.createObjectURL(mixerAudioFile);
                 bgmElem.loop = true;
-                const bgmSource = audioCtx.createMediaElementSource(bgmElem);
-                const bgmGain = audioCtx.createGain();
-                bgmGain.gain.value = 0.6; // 60% volume
-                bgmSource.connect(bgmGain).connect(audioDest);
-                bgmElem.play().catch(() => {});
+                try {
+                    const bgmSource = audioCtx.createMediaElementSource(bgmElem);
+                    const bgmGain = audioCtx.createGain();
+                    bgmGain.gain.value = 0.6; // 60% volume
+                    bgmSource.connect(bgmGain).connect(audioDest);
+                    bgmElem.play().catch(() => {});
+                } catch (_) {}
             }
 
             // Stream & MediaRecorder
@@ -2266,6 +2286,8 @@ Requirements for the generated prompt:
                 mixerStatusText.textContent = `Memproses klip ${i + 1} dari ${mixerClips.length}: "${clip.name}"...`;
 
                 const v = document.createElement("video");
+                v.playsInline = true;
+                v.setAttribute("playsinline", "");
                 v.crossOrigin = "anonymous";
                 v.src = clip.url;
                 v.muted = false;
@@ -2279,17 +2301,30 @@ Requirements for the generated prompt:
                 await new Promise(resolve => {
                     v.oncanplay = () => resolve();
                     v.onerror = () => resolve();
-                    setTimeout(resolve, 4000);
+                    setTimeout(resolve, 3000);
                 });
 
-                await v.play().catch(() => {});
+                try {
+                    await v.play();
+                } catch (playErr) {
+                    console.warn("Autoplay with audio blocked, fallback to muted:", playErr);
+                    v.muted = true;
+                    try { await v.play(); } catch (_) {}
+                }
 
-                // Play clip and draw to canvas
+                // Play clip and draw to canvas with wall-clock timer fallback
                 await new Promise(resolve => {
-                    const clipDuration = v.duration || clip.duration || 5;
+                    const clipDuration = (isFinite(v.duration) && v.duration > 0) ? v.duration : (clip.duration || 5);
+                    const clipStartTime = performance.now();
 
                     const renderFrame = () => {
                         if (!isMixing) { resolve(); return; }
+
+                        const elapsedInClip = (performance.now() - clipStartTime) / 1000;
+                        if (v.paused && v.currentTime < clipDuration) {
+                            try { v.currentTime = Math.min(clipDuration, elapsedInClip); } catch (_) {}
+                        }
+                        const curTime = (v.currentTime && v.currentTime > 0) ? v.currentTime : elapsedInClip;
 
                         ctx.fillStyle = "#000000";
                         ctx.fillRect(0, 0, outW, outH);
@@ -2306,23 +2341,25 @@ Requirements for the generated prompt:
                         // Optional fade transition at start/end
                         let alpha = 1;
                         if (transitionType === "fade") {
-                            if (v.currentTime < 0.4) {
-                                alpha = Math.min(1, v.currentTime / 0.4);
-                            } else if (clipDuration - v.currentTime < 0.4) {
-                                alpha = Math.min(1, (clipDuration - v.currentTime) / 0.4);
+                            if (curTime < 0.4) {
+                                alpha = Math.min(1, curTime / 0.4);
+                            } else if (clipDuration - curTime < 0.4) {
+                                alpha = Math.min(1, (clipDuration - curTime) / 0.4);
                             }
                         }
                         ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-                        ctx.drawImage(v, dx, dy, dw, dh);
+                        try {
+                            ctx.drawImage(v, dx, dy, dw, dh);
+                        } catch (_) {}
                         ctx.globalAlpha = 1.0;
 
                         // Progress
-                        const currentGlobal = elapsedTotal + v.currentTime;
+                        const currentGlobal = elapsedTotal + curTime;
                         const pct = Math.min(99, Math.round((currentGlobal / totalDuration) * 100));
                         mixerProgressPct.textContent = `${pct}%`;
                         mixerProgressFill.style.width = `${pct}%`;
 
-                        if (v.ended || v.currentTime >= clipDuration) {
+                        if (v.ended || curTime >= clipDuration || elapsedInClip >= clipDuration + 0.5) {
                             elapsedTotal += clipDuration;
                             resolve();
                         } else {
