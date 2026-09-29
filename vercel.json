@@ -23,5 +23,11 @@
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     }
+  ],
+  "redirects": [
+    { "source": "/app.html", "destination": "/app", "permanent": true },
+    { "source": "/login.html", "destination": "/login", "permanent": true },
+    { "source": "/admin.html", "destination": "/admin", "permanent": true },
+    { "source": "/studio", "destination": "/app", "permanent": true }
   ]
 }
