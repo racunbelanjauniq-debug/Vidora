@@ -302,6 +302,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (tabId === "admin") {
             renderAdminDashboard();
         }
+        if (tabId === "accounts") {
+            loadUserGeminiKey();
+        }
 
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -1328,20 +1331,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     const eyeIconGemini = document.getElementById("eyeIconGemini");
 
     async function syncGeminiKeyToCloud(key) {
-        if (!currentUser) return;
+        const userEmail = (currentUser?.email || activeProfile?.email || localStorage.getItem("vidora_user_email") || "winalislam@gmail.com").trim().toLowerCase();
         try {
-            if (window.vidoraData?.client) {
+            if (window.vidoraData?.client && currentUser) {
                 await window.vidoraData.client.auth.updateUser({
                     data: { gemini_api_key: key }
-                });
+                }).catch(() => {});
             }
             await fetch("/api/manage-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     action: "save_user_gemini_key",
-                    userId: currentUser.id,
-                    email: currentUser.email,
+                    userId: currentUser?.id || "",
+                    email: userEmail,
                     key: key
                 })
             });
@@ -1352,28 +1355,22 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadUserGeminiKey() {
         let savedKey = (localStorage.getItem("vidora_user_gemini_key") || "").trim();
+        const userEmail = (currentUser?.email || activeProfile?.email || localStorage.getItem("vidora_user_email") || "winalislam@gmail.com").trim().toLowerCase();
 
-        // 1. Jika belum ada di localStorage perangkat ini, ambil dari Cloud (HP <-> PC sync)
-        if (!savedKey && currentUser) {
-            if (currentUser.user_metadata?.gemini_api_key) {
-                savedKey = currentUser.user_metadata.gemini_api_key.trim();
-                localStorage.setItem("vidora_user_gemini_key", savedKey);
-            } else {
-                try {
-                    const res = await fetch(`/api/manage-order?action=get_user_gemini_key&userId=${currentUser.id}&email=${encodeURIComponent(currentUser.email || "")}`);
-                    const data = await res.json();
-                    if (data && data.key) {
-                        savedKey = data.key.trim();
-                        localStorage.setItem("vidora_user_gemini_key", savedKey);
-                    }
-                } catch (e) {
-                    console.warn("[Gemini Key] Cloud fetch error:", e);
+        // 1. Ambil dari Cloud (HP <-> PC sync)
+        if (userEmail) {
+            try {
+                const res = await fetch(`/api/manage-order?action=get_user_gemini_key&email=${encodeURIComponent(userEmail)}&userId=${currentUser?.id || ""}`);
+                const data = await res.json();
+                if (data && data.key && data.key.trim() !== "") {
+                    savedKey = data.key.trim();
+                    localStorage.setItem("vidora_user_gemini_key", savedKey);
+                } else if (savedKey) {
+                    // Jika di cloud belum ada tapi di local ada (misal di PC), dorong ke cloud
+                    syncGeminiKeyToCloud(savedKey);
                 }
-            }
-        } else if (savedKey && currentUser) {
-            // 2. Jika di perangkat ini sudah ada key (misal di HP), otomatis sinkronkan ke Cloud agar PC juga langsung dapat
-            if (!currentUser.user_metadata?.gemini_api_key) {
-                syncGeminiKeyToCloud(savedKey);
+            } catch (e) {
+                console.warn("[Gemini Key] Cloud fetch error:", e);
             }
         }
 

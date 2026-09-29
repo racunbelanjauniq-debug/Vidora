@@ -6,8 +6,44 @@
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
+const fs = require('fs');
+const path = require('path');
+const TMP_GEMINI_FILE = '/tmp/gemini_keys.json';
+
+// In-memory fallback dictionary with initial seed from user's active key
+global.__VIDORA_GEMINI_KEYS = global.__VIDORA_GEMINI_KEYS || {
+  "winalislam@gmail.com": "AIzaSyDe5r_8aoYCBcjZ8uzyXCJURp-xG_fAMCo"
+};
+
+function getLocalGeminiKey(email) {
+  const clean = (email || '').trim().toLowerCase();
+  try {
+    if (fs.existsSync(TMP_GEMINI_FILE)) {
+      const data = JSON.parse(fs.readFileSync(TMP_GEMINI_FILE, 'utf-8'));
+      if (data && data[clean]) return data[clean];
+    }
+  } catch {}
+  return (global.__VIDORA_GEMINI_KEYS && global.__VIDORA_GEMINI_KEYS[clean]) || '';
+}
+
+function saveLocalGeminiKey(email, key) {
+  const clean = (email || '').trim().toLowerCase();
+  if (!clean) return;
+  global.__VIDORA_GEMINI_KEYS = global.__VIDORA_GEMINI_KEYS || {};
+  global.__VIDORA_GEMINI_KEYS[clean] = key;
+  try {
+    let existing = {};
+    if (fs.existsSync(TMP_GEMINI_FILE)) {
+      existing = JSON.parse(fs.readFileSync(TMP_GEMINI_FILE, 'utf-8')) || {};
+    }
+    existing[clean] = key;
+    fs.writeFileSync(TMP_GEMINI_FILE, JSON.stringify(existing));
+  } catch {}
+}
+
 async function parseBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
+  if (req.method === 'GET' || req.method === 'HEAD' || !req.on || typeof req.on !== 'function') return {};
   return new Promise((resolve) => {
     let data = '';
     req.on('data', chunk => { data += chunk; });
@@ -449,13 +485,21 @@ module.exports = async function handler(req, res) {
     // ACTION: SAVE USER GEMINI KEY (Cross-Device Sync)
     // ========================================
     if (action === 'save_user_gemini_key') {
+      const cleanEmail = (body.email || query.email || '').trim().toLowerCase();
       const targetId = userId || body.id;
-      const targetEmail = body.email;
-      const geminiKey = body.key || body.gemini_key || body.gemini_api_key || '';
-      if (!targetId && !targetEmail) return res.status(400).json({ error: 'user_id atau email wajib diisi' });
+      const geminiKey = (body.key || body.gemini_key || body.gemini_api_key || query.key || '').trim();
 
+      if (!cleanEmail && !targetId) {
+        return res.status(400).json({ error: 'email atau user_id wajib diisi' });
+      }
+
+      // 1. Simpan ke local cache & /tmp agar langsung terbaca di serverless
+      if (cleanEmail) {
+        saveLocalGeminiKey(cleanEmail, geminiKey);
+      }
+
+      // 2. Simpan ke Supabase jika tersedia
       if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        // 1. Simpan di auth user metadata via admin API jika ada targetId
         if (targetId) {
           try {
             await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${targetId}`, {
@@ -465,82 +509,82 @@ module.exports = async function handler(req, res) {
                 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                user_metadata: { gemini_api_key: geminiKey }
-              })
+              body: JSON.stringify({ user_metadata: { gemini_api_key: geminiKey } })
             });
           } catch (e) {
-            console.warn('[Manage Order] update user_metadata error:', e.message);
+            console.warn('[Manage Order] auth metadata update error:', e.message);
           }
         }
 
-        // 2. Simpan di public.system_settings sebagai cadangan permanen
-        try {
-          const settingKey = `gemini_key_${targetId || (targetEmail ? targetEmail.replace(/[^a-zA-Z0-9]/g, '_') : '')}`;
-          const settingVal = JSON.stringify({ key: geminiKey, email: targetEmail, updated_at: new Date().toISOString() });
-          
-          await fetch(`${SUPABASE_URL}/rest/v1/system_settings?key=eq.${encodeURIComponent(settingKey)}`, {
-            method: 'PATCH',
-            headers: {
-              'apikey': SUPABASE_SERVICE_ROLE_KEY,
-              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ value: settingVal, updated_at: new Date().toISOString() })
-          }).then(async (r) => {
-            if (r.status === 404 || (await r.clone().text()).includes('[]')) {
-              await fetch(`${SUPABASE_URL}/rest/v1/system_settings`, {
-                method: 'POST',
-                headers: {
-                  'apikey': SUPABASE_SERVICE_ROLE_KEY,
-                  'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-                  'Content-Type': 'application/json',
-                  'Prefer': 'resolution=merge-duplicates'
-                },
-                body: JSON.stringify({ key: settingKey, value: settingVal, updated_at: new Date().toISOString() })
-              });
-            }
-          });
-        } catch (e) {
-          console.warn('[Manage Order] save system_settings error:', e.message);
+        if (cleanEmail) {
+          try {
+            const settingKey = `gemini_key_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            const settingVal = { key: geminiKey, email: cleanEmail, updated_at: new Date().toISOString() };
+            
+            await fetch(`${SUPABASE_URL}/rest/v1/system_settings?key=eq.${encodeURIComponent(settingKey)}`, {
+              method: 'PATCH',
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ value: settingVal, updated_at: new Date().toISOString() })
+            }).then(async (r) => {
+              if (r.status === 404 || (await r.clone().text()).includes('[]')) {
+                await fetch(`${SUPABASE_URL}/rest/v1/system_settings`, {
+                  method: 'POST',
+                  headers: {
+                    'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'resolution=merge-duplicates'
+                  },
+                  body: JSON.stringify({ key: settingKey, value: settingVal, updated_at: new Date().toISOString() })
+                });
+              }
+            });
+          } catch (e) {
+            console.warn('[Manage Order] system_settings save error:', e.message);
+          }
         }
       }
 
-      return res.status(200).json({ success: true, message: 'API Key Gemini berhasil disinkronkan' });
+      return res.status(200).json({ success: true, message: 'API Key Gemini berhasil disinkronkan', email: cleanEmail });
     }
 
     // ========================================
     // ACTION: GET USER GEMINI KEY (Cross-Device Sync)
     // ========================================
     if (action === 'get_user_gemini_key') {
+      const cleanEmail = (query.email || body.email || '').trim().toLowerCase();
       const targetId = userId || query.id;
-      const targetEmail = query.email || body.email;
-      if (!targetId && !targetEmail) return res.status(400).json({ error: 'user_id atau email wajib diisi' });
 
-      let foundKey = '';
+      // 1. Coba ambil dari local memory/tmp dulu
+      let foundKey = getLocalGeminiKey(cleanEmail);
 
-      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
-        // 1. Coba ambil dari system_settings
-        try {
-          const settingKey = `gemini_key_${targetId || (targetEmail ? targetEmail.replace(/[^a-zA-Z0-9]/g, '_') : '')}`;
-          const sRes = await fetch(`${SUPABASE_URL}/rest/v1/system_settings?key=eq.${encodeURIComponent(settingKey)}&select=value`, {
-            headers: {
-              'apikey': SUPABASE_SERVICE_ROLE_KEY,
-              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+      // 2. Jika belum ada, coba cari di Supabase
+      if (!foundKey && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        if (cleanEmail) {
+          try {
+            const settingKey = `gemini_key_${cleanEmail.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            const sRes = await fetch(`${SUPABASE_URL}/rest/v1/system_settings?key=eq.${encodeURIComponent(settingKey)}&select=value`, {
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+              }
+            });
+            if (sRes.ok) {
+              const rows = await sRes.json();
+              if (rows && rows.length > 0 && rows[0].value) {
+                const val = typeof rows[0].value === 'string' ? JSON.parse(rows[0].value) : rows[0].value;
+                if (val && val.key) foundKey = val.key;
+              }
             }
-          });
-          if (sRes.ok) {
-            const rows = await sRes.json();
-            if (rows && rows.length > 0 && rows[0].value) {
-              const parsed = typeof rows[0].value === 'string' ? JSON.parse(rows[0].value) : rows[0].value;
-              if (parsed && parsed.key) foundKey = parsed.key;
-            }
+          } catch (e) {
+            console.warn('[Manage Order] system_settings get error:', e.message);
           }
-        } catch (e) {
-          console.warn('[Manage Order] get system_settings error:', e.message);
         }
 
-        // 2. Jika belum ketemu, coba cek auth.users
         if (!foundKey && targetId) {
           try {
             const uRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${targetId}`, {
@@ -556,12 +600,16 @@ module.exports = async function handler(req, res) {
               }
             }
           } catch (e) {
-            console.warn('[Manage Order] get auth user error:', e.message);
+            console.warn('[Manage Order] auth user get error:', e.message);
           }
         }
       }
 
-      return res.status(200).json({ success: true, key: foundKey });
+      if (foundKey && cleanEmail) {
+        saveLocalGeminiKey(cleanEmail, foundKey);
+      }
+
+      return res.status(200).json({ success: true, key: foundKey, email: cleanEmail });
     }
 
     return res.status(400).json({ error: 'Aksi tidak valid' });
