@@ -42,6 +42,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnVideoAutoPrompt = document.getElementById("btnVideoAutoPrompt");
     const btnGenerateVideo = document.getElementById("btnGenerateVideo");
 
+    // Elements - Storyboard 3-Scene & Hybrid Mode
+    const videoApStyleSelect = document.getElementById("videoApStyleSelect");
+    const wrapSinglePrompt = document.getElementById("wrapSinglePrompt");
+    const wrapStoryboardPrompt = document.getElementById("wrapStoryboardPrompt");
+    const btnStoryboardAutoPrompt = document.getElementById("btnStoryboardAutoPrompt");
+    const sbScene1 = document.getElementById("sbScene1");
+    const sbScene2 = document.getElementById("sbScene2");
+    const sbScene3 = document.getElementById("sbScene3");
+    const sbSeoBox = document.getElementById("sbSeoBox");
+    const sbSeoText = document.getElementById("sbSeoText");
+    const btnCopySbSeo = document.getElementById("btnCopySbSeo");
+
     // Elements - Image Generator
     const imageDropzone = document.getElementById("imageDropzone");
     const imageFileInput = document.getElementById("imageFileInput");
@@ -1490,10 +1502,407 @@ Requirements for the generated prompt:
     }
 
     // =========================================================================
+    // 7.5 Storyboard 3-Scene & Hybrid Mode Engine
+    // =========================================================================
+    function updateStoryboardVisibility() {
+        const isStoryboard = videoApStyleSelect?.value === "storyboard";
+        if (wrapSinglePrompt && wrapStoryboardPrompt) {
+            wrapSinglePrompt.style.display = isStoryboard ? "none" : "block";
+            wrapStoryboardPrompt.style.display = isStoryboard ? "block" : "none";
+        }
+        if (btnGenerateVideo) {
+            if (isStoryboard) {
+                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate 3 Adegan Storyboard (Mode Hybrid)</span>`;
+            } else {
+                btnGenerateVideo.innerHTML = `<i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Generate Video (Omni Flash)</span>`;
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+
+    async function generateStoryboard3ScenesAndSeo({ platform = "tiktok", ctaType = "auto", customCta = "", base64Image = null, userPromptHint = "" }) {
+        const platformDefaults = {
+            tiktok: {
+                scene1: "High-impact visual hook in first 2 seconds, rapid dynamic push-in onto featured subject, trending vibrant TikTok aesthetic, 4k 60fps.",
+                scene2: "Extreme macro close-up showcasing product texture, smooth interaction and problem-solving demonstration, soft studio lighting.",
+                scene3: "Energetic commercial hero display, shopping basket and discount ambiance, high-conversion visual framing pointing to yellow cart.",
+                caption: "🔥 Gak nyangka nemu yang sebagus ini! Kualitasnya beneran premium dan bikin nagih banget 🤩✨ Cocok buat yang mau upgrade penampilan tanpa bikin kantong jebol.\n\n👇 Cek keranjang kuning di kiri bawah sekarang sebelum kehabisan promo hari ini!",
+                hashtags: "#fyp #racuntiktok #tiktokshopindonesia #viralindonesia #rekomendasiproduk #racunbelanja #tiktokmademebuyit"
+            },
+            tiktok_aff: {
+                scene1: "Unboxing curiosity hook, hands opening package with instant satisfying reveal, bright eye-catching TikTok Shop lighting.",
+                scene2: "Step-by-step real usage demonstration, clear before-and-after texture comparison, authentic UGC perspective.",
+                scene3: "Direct call-to-action hero angle with urgent discount badge, pointing finger gesture toward bottom-left yellow basket.",
+                caption: "🚨 STOP SCROLL DULU! Ini dia yang lagi viral banget dan sering sold out! 😱 Mumpung lagi ready stock dan dapet gratis ongkir, langsung checkout sekarang ya!\n\n🛒 Klik keranjang kuning di bawah sebelum harga kembali normal!",
+                hashtags: "#tiktokaffiliate #racuntiktok #racunbelanja #affiliatemarketing #tiktokshopid #fypシ゚viral"
+            },
+            shopee: {
+                scene1: "Flashy dynamic commercial hook, vibrant colors, Shopee orange aesthetic with immediate product feature highlight.",
+                scene2: "Detailed tactile demonstration, macro shot of craftsmanship, smooth rotating view revealing all angles.",
+                scene3: "Shopee live-style closing shot, voucher discount banner ambiance, strong purchase callout.",
+                caption: "✨ Yang dari kemarin nanyain spill barang ini, akhirnya restock juga! 😍 Kualitas juara dan lagi ada flash sale potongan gede banget!\n\n🛍️ Buruan klik keranjang oranye sekarang mumpung voucher diskon masih aktif!",
+                hashtags: "#racunshopee #shopeehaul #spillracunshopee #shopeevideo #racunshopeecheck #shopeeid"
+            },
+            instagram: {
+                scene1: "Cinematic moody slow push-in, luxury aesthetic, minimalist modern interior background, warm volumetric lighting.",
+                scene2: "Elegant aesthetic product interaction, subtle camera panning, artistic depth of field, poetic indie film color grade.",
+                scene3: "Minimalist hero still with soft rim glow, sophisticated typography headroom, calm aspirational atmosphere.",
+                caption: "Elegance in simplicity. Sentuhan kecil yang bikin rutinitas harian jadi jauh lebih bermakna ✨🤍\n\n📌 Simpan reels ini untuk inspirasi kamu & tap link di bio untuk informasi pemesanan.",
+                hashtags: "#reelsindonesia #aestheticlifestyle #dailyinspiration #minimalist #lifestylegoals #explorepage #aesthetic"
+            },
+            youtube: {
+                scene1: "High-contrast visual hook with dramatic lighting, bold framing capturing curiosity in the first second.",
+                scene2: "Fast-paced comprehensive product breakdown, showcasing key features and practical performance.",
+                scene3: "Crisp closing shot with branded endcard space, dynamic subscribe and link in description visual cue.",
+                caption: "Wajib tahu ini sebelum kehabisan! Rahasia kenapa produk ini viral dan dapat ribuan review positif 😱🔥\n\n👉 Cek info lengkap dan link promo di kolom komentar / deskripsi video!",
+                hashtags: "#shorts #youtubeshorts #trending #review #viralindonesia #gadget #rekomendasi"
+            }
+        };
+
+        const defaultData = platformDefaults[platform] || platformDefaults.tiktok;
+        const apiKey = getUserGeminiKey();
+
+        // 1. If Gemini API key is available, call Gemini 1.5 Flash Vision
+        if (apiKey) {
+            try {
+                let cleanB64 = "";
+                let mimeType = "image/jpeg";
+                if (base64Image) {
+                    if (base64Image.includes(";base64,")) {
+                        const parts = base64Image.split(";base64,");
+                        mimeType = parts[0].replace("data:", "");
+                        cleanB64 = parts[1];
+                    } else {
+                        cleanB64 = base64Image;
+                    }
+                }
+
+                const systemInstruction = `You are VIDORA Storyboard Director & Viral Copywriter.
+Create a 3-Scene Video Storyboard and Platform SEO Copywriting.
+Target Platform: ${platform}
+CTA Requirement: ${ctaType} ${customCta ? `("${customCta}")` : ""}
+User Description: ${userPromptHint || "Featured Commercial Product"}
+
+You MUST return STRICTLY a valid JSON object (no markdown code fence, no text outside JSON):
+{
+  "scene1": "Adegan 1 Hook (0-3s): Vivid visual prompt in English for AI video generation...",
+  "scene2": "Adegan 2 Demo & Detail (3-9s): Detailed close-up visual prompt in English...",
+  "scene3": "Adegan 3 CTA & Closing (9-15s): High-converting closing visual prompt in English...",
+  "caption": "Persuasive viral Indonesian copywriting caption with natural emojis, problem-solution hook, and strong CTA...",
+  "hashtags": "8-10 trending viral SEO hashtags starting with #"
+}`;
+
+                const parts = [{ text: systemInstruction }];
+                if (cleanB64) {
+                    parts.push({
+                        inline_data: {
+                            mime_type: mimeType,
+                            data: cleanB64
+                        }
+                    });
+                }
+
+                const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{ parts }],
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+                    })
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+                    rawText = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        if (parsed && (parsed.scene1 || parsed.caption)) {
+                            return {
+                                scene1: parsed.scene1 || defaultData.scene1,
+                                scene2: parsed.scene2 || defaultData.scene2,
+                                scene3: parsed.scene3 || defaultData.scene3,
+                                caption: parsed.caption || defaultData.caption,
+                                hashtags: parsed.hashtags || defaultData.hashtags
+                            };
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("[Storyboard Gemini fallback]", err);
+            }
+        }
+
+        // 2. Fallback to Pollinations AI text (Keyless, 100% Free)
+        try {
+            const queryPrompt = `Create a 3-scene video storyboard and Indonesian viral caption with SEO hashtags for ${platform}. Product/Subject: ${userPromptHint || "Commercial Product"}. Output valid JSON only: {"scene1":"Hook visual in English","scene2":"Product demo visual in English","scene3":"CTA visual in English","caption":"Indonesian viral caption","hashtags":"#tag1 #tag2"}`;
+            const pollUrl = `https://text.pollinations.ai/${encodeURIComponent(queryPrompt)}`;
+            const pollResp = await fetch(pollUrl);
+            if (pollResp.ok) {
+                let pollText = await pollResp.text();
+                pollText = pollText.replace(/```json/gi, "").replace(/```/g, "").trim();
+                const jsonMatch = pollText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    if (parsed && (parsed.scene1 || parsed.caption)) {
+                        return {
+                            scene1: parsed.scene1 || defaultData.scene1,
+                            scene2: parsed.scene2 || defaultData.scene2,
+                            scene3: parsed.scene3 || defaultData.scene3,
+                            caption: parsed.caption || defaultData.caption,
+                            hashtags: parsed.hashtags || defaultData.hashtags
+                        };
+                    }
+                }
+            }
+        } catch (pollErr) {
+            console.warn("[Storyboard Pollinations fallback]", pollErr);
+        }
+
+        return defaultData;
+    }
+
+    async function triggerStoryboardAutoPrompt() {
+        if (!checkSubscriptionAccess("Auto Prompt Video")) return;
+
+        const btn = btnStoryboardAutoPrompt || btnVideoAutoPrompt;
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader" class="spin" style="width:13px;height:13px;"></i> <span>Merancang 3 Adegan & SEO...</span>`;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            const platform = document.getElementById("videoPlatformSelect")?.value || "tiktok";
+            const ctaType = document.getElementById("videoCtaSelect")?.value || "auto";
+            const customCta = document.getElementById("videoCustomCta")?.value.trim() || "";
+            const userPromptHint = (videoPromptInput?.value || sbScene1?.value || "").trim();
+
+            const result = await generateStoryboard3ScenesAndSeo({
+                platform,
+                ctaType,
+                customCta,
+                base64Image: uploadedProductImage,
+                userPromptHint
+            });
+
+            if (result) {
+                if (sbScene1) sbScene1.value = result.scene1 || "";
+                if (sbScene2) sbScene2.value = result.scene2 || "";
+                if (sbScene3) sbScene3.value = result.scene3 || "";
+                if (sbSeoText) {
+                    sbSeoText.value = `${result.caption || ""}\n\n${result.hashtags || ""}`.trim();
+                }
+            }
+        } catch (err) {
+            console.error("Storyboard prompt error:", err);
+            alert("Gagal merancang storyboard: " + err.message);
+        } finally {
+            if (btnStoryboardAutoPrompt) {
+                btnStoryboardAutoPrompt.disabled = false;
+                btnStoryboardAutoPrompt.innerHTML = `<i data-lucide="sparkles" style="width:13px;height:13px;"></i> <span>Auto 3 Scene & SEO AI</span>`;
+            }
+            if (btnVideoAutoPrompt) {
+                btnVideoAutoPrompt.disabled = false;
+                btnVideoAutoPrompt.innerHTML = `<i data-lucide="sparkles" style="width:13px;height:13px;"></i> <span>Auto Prompt AI</span>`;
+            }
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+
+    function loadImageFromSrc(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Gagal mengunduh gambar"));
+            img.src = src;
+        });
+    }
+
+    function renderImageToCinematicVideoBlob({ img, durationSec = 3.5, motionType = "hook_push", width = 720, height = 1280, fps = 30 }) {
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+
+            let mimeType = "video/webm;codecs=vp9";
+            if (typeof MediaRecorder === "undefined") {
+                return reject(new Error("Browser Anda tidak mendukung MediaRecorder untuk mode Hybrid"));
+            }
+            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/webm;codecs=vp8";
+            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/webm";
+            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = "video/mp4";
+
+            const stream = canvas.captureStream(fps);
+            let recorder;
+            try {
+                recorder = new MediaRecorder(stream, {
+                    mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : undefined,
+                    videoBitsPerSecond: 3000000
+                });
+            } catch (_) {
+                recorder = new MediaRecorder(stream);
+            }
+
+            const chunks = [];
+            recorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) chunks.push(e.data);
+            };
+            recorder.onstop = () => {
+                const blob = new Blob(chunks, { type: recorder.mimeType || "video/webm" });
+                resolve(blob);
+            };
+            recorder.onerror = (e) => reject(e);
+
+            recorder.start();
+
+            const startTime = performance.now();
+            const totalMs = durationSec * 1000;
+
+            function animate(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / totalMs);
+
+                let scale = 1.0;
+                let panX = 0;
+                let panY = 0;
+
+                if (motionType === "hook_push") {
+                    const ease = Math.pow(progress, 0.45);
+                    scale = 1.0 + ease * 0.18;
+                    panY = Math.sin(progress * Math.PI) * 12;
+                } else if (motionType === "pan_macro") {
+                    scale = 1.12 + progress * 0.12;
+                    panX = (progress - 0.5) * 35;
+                    panY = (progress - 0.5) * 25;
+                } else {
+                    scale = 1.20 - progress * 0.15;
+                    panY = (progress - 0.5) * 15;
+                }
+
+                ctx.save();
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.translate(width / 2, height / 2);
+                ctx.scale(scale, scale);
+                ctx.translate(panX, panY);
+
+                const imgW = img.naturalWidth || img.width || width;
+                const imgH = img.naturalHeight || img.height || height;
+                const imgAspect = imgW / imgH;
+                const canvasAspect = width / height;
+
+                let drawW, drawH;
+                if (imgAspect > canvasAspect) {
+                    drawH = height;
+                    drawW = height * imgAspect;
+                } else {
+                    drawW = width;
+                    drawH = width / imgAspect;
+                }
+
+                ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+
+                if (motionType === "hook_push" && progress < 0.25) {
+                    const flash = (1 - (progress / 0.25)) * 0.22;
+                    ctx.fillStyle = `rgba(255, 255, 255, ${flash})`;
+                    ctx.fillRect(-drawW, -drawH, drawW * 2, drawH * 2);
+                } else if (motionType === "cta_pull") {
+                    const grad = ctx.createLinearGradient(0, height * 0.15, 0, height * 0.5);
+                    grad.addColorStop(0, "rgba(245, 158, 11, 0)");
+                    grad.addColorStop(1, "rgba(245, 158, 11, 0.12)");
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(-drawW, -drawH, drawW * 2, drawH * 2);
+                }
+
+                ctx.restore();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    setTimeout(() => {
+                        if (recorder.state !== "inactive") {
+                            try { recorder.stop(); } catch (_) {}
+                        }
+                    }, 120);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        });
+    }
+
+    async function generateHybridStoryboardClips({ scene1, scene2, scene3, targetRatio = "9:16", onProgress }) {
+        const sceneDefs = [
+            { text: scene1, name: "Scene 1: Hook (0-3s)", motion: "hook_push", duration: 3.5 },
+            { text: scene2, name: "Scene 2: Demo Produk (3-9s)", motion: "pan_macro", duration: 4.5 },
+            { text: scene3, name: "Scene 3: Closing & CTA (9-15s)", motion: "cta_pull", duration: 3.5 }
+        ];
+
+        let width = 720;
+        let height = 1280;
+        if (targetRatio === "16:9") {
+            width = 1280;
+            height = 720;
+        } else if (targetRatio === "1:1") {
+            width = 720;
+            height = 720;
+        }
+
+        for (let i = 0; i < sceneDefs.length; i++) {
+            const sc = sceneDefs[i];
+            if (onProgress) onProgress(`Adegan ${i + 1}/3: Menyiapkan visual ${sc.name}...`);
+
+            let imgElement = null;
+
+            if (i === 1 && uploadedProductImage) {
+                imgElement = await loadImageFromSrc(uploadedProductImage);
+            } else {
+                try {
+                    const seed = Math.floor(Math.random() * 1000000);
+                    const prompt = encodeURIComponent(`${sc.text}, cinematic lighting, photorealistic, 4k 60fps, high detail`);
+                    const imgUrl = `https://image.pollinations.ai/prompt/${prompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+                    imgElement = await loadImageFromSrc(imgUrl);
+                } catch (e) {
+                    console.warn(`Fallback image for scene ${i + 1}:`, e);
+                    if (uploadedProductImage) {
+                        imgElement = await loadImageFromSrc(uploadedProductImage);
+                    } else {
+                        throw new Error(`Visual Adegan ${i + 1} tidak dapat dimuat: ${e.message}`);
+                    }
+                }
+            }
+
+            if (onProgress) onProgress(`Adegan ${i + 1}/3: Merender gerakan sinematik (${sc.motion})...`);
+
+            const blob = await renderImageToCinematicVideoBlob({
+                img: imgElement,
+                durationSec: sc.duration,
+                motionType: sc.motion,
+                width,
+                height,
+                fps: 30
+            });
+
+            await addClipToMixer(blob, sc.name);
+        }
+    }
+
+    // =========================================================================
     // 8. Auto Prompt Generation Handlers
     // =========================================================================
     btnVideoAutoPrompt.addEventListener("click", async () => {
         if (!checkSubscriptionAccess("Auto Prompt Video")) return;
+
+        const style = document.getElementById("videoApStyleSelect")?.value || "musik_playlist";
+        if (style === "storyboard") {
+            await triggerStoryboardAutoPrompt();
+            return;
+        }
 
         if (!uploadedProductImage) {
             alert("Silakan upload foto produk terlebih dahulu di kotak upload di atas!");
@@ -1506,7 +1915,6 @@ Requirements for the generated prompt:
         lucide.createIcons();
 
         const platform = document.getElementById("videoPlatformSelect")?.value || "youtube_long";
-        const style = document.getElementById("videoApStyleSelect")?.value || "musik_playlist";
         const ctaType = document.getElementById("videoCtaSelect")?.value || "auto";
         const customCta = document.getElementById("videoCustomCta")?.value.trim() || "";
 
@@ -1611,6 +2019,51 @@ Requirements for the generated prompt:
     // =========================================================================
     btnGenerateVideo.addEventListener("click", async () => {
         if (!checkSubscriptionAccess("Generate Video AI (Omni Flash)")) return;
+
+        // Storyboard Mode Hybrid Generation (100% Free, Tanpa Flow / Veo / Akun Google)
+        if (videoApStyleSelect?.value === "storyboard") {
+            const sc1 = (sbScene1?.value || "").trim();
+            const sc2 = (sbScene2?.value || "").trim();
+            const sc3 = (sbScene3?.value || "").trim();
+
+            if (!sc1 && !sc2 && !sc3) {
+                alert("Harap isi deskripsi adegan atau klik tombol 'Auto 3 Scene & SEO AI' terlebih dahulu!");
+                if (sbScene1) sbScene1.focus();
+                return;
+            }
+
+            btnGenerateVideo.disabled = true;
+            btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Storyboard Hybrid...</span>`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                await generateHybridStoryboardClips({
+                    scene1: sc1 || "Dynamic eye-catching visual hook, cinematic lighting, 4k",
+                    scene2: sc2 || "Close-up product demonstration, showing textures and premium detail",
+                    scene3: sc3 || "Call to action scene, premium product showcase with warm commercial glow",
+                    targetRatio: videoRatio || "9:16",
+                    onProgress: (msg) => {
+                        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span style="font-size:12px;">${msg}</span>`;
+                        if (window.lucide) lucide.createIcons();
+                    }
+                });
+
+                btnGenerateVideo.disabled = false;
+                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate 3 Adegan Storyboard (Mode Hybrid)</span>`;
+                if (window.lucide) lucide.createIcons();
+
+                switchTab("studio");
+                switchSubTab("mixer");
+                alert("🎉 Berhasil!\n\n3 Adegan Storyboard telah dibuat dan otomatis dimasukkan ke Antrian Mixer.\n\nSemua klip sudah tersusun berurutan (Scene 1, 2, 3). Anda bisa menambahkan musik latar, memilih transisi, dan klik 'Gabungkan Semua Klip Menjadi 1 Video'!");
+            } catch (err) {
+                console.error("Hybrid Storyboard Generation Error:", err);
+                btnGenerateVideo.disabled = false;
+                btnGenerateVideo.innerHTML = `<i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> <span>Generate 3 Adegan Storyboard (Mode Hybrid)</span>`;
+                if (window.lucide) lucide.createIcons();
+                alert("Gagal memproses Storyboard Hybrid: " + err.message);
+            }
+            return;
+        }
 
         const prompt = videoPromptInput.value.trim();
         if (!prompt) {
@@ -1989,7 +2442,7 @@ Requirements for the generated prompt:
         const id = "clip_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
         let url = "";
 
-        if (source instanceof File) {
+        if (source instanceof File || source instanceof Blob) {
             url = URL.createObjectURL(source);
         } else if (typeof source === "string") {
             try {
@@ -2474,5 +2927,38 @@ Requirements for the generated prompt:
         switchTab("studio");
         switchSubTab("mixer");
     }
+
+    // Storyboard Event Listeners & Initial State
+    if (videoApStyleSelect) {
+        videoApStyleSelect.addEventListener("change", updateStoryboardVisibility);
+    }
+    if (btnStoryboardAutoPrompt) {
+        btnStoryboardAutoPrompt.addEventListener("click", async () => {
+            await triggerStoryboardAutoPrompt();
+        });
+    }
+    if (btnCopySbSeo) {
+        btnCopySbSeo.addEventListener("click", () => {
+            const text = sbSeoText?.value || "";
+            if (!text.trim()) {
+                alert("Belum ada caption & hashtag. Klik 'Auto 3 Scene & SEO AI' terlebih dahulu!");
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = btnCopySbSeo.innerHTML;
+                btnCopySbSeo.innerHTML = `<i data-lucide="check" style="width:12px;height:12px;"></i> <span>Tersalin!</span>`;
+                if (window.lucide) lucide.createIcons();
+                setTimeout(() => {
+                    btnCopySbSeo.innerHTML = originalHTML;
+                    if (window.lucide) lucide.createIcons();
+                }, 2000);
+            }).catch(() => {
+                sbSeoText.select();
+                document.execCommand("copy");
+                alert("Caption & Hashtags berhasil disalin!");
+            });
+        });
+    }
+    updateStoryboardVisibility();
 });
 
