@@ -585,12 +585,15 @@
                     <!-- Upload / Add Clips Area -->
                     <div class="form-group">
                         <label class="form-label">Tambahkan Klip Video:</label>
-                        <div class="dropzone" id="mixerDropzone" style="min-height: 110px; border: 2px dashed rgba(236,72,153,0.35);">
-                            <i data-lucide="folder-plus" style="width: 32px; height: 32px; color: #f472b6; margin-bottom: 8px;"></i>
-                            <div style="font-size: 13px; font-weight: 600; color: white;">Ketuk untuk Tambah Video (Bisa Pilih Banyak)</div>
-                            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Mendukung format MP4, WebM (dari Galeri atau File Lokal)</div>
-                            <input type="file" id="mixerFileInput" accept="video/mp4,video/webm" multiple style="display: none;">
+                        <div class="upload-dropzone" id="mixerDropzone" style="min-height: 120px; border: 2px dashed rgba(236,72,153,0.45); cursor: pointer; text-align: center; padding: 20px 16px;">
+                            <i data-lucide="folder-plus" style="width: 34px; height: 34px; color: #f472b6; margin-bottom: 6px;"></i>
+                            <div style="font-size: 13.5px; font-weight: 700; color: white;">Ketuk untuk Tambah Video (Bisa Pilih Banyak)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 4px;">Mendukung format MP4, WebM, MOV (bisa pilih banyak sekaligus)</div>
+                            <button type="button" class="btn-secondary" style="margin-top: 10px; pointer-events: none; border-color: #ec4899; color: #f472b6; font-size: 11.5px; font-weight: 700; padding: 5px 14px;">
+                                <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Pilih File Video
+                            </button>
                         </div>
+                        <input type="file" id="mixerFileInput" accept="video/*" multiple style="display: none;">
                     </div>
 
                     <!-- Clips Queue List -->

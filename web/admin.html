@@ -608,7 +608,7 @@
             <div class="topbar-right">
                 <div class="admin-user-pill">
                     <i data-lucide="crown" style="width: 14px; height: 14px; color: #fbbf24;"></i>
-                    <span id="adminEmailDisplay">winalislam@gmail.com</span>
+                    <span id="adminEmailDisplay">Super Administrator</span>
                 </div>
             </div>
         </header>
@@ -1239,7 +1239,7 @@
                 try {
                     const data = JSON.parse(adminRaw);
                     if (data && data.role === "superadmin") {
-                        document.getElementById("adminEmailDisplay").textContent = data.user?.email || "winalislam@gmail.com";
+                        document.getElementById("adminEmailDisplay").textContent = "Super Administrator";
                         return true;
                     }
                 } catch (e) {}

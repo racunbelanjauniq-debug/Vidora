@@ -2143,7 +2143,7 @@ Requirements for the generated prompt:
         mixerDropzone.addEventListener("drop", async (e) => {
             e.preventDefault();
             mixerDropzone.style.borderColor = "rgba(236,72,153,0.35)";
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("video/"));
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("video/") || /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(f.name));
             for (const file of files) {
                 await addClipToMixer(file, file.name);
             }

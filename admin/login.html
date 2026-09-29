@@ -183,11 +183,21 @@
             <form id="formAdminLogin">
                 <div class="form-group">
                     <label class="form-label" for="adminEmail">Email Administrator:</label>
-                    <input type="email" class="form-input" id="adminEmail" placeholder="winalislam@gmail.com" required autocomplete="email" style="border-color: rgba(251, 191, 36, 0.25);">
+                    <div style="position: relative;">
+                        <input type="password" class="form-input" id="adminEmail" placeholder="••••••••••••" required autocomplete="off" style="border-color: rgba(251, 191, 36, 0.25); padding-right: 40px;">
+                        <button type="button" id="btnToggleAdminEmail" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px;">
+                            <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="adminPassword">Password:</label>
-                    <input type="password" class="form-input" id="adminPassword" placeholder="••••••••" required autocomplete="current-password" style="border-color: rgba(251, 191, 36, 0.25);">
+                    <div style="position: relative;">
+                        <input type="password" class="form-input" id="adminPassword" placeholder="••••••••" required autocomplete="current-password" style="border-color: rgba(251, 191, 36, 0.25); padding-right: 40px;">
+                        <button type="button" id="btnToggleAdminPassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #94a3b8; cursor: pointer; padding: 4px;">
+                            <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="btn-admin-login" id="btnSubmitAdmin">
                     <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
@@ -214,6 +224,33 @@
             const errorBox = document.getElementById("adminErrorMsg");
             const btnSubmit = document.getElementById("btnSubmitAdmin");
             const btnSubmitText = document.getElementById("btnSubmitAdminText");
+
+            // Eye toggles for email and password
+            const toggleEmailBtn = document.getElementById("btnToggleAdminEmail");
+            const adminEmailInput = document.getElementById("adminEmail");
+            if (toggleEmailBtn && adminEmailInput) {
+                toggleEmailBtn.addEventListener("click", () => {
+                    const isPwd = adminEmailInput.type === "password";
+                    adminEmailInput.type = isPwd ? "text" : "password";
+                    toggleEmailBtn.innerHTML = isPwd 
+                        ? '<i data-lucide="eye-off" style="width: 16px; height: 16px;"></i>' 
+                        : '<i data-lucide="eye" style="width: 16px; height: 16px;"></i>';
+                    lucide.createIcons();
+                });
+            }
+
+            const togglePwdBtn = document.getElementById("btnToggleAdminPassword");
+            const adminPwdInput = document.getElementById("adminPassword");
+            if (togglePwdBtn && adminPwdInput) {
+                togglePwdBtn.addEventListener("click", () => {
+                    const isPwd = adminPwdInput.type === "password";
+                    adminPwdInput.type = isPwd ? "text" : "password";
+                    togglePwdBtn.innerHTML = isPwd 
+                        ? '<i data-lucide="eye-off" style="width: 16px; height: 16px;"></i>' 
+                        : '<i data-lucide="eye" style="width: 16px; height: 16px;"></i>';
+                    lucide.createIcons();
+                });
+            }
 
             function showError(msg) {
                 errorBox.textContent = msg;
