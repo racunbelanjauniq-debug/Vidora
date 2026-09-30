@@ -1632,44 +1632,65 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // VIDORA Built-in Smart Prompt Generator Fallback (Jika API Key belum diset atau Google API bermasalah)
     function generateFallbackPrompt(mode, style, platform, extra = "", ctaType = "auto", customCta = "") {
-        const platformMap = {
-            tiktok: "Target Platform: TikTok Short Video (9:16). High energy hook in first 2 seconds, punchy visual rhythm, trending viral aesthetic.",
-            tiktok_aff: "Target Platform: TikTok Shop Affiliate (9:16). Clear product feature demonstration, high-conversion visual framing pointing to yellow basket.",
-            tiktok_go_hotel: "Target Platform: TikTok Go Hotel & Staycation. Inviting room tour, cozy bed textures, luxurious bathroom amenities, relaxing holiday vibes.",
-            tiktok_go_wisata: "Target Platform: TikTok Go Wisata. Spectacular wide panoramic shots, vibrant natural scenery, landmark highlights, travel inspiration.",
-            tiktok_go_kuliner: "Target Platform: TikTok Go Kuliner. Sizzling warm dishes, mouth-watering close-up of delicious textures, vibrant culinary appeal.",
-            shopee: "Target Platform: Shopee Video. Bright commercial lighting, discount voucher callout feel, product detail focus, pointing to orange basket.",
-            instagram: "Target Platform: Instagram Reels. Clean luxury modern aesthetic, seamless lifestyle loop, aesthetic color grading.",
-            youtube: "Target Platform: YouTube Shorts. Dynamic pacing, clear value proposition in first 3 seconds, clean branding throughout.",
-            youtube_long: "Target Platform: YouTube Long-Form (16:9 Landscape). Cinematic widescreen composition, steady camera motion, rich immersive atmosphere."
+        const isImage = (mode || "").toLowerCase().includes("image") || (mode || "").toLowerCase().includes("gambar") || (mode || "").toLowerCase().includes("photo");
+
+        const platformDescriptions = {
+            tiktok: "video pendek vertikal TikTok (9:16) dengan hook visual tajam di 2 detik awal untuk memaksimalkan retensi audiens",
+            tiktok_aff: "video promosi TikTok Shop Affiliate (9:16) berorientasi konversi tinggi dengan sorotan detail produk yang memikat",
+            tiktok_go_hotel: "video TikTok Go Hotel & Staycation dengan room tour estetik, memperlihatkan kenyamanan dan kemewahan ruangan",
+            tiktok_go_wisata: "video TikTok Go Wisata dengan panorama lanskap menakjubkan dan atmosfer liburan yang menginspirasi",
+            tiktok_go_kuliner: "video TikTok Go Kuliner dengan close-up hidangan hangat yang menggoda selera dan uap lezat",
+            shopee: "video komersial Shopee Video yang cerah dan memikat, menonjolkan fitur produk dan diskon menarik",
+            instagram: "video reels Instagram estetik dengan palet warna modern, pencahayaan lembut, dan lifestyle elegan",
+            youtube: "video YouTube Shorts yang dinamis dengan visual memikat sejak detik pertama",
+            youtube_long: "video lanskap YouTube (16:9) sinematik layar lebar dengan kedalaman visual atmosferik",
+            marketplace: "foto katalog marketplace berkualitas studio profesional dengan pencahayaan bersih merata",
+            katalog: "foto editorial katalog produk kelas atas dengan ketajaman warna sempurna dan standar cetak premium"
         };
 
-        const styleMap = {
-            hard_selling: "Commercial TV style, high-energy explosive camera movement, vivid saturated lighting, razor-sharp product focus, 4k 60fps octane render quality.",
-            soft_selling: "Aesthetic lifestyle cinematography, warm golden hour ambient lighting, cozy aspirational atmosphere, smooth subtle panning camera, shallow depth of field.",
-            storyboard: "Sequential 3-stage commercial presentation: attention hook, tactile product demonstration, and high-conversion commercial showcase.",
-            unboxing: "First-person perspective unboxing showcase, tactile peeling of protective film, revealing pristine product, soft diffused studio light, 8k resolution.",
-            before_after: "Dramatic transformation showcase, cinematic transition from dull to glowing flawless finished state, crisp photorealistic textures.",
-            comparison_vs: "Split comparison showcase highlighting superior premium finish, ultra-detailed macro textures, crisp reflections.",
-            trend_challenge: "Trendy viral pacing, dynamic snappy transitions, modern studio neon and natural pop lighting, ultra-fluid motion.",
-            vlog_bts: "Behind-the-scenes authentic creator POV, natural ambient lighting, genuine candid movement, true-to-life color grading.",
-            aesthetic: "Aesthetic indie cinema masterpiece, moody teal and warm amber contrast, slow poetic tracking shot, volumetric dust particles, anamorphic lens flare.",
-            cinematic: "Cinematic commercial masterpiece, moody volumetric lighting, subtle anamorphic lens flare, film grain, smooth gimbal push-in, 4k 60fps.",
-            edukasi: "Clean instructional framing, balanced composition, bright neutral studio lighting, sharp clear subject focus.",
-            tutorial: "Step-by-step tutorial framing, neat clean background, clear product usage demonstration, professional softbox lighting.",
-            pov: "Relatable first-person POV shot looking down at hands using the product, authentic natural daylight, realistic domestic or workplace environment.",
-            asmr: "Extreme macro ASMR close-up, ultra-detailed product surface and tactile interaction, glossy reflection, intimate serene atmosphere.",
-            studio: "Clean commercial product studio photography, pure minimalist background, professional 3-point softbox lighting, ultra-sharp edges, catalog ready 8k quality.",
-            ugc: "Authentic UGC smartphone style framing, natural indoor daylight, genuine relatable handheld movement, crisp true-to-life color reproduction.",
-            beauty: "Dewy glowing glass-skin aesthetic, soft ring-light glow, flawless skin textures and reflective serum drops, macro close-up focus, luxury cosmetic aesthetic."
+        const styleDescriptions = {
+            soft_selling: "gaya storytelling & soft selling yang hangat dan emosional, memperlihatkan subjek dalam momen keseharian yang natural tanpa kesan hard-sell",
+            hard_selling: "gaya iklan komersial TV berenergi tinggi dengan komposisi hero shot yang tegas, pencahayaan berani, dan dinamika visual memukau",
+            storyboard: "gaya storyboard sinematik multi-scene: dimulai dari visual hook penarik perhatian, demonstrasi produk mendalam, hingga closing konversi",
+            unboxing: "gaya unboxing & haul dari sudut pandang dekat, memperlihatkan kemasan rapi yang dibuka perlahan hingga menampakkan keaslian dan tekstur produk",
+            before_after: "gaya transformasi before-after yang dramatis dengan transisi pencahayaan dari redup menjadi cerah bercahaya dan mempesona",
+            comparison_vs: "gaya perbandingan visual yang menonjolkan keunggulan tekstur, kerapian jahitan, dan kualitas premium produk secara jelas",
+            trend_challenge: "gaya tren viral terkini dengan ritme visual kekinian, pencahayaan pop modern, dan gerakan yang mengalir dinamis",
+            vlog_bts: "gaya vlog santai behind-the-scenes dengan sudut pandang kreator yang otentik dan pencahayaan ambient yang hangat",
+            aesthetic: "gaya sinematik estetik dengan grading warna moody teal dan warm amber, gerakan kamera lambat puitis, dan kedalaman bidang artistik",
+            cinematic: "gaya film sinematik layar lebar dengan pencahayaan volumetrik halus, bayangan terarah, dan gerakan kamera gimbal push-in elegan",
+            edukasi: "gaya edukasi & tips bermanfaat dengan komposisi rapi dan subjek yang ditonjolkan secara jelas",
+            tutorial: "gaya tutorial langkah demi langkah dengan framing rapi dan demonstrasi pemakaian produk yang presisi",
+            pov: "gaya sudut pandang orang pertama (POV) yang relatable, melihat langsung ke subjek dengan kesan nyata",
+            asmr: "gaya ASMR & sensori makro ekstrem, menonjolkan detail permukaan, pantulan cahaya, dan interaksi sentuhan yang memuaskan",
+            studio: "gaya studio foto profesional bersih berlatar belakang netral dengan tata cahaya 3-titik yang menegaskan setiap lekuk subjek",
+            ugc: "gaya kreator UGC (User Generated Content) alami dengan sudut kamera smartphone realistis dan pencahayaan ruangan yang otentik",
+            beauty: "gaya kecantikan & fashion estetik dengan kilau dewy glass-skin sempurna, pencahayaan softbox lembut merona, dan fokus yang jernih"
         };
 
-        const chosenStyle = styleMap[style] || styleMap.cinematic;
-        const chosenPlatform = platformMap[platform] || platformMap.tiktok;
-        const ctaText = customCta ? `Closing CTA: "${customCta}".` : (ctaType !== "auto" ? `Closing CTA: ${ctaType}.` : "");
-        const extraText = extra ? `Creator Notes: ${extra}.` : "";
+        const chosenPlatform = platformDescriptions[platform] || platformDescriptions.tiktok;
+        const chosenStyle = styleDescriptions[style] || styleDescriptions.soft_selling;
 
-        return `Commercial photorealistic shot of featured subject. ${chosenStyle} ${chosenPlatform} ${extraText} ${ctaText} Cinematic lighting, 4k 60fps, octane render quality, film grain, hyperrealistic commercial master.`.trim();
+        let ctaText = "diakhiri dengan senyum ramah dan ajakan visual untuk melihat detail penawaran terbaik";
+        if (ctaType === "tiktok_aff") {
+            ctaText = "diakhiri dengan senyum ramah dan gestur tangan interaktif mengarahkan audiens ke keranjang kuning di kiri bawah layar sebelum promo berakhir";
+        } else if (ctaType === "shopee_aff") {
+            ctaText = "diakhiri dengan ajakan visual untuk klik keranjang oranye di bawah dan klaim voucher diskon hari ini";
+        } else if (ctaType === "tiktok") {
+            ctaText = "diakhiri dengan ajakan interaktif untuk follow akun, berikan like, dan tulis tanggapan di kolom komentar";
+        } else if (ctaType === "sosmed") {
+            ctaText = "diakhiri dengan gestur ajakan like, share, dan simpan video ini";
+        } else if (ctaType === "custom" && customCta) {
+            ctaText = `diakhiri dengan call to action: "${customCta}"`;
+        }
+
+        const extraNote = extra ? `Detail penekanan: ${extra}. ` : "";
+
+        if (isImage) {
+            return `Foto profesional komersial beresolusi tinggi dengan ${chosenStyle}, dirancang khusus untuk ${chosenPlatform}. Menampilkan subjek utama dari foto referensi dengan pose proporsional dan ekspresi percaya diri, memperlihatkan detail pakaian, tekstur bahan, dan jahitan secara sangat jernih dan tajam. Ditata dengan pencahayaan studio terdistribusi merata, latar belakang estetik yang serasi, serta kedalaman fokus presisi. ${extraNote}Standar fotografi master 8K UHD, warna fotorealistik alami, tajam tanpa cela, siap memikat calon pembeli.`;
+        }
+
+        return `Video sinematik promosi berkualitas tinggi dengan ${chosenStyle}, dirancang khusus untuk ${chosenPlatform}. Menampilkan subjek dari foto referensi dengan ekspresi natural memikat, mengenakan busana/produk secara sempurna dengan tekstur kain dan warna yang terlihat sangat detail. Kamera bergerak dinamis menggunakan teknik smooth slow push-in dan orbit tracking halus menonjolkan kenyamanan serta keanggunan subjek. Didukung tata cahaya sinematik hangat dengan sentuhan ambient lembut di latar belakang yang menciptakan nuansa estetik dan kredibel. ${extraNote}Adegan ${ctaText}. Resolusi ultra HD 4K 60fps, grading warna mempesona, fotorealistik, siap mendongkrak konversi viral.`;
     }
 
     // Gemini Vision API Caller
@@ -1679,7 +1700,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const goToSettings = confirm(
                 "Perhatian: Anda belum memasukkan API Key Gemini!\n\n" +
                 "• Klik 'OK' untuk membuka tab 'Pengaturan' & memasukkan API Key Gemini gratis dari aistudio.google.com\n" +
-                "• Klik 'Cancel' untuk tetap membuat prompt video sinematik secara otomatis (menggunakan Built-in Smart Engine)."
+                "• Klik 'Cancel' untuk tetap membuat prompt video sinematik dalam Bahasa Indonesia menggunakan Built-in Smart Engine."
             );
             if (goToSettings) {
                 switchTab("accounts");
@@ -1697,94 +1718,98 @@ document.addEventListener("DOMContentLoaded", async () => {
             cleanB64 = parts[1];
         }
 
-        let platformInstruction = "General social media short-form video style.";
+        let platformInstruction = "Platform media sosial video vertikal (9:16).";
         if (platform === "tiktok") {
-            platformInstruction = "Target Platform: TikTok Short Video (9:16). High energy hook in first 2 seconds, punchy visual rhythm, natural viral aesthetic.";
+            platformInstruction = "Target Platform: TikTok Short Video (9:16). Ritme cepat, hook visual kuat di 2 detik pertama, estetika viral kekinian.";
         } else if (platform === "tiktok_aff") {
-            platformInstruction = "Target Platform: TikTok Shop Affiliate (9:16). Clear product feature demonstration, high-conversion visual framing, and cue: Cek Keranjang Kuning di bawah!";
+            platformInstruction = "Target Platform: TikTok Shop Affiliate (9:16). Sorotan detail produk/outfit sangat jelas, visual persuasif berorientasi konversi tinggi, ajakan: Cek Keranjang Kuning di kiri bawah!";
         } else if (platform === "tiktok_go_hotel") {
-            platformInstruction = "Target Platform: TikTok Go Hotel & Staycation. Inviting room tour, cozy bed textures, luxurious bathroom amenities, relaxing holiday vibes.";
+            platformInstruction = "Target Platform: TikTok Go Hotel & Staycation. Room tour estetik, tempat tidur nyaman, pencahayaan kamar hangat dan mewah.";
         } else if (platform === "tiktok_go_wisata") {
-            platformInstruction = "Target Platform: TikTok Go Wisata / Travel Destination. Spectacular wide panoramic shots, vibrant natural scenery, landmark highlights, travel inspiration.";
+            platformInstruction = "Target Platform: TikTok Go Wisata. Sudut lanskap luas spektakuler, panorama alam hidup, destinasi liburan memikat.";
         } else if (platform === "tiktok_go_kuliner") {
-            platformInstruction = "Target Platform: TikTok Go Kuliner / Food. Sizzling warm dishes, mouth-watering close-up of delicious textures, vibrant culinary appeal.";
+            platformInstruction = "Target Platform: TikTok Go Kuliner. Close-up hidangan hangat menggiurkan, tekstur lezat, uap hangat menggiurkan.";
         } else if (platform === "shopee") {
-            platformInstruction = "Target Platform: Shopee Video. Bright commercial lighting, discount voucher callout feel, product detail focus, and cue: Klik Keranjang Oranye di bawah!";
+            platformInstruction = "Target Platform: Shopee Video. Pencahayaan komersial terang, penekanan voucher dan promo, ajakan: Klik Keranjang Oranye di bawah!";
         } else if (platform === "instagram" || platform === "reels") {
-            platformInstruction = "Target Platform: Instagram Reels / Feed. Clean luxury modern aesthetic, seamless lifestyle loop, aesthetic color grading.";
+            platformInstruction = "Target Platform: Instagram Reels. Estetika gaya hidup modern mewah, tone warna berkelas, transisi visual mulus.";
         } else if (platform === "youtube") {
-            platformInstruction = "Target Platform: YouTube Shorts. Dynamic pacing, clear value proposition in first 3 seconds, clean branding throughout.";
+            platformInstruction = "Target Platform: YouTube Shorts. Pacing cepat teratur, hook kuat di 3 detik awal, komposisi visual rapi.";
         } else if (platform === "youtube_long") {
-            platformInstruction = "Target Platform: YouTube Long-Form (16:9 Landscape). Cinematic widescreen composition, steady camera motion, rich immersive atmosphere for deep engagement.";
+            platformInstruction = "Target Platform: YouTube Landscape (16:9). Komposisi layar lebar sinematik, kedalaman atmosfer imersif, pergerakan kamera stabil.";
         } else if (platform === "ads") {
-            platformInstruction = "Target Platform: Paid digital ads (Meta/TikTok Ads). High-impact first frame, immediate visual hook, strong commercial CTA.";
+            platformInstruction = "Target Platform: Iklan Berbayar (Meta / TikTok Ads). Visual hook memikat, demonstrasi manfaat langsung, CTA tegas.";
         } else if (platform === "marketplace") {
-            platformInstruction = "Target Platform: Marketplace product listing (Shopee/Tokopedia). Crystal-clear product detail, clean background, professional studio lighting.";
+            platformInstruction = "Target Platform: Marketplace Listing (Shopee/Tokopedia). Detail produk sangat tajam dan presisi, latar bersih studio, pencahayaan merata.";
         } else if (platform === "katalog") {
-            platformInstruction = "Target Platform: Product catalog / print material. Ultra-sharp details, perfect color accuracy, premium editorial quality.";
+            platformInstruction = "Target Platform: Editorial Katalog Cetak / Digital. Kualitas warna presisi tinggi, komposisi proporsional, standar editorial elegan.";
         }
 
-        let ctaInstruction = "";
-        if (ctaType === "tiktok_go") {
-            ctaInstruction = "Closing CTA Cue: Klaim promo langsung di lokasi / cek info maps sekarang.";
+        let ctaInstruction = "Closing CTA: Diakhiri dengan gestur ramah mengajak audiens berinteraksi secara natural.";
+        if (ctaType === "tiktok_aff") {
+            ctaInstruction = "Closing CTA: Subjek tersenyum ramah dan mengarahkan gestur tangan ke Keranjang Kuning di kiri bawah layar.";
         } else if (ctaType === "shopee_aff") {
-            ctaInstruction = "Closing CTA Cue: Klik Keranjang Oranye di bawah sebelum voucher habis!";
-        } else if (ctaType === "tiktok_aff") {
-            ctaInstruction = "Closing CTA Cue: Cek Keranjang Kuning di kiri bawah sekarang juga!";
+            ctaInstruction = "Closing CTA: Ajakan visual untuk mengklik Keranjang Oranye di bawah sebelum diskon berakhir.";
+        } else if (ctaType === "tiktok_go") {
+            ctaInstruction = "Closing CTA: Ajakan untuk klaim promo langsung atau cek detail lokasi sekarang.";
         } else if (ctaType === "tiktok") {
-            ctaInstruction = "Closing CTA Cue: Jangan lupa follow akun ini dan tulis pendapatmu di komentar!";
+            ctaInstruction = "Closing CTA: Ajakan untuk follow akun, berikan like, dan tulis pendapat di komentar.";
         } else if (ctaType === "sosmed") {
-            ctaInstruction = "Closing CTA Cue: Like, simpan, dan share video ini ke teman-temanmu!";
+            ctaInstruction = "Closing CTA: Ajakan untuk like, simpan, dan bagikan video ini.";
         } else if (ctaType === "custom" && customCta) {
-            ctaInstruction = `Closing CTA Cue: ${customCta}`;
+            ctaInstruction = `Closing CTA: "${customCta}".`;
         }
 
-        // 17 Visual style instruction map
+        // 17 Visual style instruction map dalam Bahasa Indonesia
         const styleInstructions = {
-            hard_selling: "Style: Hard Selling Commercial (Iklan TV). High-energy composition, bold product hero shot with exploding dynamic action, motion blur trails, bright saturated colors, urgency-focused commercial framing with direct purchasing cues.",
-            hardselling: "Style: Hard Selling Commercial (Iklan TV). High-energy composition, bold product hero shot with exploding dynamic action, motion blur trails, bright saturated colors, urgency-focused commercial framing.",
-            soft_selling: "Style: Soft Selling Lifestyle & Storytelling. Warm pastel tones, natural golden hour lighting, product integrated into a cozy aspirational scene, gentle camera movement, deep emotional connection without hard sales pressure.",
-            softselling: "Style: Soft Selling Lifestyle & Storytelling. Warm pastel tones, natural golden hour lighting, product integrated into a cozy aspirational scene, gentle camera movement, deep emotional connection.",
-            storyboard: "Style: Storyboard Multi-Scene. Structured sequential cinematic shots (Scene 1: Establishing contextual atmosphere; Scene 2: Close-up product interaction; Scene 3: High-impact transformation result), fluid cinematic transitions.",
-            unboxing: "Style: Unboxing & Haul. First-person or tabletop perspective unwrapping premium packaging, tactile peeling of protective film, revealing pristine product, authentic excitement and crisp detail.",
-            before_after: "Style: Before-After Transformation. Dramatic contrast split or smooth wipe transition showing dull/problematic state transformed into a glowing, flawless, highly satisfying finished state.",
-            comparison_vs: "Style: Comparison / VS Battle. Side-by-side or split visual comparison clearly illustrating the superior texture, finish, and premium feel of the featured subject compared to ordinary alternatives.",
-            trend_challenge: "Style: Trend & Viral Challenge. Trendy fast-paced visual hooks, modern TikTok transition snaps, vibrant neon or natural pop lighting, meme/relatable pacing, dynamic beats.",
-            vlog_bts: "Style: Behind The Scenes / Casual Daily Vlog. Authentic creator POV, candid handheld camera movement, genuine production or preparation moments, welcoming warm ambient lighting.",
-            musik_playlist: "Style: Musik Playlist / Penyanyi. Static tripod framing, gentle ambient micro-motion (soft breeze, flickering subtle neon, slow atmospheric dust particles, gentle singer sway), ultra-relaxed cozy aesthetic.",
-            vlog_alam: "Style: Nature & Landscape Cinematic Drone. Grand expansive drone aerial tracking shot over misty mountain ridges, turquoise ocean waves crashing on cliffs, sunbeams cutting through forest canopy, 4K 60fps IMAX scope.",
-            aesthetic: "Style: Aesthetic Cinematic (Non-Commercial). Moody color grading, artistic negative space, poetic slow motion, evocative rim lighting, indie film festival visual masterpiece.",
-            cinematic: "Style: Aesthetic Cinematic. Moody volumetric lighting, subtle lens flare, film grain, cinematic teal-orange color grading, smooth slow tracking shot.",
-            edukasi: "Style: Educational & Tips. Clean instructional framing, crisp focal subject, balanced composition leaving headroom/side space for graphics or captions, bright clear neutral lighting.",
-            tutorial: "Style: Educational & Tutorial. Step-by-step instructional framing, clear product usage demonstration, neat studio background.",
-            pov: "Style: POV (Point of View Relatable). First-person perspective looking down at hands using the product, authentic everyday situation, relatable domestic or travel environment.",
-            asmr: "Style: ASMR & Satisfying Sensory. Extreme macro close-up of product textures, surfaces, and tactile interactions (creamy lather, crisp cutting, bubbling fizz, glossy liquid drizzle), intimate calming visuals.",
-            tiktok_go_wisata: "Style: TikTok Go - Tempat Wisata. Sun-drenched panoramic vacation spot, happy travelers enjoying scenic viewpoints, crystal-clear water, vibrant tropical or alpine destination allure.",
-            tiktok_go_kuliner: "Style: TikTok Go - Kuliner & Makanan. Sizzling skillet, rising aromatic steam, glistening sauces, macro cheese pulls, warm appetizing amber restaurant lighting.",
-            tiktok_go_hotel: "Style: TikTok Go - Hotel & Penginapan. Chic hotel lobby, serene resort balcony view, fluffy pristine king-size bedding, warm ambient luxury interior hospitality lighting.",
-            ugc: "Style: UGC Authentic. Handheld smartphone camera feel, natural ambient lighting, genuine unedited texture, realistic everyday context.",
-            beauty: "Style: Beauty & Skincare. Dewy glass-skin aesthetic, model close-up with flawless complexion, soft rose/peachy studio lights, glistening serum droplet.",
-            minimalist: "Style: Minimalist Clean. Pure white or deep dark studio backdrop, single hero subject, sharp sculptural shadows, high-end design aesthetic.",
-            luxury: "Style: Luxury Prestige. Dark moodboard, gold-black-marble textures, dramatic single-source spotlight, slow rotating pedestal, ultra-shallow depth of field.",
-            lifestyle: "Style: Lifestyle Activity. Product in natural human activity context, natural daylight, candid movement, real-world authenticity.",
-            studio: "Style: Clean Product Studio. Pure white/gradient studio background, professional 3-point lighting setup, sharp product detail, catalog-ready quality."
+            hard_selling: "Gaya: Hard Selling Komersial TV. Komposisi visual energik, sorotan produk heroik dan tegas, pergerakan kamera cepat terarah, warna cerah memikat, menonjolkan urgensi pembelian.",
+            hardselling: "Gaya: Hard Selling Komersial TV. Komposisi visual energik, sorotan produk heroik dan tegas, pergerakan kamera cepat terarah, warna cerah memikat, menonjolkan urgensi pembelian.",
+            soft_selling: "Gaya: Soft Selling & Storytelling Emosional. Nuansa hangat dan alami, subjek beraktivitas santai menginspirasi, pergerakan kamera lambat lembut, membangun kedekatan emosional tanpa kesan memaksa.",
+            softselling: "Gaya: Soft Selling & Storytelling Emosional. Nuansa hangat dan alami, subjek beraktivitas santai menginspirasi, pergerakan kamera lambat lembut, membangun kedekatan emosional tanpa kesan memaksa.",
+            storyboard: "Gaya: Storyboard Multi-Scene (Adegan 1: Hook pembuka; Adegan 2: Detail interaksi produk; Adegan 3: Hasil memuaskan & CTA penutup).",
+            unboxing: "Gaya: Unboxing & Haul. Sudut pandang dekat membuka kemasan produk, memperlihatkan bahan rapi, tekstur premium, dan ekspresi kepuasan otentik.",
+            before_after: "Gaya: Transformasi Before-After. Perubahan visual kontras yang dramatis dan memuaskan dari kondisi awal ke hasil akhir yang bercahaya sempurna.",
+            comparison_vs: "Gaya: Perbandingan Visual (VS). Menegaskan keunggulan kualitas bahan, potongan, dan kenyamanan produk dibanding produk biasa.",
+            trend_challenge: "Gaya: Tren & Viral Challenge. Transisi kekinian, ritme visual dinamis, pencahayaan pop neon modern, gaya anak muda aktif.",
+            vlog_bts: "Gaya: Behind The Scenes / Vlog Harian. Sudut pandang kreator asli, pencahayaan ruangan natural, gerakan kasual ramah dan menyenangkan.",
+            aesthetic: "Gaya: Sinematik Estetik (Indie Mood). Grading warna moody teal dan warm amber, gerakan kamera lambat puitis, pencahayaan volumetrik artistik.",
+            cinematic: "Gaya: Sinematik Komersial Layar Lebar. Pencahayaan volumetrik dramatis, bayangan lembut terarah, gerakan kamera gimbal push-in anggun.",
+            edukasi: "Gaya: Edukasi & Rekomendasi Produk. Komposisi rapi, subjek terlihat jelas dan kredibel, pencahayaan studio netral terang.",
+            tutorial: "Gaya: Tutorial Praktis. Framing langkah demi langkah yang rapi, demonstrasi pemakaian yang jelas, latar bersih teratur.",
+            pov: "Gaya: POV Relatable. Sudut pandang orang pertama melihat ke subjek/produk dalam suasana keseharian yang nyata dan akrab.",
+            asmr: "Gaya: ASMR Sensori Memuaskan. Pengambilan gambar close-up makro ekstrem memperlihatkan tekstur halus, kilau bahan, dan detail taktil yang memanjakan mata.",
+            tiktok_go_wisata: "Gaya: TikTok Go Tempat Wisata. Lanskap cerah bermandikan cahaya matahari, suasana santai pelancong, panorama air jernih dan pemandangan mempesona.",
+            tiktok_go_kuliner: "Gaya: TikTok Go Kuliner. Wajan panas mendesis, kepulan uap hangat, lumuran saus berkilau, pencahayaan amber hangat menggugah selera.",
+            tiktok_go_hotel: "Gaya: TikTok Go Penginapan. Kamar tidur estetik, pencahayaan interior hangat mewah, atmosfer staycation santai dan elegan.",
+            ugc: "Gaya: UGC Otentik. Nuansa rekaman kamera smartphone alami, pencahayaan ruangan asli, kesan jujur tanpa rekayasa.",
+            beauty: "Gaya: Beauty & Skincare Estetik. Tampilan kulit dewy glass-skin bercahaya, model anggun percaya diri, pencahayaan softbox lembut merona.",
+            minimalist: "Gaya: Minimalis Bersih. Latar belakang netral bersih, subjek tunggal yang dominan, bayangan tegas artistik, estetika modern.",
+            luxury: "Gaya: Mewah & Prestise. Suasana gelap elegan dengan aksen emas/marmer, sorotan spotlight tunggal dramatis, kedalaman ruang eksklusif.",
+            lifestyle: "Gaya: Lifestyle Dinamis. Subjek berinteraksi dalam aktivitas nyata, cahaya matahari alami, gerakan spontan yang hidup.",
+            studio: "Gaya: Studio Produk Bersih. Latar belakang putih/gradasi studio netral, pencahayaan 3-titik profesional, detail tajam siap katalog komersial."
         };
-        const styleInstruction = styleInstructions[style] || styleInstructions.cinematic;
+        const styleInstruction = styleInstructions[style] || styleInstructions.soft_selling;
 
-        const systemPrompt = `You are VIDORA Smart Prompt Generator, an elite commercial director, cinematographer, and prompt engineer.
-Your task: Analyze the provided image/details and generate an extremely rich, cinematic, photorealistic prompt optimized for AI video generation (Google Flow / Omni Flash) or studio photography (Imagen / Nano Banana).
-Mode: ${mode}
-${styleInstruction}
-${platformInstruction}
-${ctaInstruction ? `Call to Action Instruction: ${ctaInstruction}` : ""}
-Additional Creator Notes: ${extra || "None"}
+        const systemPrompt = `Anda adalah VIDORA Smart Prompt Director, sutradara komersial elit, sinematografer profesional, dan master AI prompt engineer (seperti prompt studio di Gamma App).
+Tugas Anda: Analisa foto yang diberikan secara mendalam, lalu buatlah deskripsi prompt adegan visual yang LENGKAP, KAYA DETAIL, dan MEMUKAU dalam BAHASA INDONESIA untuk generate video/foto AI.
 
-Requirements for the generated prompt:
-1. Accurately describe the subject based on visible features (colors, textures, materials, packaging, proportions).
-2. Specify cinematic lighting (e.g. dramatic rim lighting, soft volumetric golden hour, diffused studio softbox).
-3. Specify camera movement (e.g. smooth macro slow tracking shot, rotating pedestal 360, gentle push-in, static serene framing).
-4. Specify ultra-high resolution keywords (e.g. 4k 60fps, photorealistic texture, octane render quality, film grain).
-5. Output ONLY the finalized prompt text in English for maximum AI model fidelity. No introductory remarks, no quotes.`;
+KONTEKS PILIHAN PENGGUNA:
+- Mode Pembuatan: ${mode}
+- ${styleInstruction}
+- ${platformInstruction}
+- ${ctaInstruction}
+- Catatan Tambahan Kreator: ${extra || "Tidak ada"}
+
+PANDUAN STRUKTUR PROMPT (WAJIB DIIKUTI LENGKAP DALAM BAHASA INDONESIA):
+1. Subjek & Penampilan: Deskripsikan secara spesifik subjek yang tampak pada foto (karakter/orang, usia perkiraan, pose, pakaian/outfit yang dipakai, tekstur bahan, warna baju/celana, dan ekspresi wajah natural).
+2. Latar Belakang & Setting Ruangan: Deskripsikan lingkungan ruangan/lokasi secara hidup sesuai foto (dekorasi kamar, rak pakaian, poster/lampu, suasana estetik urban/studio).
+3. Gerakan Kamera & Sinematografi: Sertakan pergerakan kamera sinematik (slow push-in, tracking dinamis, camera orbit halus, close-up tekstur).
+4. Pencahayaan & Warna: Detailkan tata cahaya (pencahayaan hangat ambient, rim lighting lembut, aksen neon biru/ungu, tone warna sinematik memikat).
+5. Alur & Call to Action: Sesuaikan alur adegan dengan target platform dan arahkan visual penutup ke CTA yang dipilih (misal tersenyum ramah dan mengarahkan gestur ke keranjang kuning di kiri bawah).
+6. Standar Kualitas: Tentukan standar resolusi tertinggi (ultra HD 4K 60fps, fotorealistik, tekstur tajam, komposisi proporsional).
+
+FORMAT OUTPUT:
+Keluarkan HANYA SATU PARAGRAF teks prompt lengkap dan mengalir dalam BAHASA INDONESIA (panjang sekitar 3-5 kalimat berbobot, kaya kata sifat visual). DILARANG mengeluarkan potongan pendek atau terpotong. JANGAN gunakan tanda petik pembuka/penutup atau teks basa-basi pengantar.`;
 
         const requestBody = {
             contents: [
@@ -1802,7 +1827,7 @@ Requirements for the generated prompt:
             ],
             generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: 300
+                maxOutputTokens: 1000
             }
         };
 
@@ -2051,12 +2076,41 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         }
     }
 
-    function loadImageFromSrc(src) {
-        return new Promise((resolve, reject) => {
+    function loadImageFromSrc(src, timeoutMs = 15000) {
+        return new Promise((resolve) => {
             const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error("Gagal mengunduh gambar"));
+            let resolved = false;
+
+            const timer = setTimeout(() => {
+                if (!resolved) {
+                    resolved = true;
+                    resolve(img);
+                }
+            }, timeoutMs);
+
+            img.onload = () => {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timer);
+                    resolve(img);
+                }
+            };
+
+            img.onerror = () => {
+                if (!resolved) {
+                    resolved = true;
+                    clearTimeout(timer);
+                    // Fallback tanpa anonymous CORS
+                    const imgFallback = new Image();
+                    imgFallback.onload = () => resolve(imgFallback);
+                    imgFallback.onerror = () => resolve(img);
+                    imgFallback.src = src;
+                }
+            };
+
+            try {
+                img.crossOrigin = "anonymous";
+            } catch (_) {}
             img.src = src;
         });
     }
@@ -2503,6 +2557,9 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             } else if (imageRatio === "16:9") {
                 width = 1280;
                 height = 720;
+            } else if (imageRatio === "4:3") {
+                width = 1024;
+                height = 768;
             }
 
             const seed = Math.floor(Math.random() * 1000000);
@@ -2510,17 +2567,32 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             const cleanPrompt = encodeURIComponent(`${prompt}, ${style} photography, high resolution, 8k uhd, photorealistic, masterpiece`);
             const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
 
-            await loadImageFromSrc(imageUrl);
+            await loadImageFromSrc(imageUrl, 15000);
 
             btnGenerateImage.disabled = false;
             btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar</span>`;
             if (window.lucide) lucide.createIcons();
 
-            openPlayerModal({
+            const imageJob = {
+                id: "img_" + Date.now(),
+                prompt: prompt,
+                title: prompt.substring(0, 45) + "...",
+                video_url: imageUrl,
+                thumbnail_url: imageUrl,
                 url: imageUrl,
-                title: prompt.substring(0, 40) + "...",
-                type: "image"
-            });
+                duration: "photo",
+                type: "image",
+                created_at: new Date().toISOString(),
+                status: "completed"
+            };
+
+            // Simpan ke daftar tugas dan perbarui galeri
+            if (Array.isArray(userJobs)) {
+                userJobs.unshift(imageJob);
+                if (typeof renderGallery === "function") renderGallery();
+            }
+
+            openMediaModal(imageJob);
         } catch (e) {
             btnGenerateImage.disabled = false;
             btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar</span>`;
@@ -2640,31 +2712,38 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         lucide.createIcons();
     }
 
-    // Media Player Modal
+    // Media Player Modal (Video & Gambar)
     function openMediaModal(job) {
-        playerPromptText.textContent = job.prompt;
-        const isImg = job.duration === "photo" || !job.video_url;
+        if (!job) return;
+        playerPromptText.textContent = job.prompt || job.title || "";
+        const isImg = job.duration === "photo" || job.type === "image" || !job.video_url;
 
         if (isImg) {
             playerModalTitle.textContent = "Pratinjau Gambar AI";
             playerVideo.style.display = "none";
             playerImage.style.display = "block";
-            playerImage.src = job.thumbnail_url || job.video_url;
+            const imgSrc = job.thumbnail_url || job.video_url || job.url || "";
+            playerImage.src = imgSrc;
             btnDownloadVideo.onclick = () => {
-                window.open(job.thumbnail_url || job.video_url, "_blank");
+                window.open(imgSrc, "_blank");
             };
         } else {
             playerModalTitle.textContent = "Pratinjau Video AI";
             playerImage.style.display = "none";
             playerVideo.style.display = "block";
-            playerVideo.src = job.video_url;
-            playerVideo.play();
+            const vidSrc = job.video_url || job.url || "";
+            playerVideo.src = vidSrc;
+            playerVideo.play().catch(() => {});
             btnDownloadVideo.onclick = () => {
-                window.open(job.video_url, "_blank");
+                window.open(vidSrc, "_blank");
             };
         }
         modalVideoPlayer.classList.add("open");
     }
+
+    const openPlayerModal = openMediaModal;
+    window.openPlayerModal = openMediaModal;
+    window.openMediaModal = openMediaModal;
 
     document.getElementById("btnClosePlayer").addEventListener("click", () => {
         playerVideo.pause();
