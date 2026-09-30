@@ -10,33 +10,56 @@ const fs = require('fs');
 const path = require('path');
 const TMP_GEMINI_FILE = '/tmp/gemini_keys.json';
 
-// In-memory fallback dictionary with initial seed from user's active key
-global.__VIDORA_GEMINI_KEYS = global.__VIDORA_GEMINI_KEYS || {
-  "winalislam@gmail.com": "AIzaSyDe5r_8aoYCBcjZ8uzyXCJURp-xG_fAMCo"
-};
+// In-memory fallback dictionary
+global.__VIDORA_GEMINI_KEYS = global.__VIDORA_GEMINI_KEYS || {};
+
+const REVOKED_GEMINI_KEYS = new Set([
+  'AIzaSyDe5r_8aoYCBcjZ8uzyXCJURp-xG_fAMCo'
+]);
 
 function getLocalGeminiKey(email) {
   const clean = (email || '').trim().toLowerCase();
+  if (!clean) return process.env.GEMINI_API_KEY || '';
   try {
     if (fs.existsSync(TMP_GEMINI_FILE)) {
       const data = JSON.parse(fs.readFileSync(TMP_GEMINI_FILE, 'utf-8'));
-      if (data && data[clean]) return data[clean];
+      if (data && data[clean]) {
+        if (REVOKED_GEMINI_KEYS.has(data[clean])) {
+          delete data[clean];
+          fs.writeFileSync(TMP_GEMINI_FILE, JSON.stringify(data));
+        } else {
+          return data[clean];
+        }
+      }
     }
   } catch {}
-  return (global.__VIDORA_GEMINI_KEYS && global.__VIDORA_GEMINI_KEYS[clean]) || '';
+  const memKey = (global.__VIDORA_GEMINI_KEYS && global.__VIDORA_GEMINI_KEYS[clean]) || '';
+  if (REVOKED_GEMINI_KEYS.has(memKey)) {
+    delete global.__VIDORA_GEMINI_KEYS[clean];
+    return process.env.GEMINI_API_KEY || '';
+  }
+  return memKey || process.env.GEMINI_API_KEY || '';
 }
 
 function saveLocalGeminiKey(email, key) {
   const clean = (email || '').trim().toLowerCase();
   if (!clean) return;
   global.__VIDORA_GEMINI_KEYS = global.__VIDORA_GEMINI_KEYS || {};
-  global.__VIDORA_GEMINI_KEYS[clean] = key;
+  if (!key || REVOKED_GEMINI_KEYS.has(key)) {
+    delete global.__VIDORA_GEMINI_KEYS[clean];
+  } else {
+    global.__VIDORA_GEMINI_KEYS[clean] = key;
+  }
   try {
     let existing = {};
     if (fs.existsSync(TMP_GEMINI_FILE)) {
       existing = JSON.parse(fs.readFileSync(TMP_GEMINI_FILE, 'utf-8')) || {};
     }
-    existing[clean] = key;
+    if (!key || REVOKED_GEMINI_KEYS.has(key)) {
+      delete existing[clean];
+    } else {
+      existing[clean] = key;
+    }
     fs.writeFileSync(TMP_GEMINI_FILE, JSON.stringify(existing));
   } catch {}
 }
@@ -603,6 +626,10 @@ module.exports = async function handler(req, res) {
             console.warn('[Manage Order] auth user get error:', e.message);
           }
         }
+      }
+
+      if (REVOKED_GEMINI_KEYS.has(foundKey)) {
+        foundKey = '';
       }
 
       if (foundKey && cleanEmail) {

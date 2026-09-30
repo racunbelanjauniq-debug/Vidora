@@ -1324,14 +1324,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================================
     // 7. BYOK: Gemini API Key Handling (Sinkronisasi Antar Perangkat HP & PC)
     // =========================================================================
+    const REVOKED_GEMINI_KEYS = ["AIzaSyDe5r_8aoYCBcjZ8uzyXCJURp-xG_fAMCo"];
     const userGeminiKeyInput = document.getElementById("userGeminiKeyInput");
     const btnSaveGeminiKey = document.getElementById("btnSaveGeminiKey");
+    const btnTestGeminiKey = document.getElementById("btnTestGeminiKey");
+    const geminiTestFeedback = document.getElementById("geminiTestFeedback");
     const geminiKeyStatusBadge = document.getElementById("geminiKeyStatusBadge");
     const btnToggleShowGeminiKey = document.getElementById("btnToggleShowGeminiKey");
     const eyeIconGemini = document.getElementById("eyeIconGemini");
 
+    // Bersihkan segera jika di localStorage tersimpan key yang sudah kedaluwarsa/bocor
+    (function sanitizeInitialKey() {
+        const stored = (localStorage.getItem("vidora_user_gemini_key") || "").trim();
+        if (REVOKED_GEMINI_KEYS.includes(stored)) {
+            localStorage.removeItem("vidora_user_gemini_key");
+        }
+    })();
+
+    async function testGeminiApiKey(key) {
+        if (!key) return { success: false, message: "API Key belum diisi." };
+        if (REVOKED_GEMINI_KEYS.includes(key)) {
+            return { success: false, message: "API Key ini telah kedaluwarsa / dinonaktifkan oleh Google AI Studio." };
+        }
+        try {
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(key)}`);
+            if (resp.ok) {
+                return { success: true };
+            }
+            const data = await resp.json().catch(() => ({}));
+            const msg = data.error?.message || `HTTP Status ${resp.status}`;
+            return { success: false, message: msg };
+        } catch (e) {
+            return { success: false, message: e.message || "Gagal menghubungi server Google AI Studio." };
+        }
+    }
+
     async function syncGeminiKeyToCloud(key) {
-        const userEmail = (currentUser?.email || activeProfile?.email || localStorage.getItem("vidora_user_email") || "winalislam@gmail.com").trim().toLowerCase();
+        const userEmail = (currentUser?.email || activeProfile?.email || localStorage.getItem("vidora_user_email") || "").trim().toLowerCase();
+        if (!userEmail) return;
         try {
             if (window.vidoraData?.client && currentUser) {
                 await window.vidoraData.client.auth.updateUser({
@@ -1355,18 +1385,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadUserGeminiKey() {
         let savedKey = (localStorage.getItem("vidora_user_gemini_key") || "").trim();
-        const userEmail = (currentUser?.email || activeProfile?.email || localStorage.getItem("vidora_user_email") || "winalislam@gmail.com").trim().toLowerCase();
+        if (REVOKED_GEMINI_KEYS.includes(savedKey)) {
+            localStorage.removeItem("vidora_user_gemini_key");
+            savedKey = "";
+        }
 
-        // 1. Ambil dari Cloud (HP <-> PC sync)
+        const userEmail = (currentUser?.email || activeProfile?.email || localStorage.getItem("vidora_user_email") || "").trim().toLowerCase();
+
+        // 1. Ambil dari Cloud (HP <-> PC sync jika user terdaftar)
         if (userEmail) {
             try {
                 const res = await fetch(`/api/manage-order?action=get_user_gemini_key&email=${encodeURIComponent(userEmail)}&userId=${currentUser?.id || ""}`);
                 const data = await res.json();
                 if (data && data.key && data.key.trim() !== "") {
-                    savedKey = data.key.trim();
-                    localStorage.setItem("vidora_user_gemini_key", savedKey);
+                    const fetchedKey = data.key.trim();
+                    if (!REVOKED_GEMINI_KEYS.includes(fetchedKey)) {
+                        savedKey = fetchedKey;
+                        localStorage.setItem("vidora_user_gemini_key", savedKey);
+                    }
                 } else if (savedKey) {
-                    // Jika di cloud belum ada tapi di local ada (misal di PC), dorong ke cloud
                     syncGeminiKeyToCloud(savedKey);
                 }
             } catch (e) {
@@ -1377,7 +1414,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (savedKey) {
             if (userGeminiKeyInput) userGeminiKeyInput.value = savedKey;
             if (geminiKeyStatusBadge) {
-                geminiKeyStatusBadge.textContent = "Aktif & Siap";
+                geminiKeyStatusBadge.textContent = "Tersimpan";
                 geminiKeyStatusBadge.style.background = "rgba(16, 185, 129, 0.15)";
                 geminiKeyStatusBadge.style.color = "#10b981";
             }
@@ -1392,30 +1429,119 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     loadUserGeminiKey();
 
+    if (btnTestGeminiKey) {
+        btnTestGeminiKey.addEventListener("click", async () => {
+            const key = (userGeminiKeyInput ? userGeminiKeyInput.value : "").trim().replace(/^["']|["']$/g, "");
+            if (!key) {
+                alert("Silakan masukkan API Key Gemini Anda di kotak input terlebih dahulu.");
+                if (userGeminiKeyInput) userGeminiKeyInput.focus();
+                return;
+            }
+
+            const origHtml = btnTestGeminiKey.innerHTML;
+            btnTestGeminiKey.disabled = true;
+            btnTestGeminiKey.innerHTML = `<i data-lucide="loader" class="spin" style="width:14px;height:14px;"></i> <span>Menguji...</span>`;
+            if (window.lucide) lucide.createIcons();
+
+            if (geminiTestFeedback) {
+                geminiTestFeedback.style.display = "block";
+                geminiTestFeedback.style.background = "rgba(56, 189, 248, 0.1)";
+                geminiTestFeedback.style.color = "#38bdf8";
+                geminiTestFeedback.textContent = "Sedang menghubungi Google AI Studio...";
+            }
+
+            const res = await testGeminiApiKey(key);
+            btnTestGeminiKey.disabled = false;
+            btnTestGeminiKey.innerHTML = origHtml;
+            if (window.lucide) lucide.createIcons();
+
+            if (res.success) {
+                if (geminiKeyStatusBadge) {
+                    geminiKeyStatusBadge.textContent = "Valid & Aktif";
+                    geminiKeyStatusBadge.style.background = "rgba(16, 185, 129, 0.15)";
+                    geminiKeyStatusBadge.style.color = "#10b981";
+                }
+                if (geminiTestFeedback) {
+                    geminiTestFeedback.style.background = "rgba(16, 185, 129, 0.15)";
+                    geminiTestFeedback.style.color = "#10b981";
+                    geminiTestFeedback.textContent = "✅ Koneksi Berhasil! API Key Gemini Anda valid dan aktif di Google AI Studio.";
+                }
+            } else {
+                if (geminiKeyStatusBadge) {
+                    geminiKeyStatusBadge.textContent = "Tidak Valid";
+                    geminiKeyStatusBadge.style.background = "rgba(239, 68, 68, 0.15)";
+                    geminiKeyStatusBadge.style.color = "#f87171";
+                }
+                if (geminiTestFeedback) {
+                    geminiTestFeedback.style.background = "rgba(239, 68, 68, 0.15)";
+                    geminiTestFeedback.style.color = "#f87171";
+                    geminiTestFeedback.textContent = `❌ Gagal: ${res.message}. Pastikan API Key aktif di aistudio.google.com/app/apikey`;
+                }
+            }
+        });
+    }
+
     btnSaveGeminiKey.addEventListener("click", async () => {
-        const key = userGeminiKeyInput.value.trim();
+        let key = userGeminiKeyInput.value.trim().replace(/^["']|["']$/g, "");
         if (!key) {
             localStorage.removeItem("vidora_user_gemini_key");
             await syncGeminiKeyToCloud("");
             await loadUserGeminiKey();
+            if (geminiTestFeedback) geminiTestFeedback.style.display = "none";
             alert("API Key Gemini dihapus dari perangkat dan akun Anda.");
             return;
         }
 
-        localStorage.setItem("vidora_user_gemini_key", key);
-        await loadUserGeminiKey();
+        if (REVOKED_GEMINI_KEYS.includes(key)) {
+            alert("Peringatan: API Key ini sudah dinonaktifkan/kedaluwarsa oleh Google.\n\nSilakan buat API Key baru secara gratis di aistudio.google.com/app/apikey");
+            if (userGeminiKeyInput) userGeminiKeyInput.focus();
+            return;
+        }
 
         const origHtml = btnSaveGeminiKey.innerHTML;
         btnSaveGeminiKey.disabled = true;
-        btnSaveGeminiKey.innerHTML = `<span>Menyinkronkan ke Akun...</span>`;
+        btnSaveGeminiKey.innerHTML = `<span>Memverifikasi ke Google...</span>`;
 
+        const testRes = await testGeminiApiKey(key);
+        if (!testRes.success) {
+            btnSaveGeminiKey.disabled = false;
+            btnSaveGeminiKey.innerHTML = origHtml;
+            if (window.lucide) lucide.createIcons();
+
+            if (geminiKeyStatusBadge) {
+                geminiKeyStatusBadge.textContent = "Tidak Valid";
+                geminiKeyStatusBadge.style.background = "rgba(239, 68, 68, 0.15)";
+                geminiKeyStatusBadge.style.color = "#f87171";
+            }
+            if (geminiTestFeedback) {
+                geminiTestFeedback.style.display = "block";
+                geminiTestFeedback.style.background = "rgba(239, 68, 68, 0.15)";
+                geminiTestFeedback.style.color = "#f87171";
+                geminiTestFeedback.textContent = `❌ Key tidak valid: ${testRes.message}`;
+            }
+
+            const stillSave = confirm(
+                `Google AI Studio menolak API Key ini:\n"${testRes.message}"\n\nApakah Anda tetap ingin menyimpannya? (Disarankan untuk memeriksa kembali key Anda di aistudio.google.com)`
+            );
+            if (!stillSave) return;
+        }
+
+        localStorage.setItem("vidora_user_gemini_key", key);
         await syncGeminiKeyToCloud(key);
+        await loadUserGeminiKey();
 
         btnSaveGeminiKey.disabled = false;
         btnSaveGeminiKey.innerHTML = origHtml;
         if (window.lucide && typeof lucide.createIcons === "function") lucide.createIcons();
 
-        alert("API Key Gemini Anda berhasil disimpan dan disinkronkan ke akun Anda (otomatis aktif di HP & PC)!");
+        if (geminiTestFeedback) {
+            geminiTestFeedback.style.display = "block";
+            geminiTestFeedback.style.background = "rgba(16, 185, 129, 0.15)";
+            geminiTestFeedback.style.color = "#10b981";
+            geminiTestFeedback.textContent = "✅ API Key Gemini berhasil disimpan & terverifikasi siap digunakan!";
+        }
+
+        alert("✅ API Key Gemini berhasil disimpan dan siap digunakan untuk analisa foto & auto prompt!");
     });
 
     btnToggleShowGeminiKey.addEventListener("click", () => {
@@ -1430,7 +1556,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     function getUserGeminiKey() {
-        return (localStorage.getItem("vidora_user_gemini_key") || "").trim();
+        const key = (localStorage.getItem("vidora_user_gemini_key") || "").trim();
+        if (REVOKED_GEMINI_KEYS.includes(key)) {
+            localStorage.removeItem("vidora_user_gemini_key");
+            return "";
+        }
+        return key;
     }
 
     // Robust Cascade Gemini API Caller (Mencoba Gemini 2.0 Flash, 1.5 Flash Latest, dsb secara otomatis)
@@ -1499,14 +1630,63 @@ document.addEventListener("DOMContentLoaded", async () => {
         throw lastError || new Error("Model Gemini tidak ditemukan untuk API Key ini.");
     }
 
+    // VIDORA Built-in Smart Prompt Generator Fallback (Jika API Key belum diset atau Google API bermasalah)
+    function generateFallbackPrompt(mode, style, platform, extra = "", ctaType = "auto", customCta = "") {
+        const platformMap = {
+            tiktok: "Target Platform: TikTok Short Video (9:16). High energy hook in first 2 seconds, punchy visual rhythm, trending viral aesthetic.",
+            tiktok_aff: "Target Platform: TikTok Shop Affiliate (9:16). Clear product feature demonstration, high-conversion visual framing pointing to yellow basket.",
+            tiktok_go_hotel: "Target Platform: TikTok Go Hotel & Staycation. Inviting room tour, cozy bed textures, luxurious bathroom amenities, relaxing holiday vibes.",
+            tiktok_go_wisata: "Target Platform: TikTok Go Wisata. Spectacular wide panoramic shots, vibrant natural scenery, landmark highlights, travel inspiration.",
+            tiktok_go_kuliner: "Target Platform: TikTok Go Kuliner. Sizzling warm dishes, mouth-watering close-up of delicious textures, vibrant culinary appeal.",
+            shopee: "Target Platform: Shopee Video. Bright commercial lighting, discount voucher callout feel, product detail focus, pointing to orange basket.",
+            instagram: "Target Platform: Instagram Reels. Clean luxury modern aesthetic, seamless lifestyle loop, aesthetic color grading.",
+            youtube: "Target Platform: YouTube Shorts. Dynamic pacing, clear value proposition in first 3 seconds, clean branding throughout.",
+            youtube_long: "Target Platform: YouTube Long-Form (16:9 Landscape). Cinematic widescreen composition, steady camera motion, rich immersive atmosphere."
+        };
+
+        const styleMap = {
+            hard_selling: "Commercial TV style, high-energy explosive camera movement, vivid saturated lighting, razor-sharp product focus, 4k 60fps octane render quality.",
+            soft_selling: "Aesthetic lifestyle cinematography, warm golden hour ambient lighting, cozy aspirational atmosphere, smooth subtle panning camera, shallow depth of field.",
+            storyboard: "Sequential 3-stage commercial presentation: attention hook, tactile product demonstration, and high-conversion commercial showcase.",
+            unboxing: "First-person perspective unboxing showcase, tactile peeling of protective film, revealing pristine product, soft diffused studio light, 8k resolution.",
+            before_after: "Dramatic transformation showcase, cinematic transition from dull to glowing flawless finished state, crisp photorealistic textures.",
+            comparison_vs: "Split comparison showcase highlighting superior premium finish, ultra-detailed macro textures, crisp reflections.",
+            trend_challenge: "Trendy viral pacing, dynamic snappy transitions, modern studio neon and natural pop lighting, ultra-fluid motion.",
+            vlog_bts: "Behind-the-scenes authentic creator POV, natural ambient lighting, genuine candid movement, true-to-life color grading.",
+            aesthetic: "Aesthetic indie cinema masterpiece, moody teal and warm amber contrast, slow poetic tracking shot, volumetric dust particles, anamorphic lens flare.",
+            cinematic: "Cinematic commercial masterpiece, moody volumetric lighting, subtle anamorphic lens flare, film grain, smooth gimbal push-in, 4k 60fps.",
+            edukasi: "Clean instructional framing, balanced composition, bright neutral studio lighting, sharp clear subject focus.",
+            tutorial: "Step-by-step tutorial framing, neat clean background, clear product usage demonstration, professional softbox lighting.",
+            pov: "Relatable first-person POV shot looking down at hands using the product, authentic natural daylight, realistic domestic or workplace environment.",
+            asmr: "Extreme macro ASMR close-up, ultra-detailed product surface and tactile interaction, glossy reflection, intimate serene atmosphere.",
+            studio: "Clean commercial product studio photography, pure minimalist background, professional 3-point softbox lighting, ultra-sharp edges, catalog ready 8k quality.",
+            ugc: "Authentic UGC smartphone style framing, natural indoor daylight, genuine relatable handheld movement, crisp true-to-life color reproduction.",
+            beauty: "Dewy glowing glass-skin aesthetic, soft ring-light glow, flawless skin textures and reflective serum drops, macro close-up focus, luxury cosmetic aesthetic."
+        };
+
+        const chosenStyle = styleMap[style] || styleMap.cinematic;
+        const chosenPlatform = platformMap[platform] || platformMap.tiktok;
+        const ctaText = customCta ? `Closing CTA: "${customCta}".` : (ctaType !== "auto" ? `Closing CTA: ${ctaType}.` : "");
+        const extraText = extra ? `Creator Notes: ${extra}.` : "";
+
+        return `Commercial photorealistic shot of featured subject. ${chosenStyle} ${chosenPlatform} ${extraText} ${ctaText} Cinematic lighting, 4k 60fps, octane render quality, film grain, hyperrealistic commercial master.`.trim();
+    }
+
     // Gemini Vision API Caller
     async function analyzeProductImageWithGemini(base64Data, mode, style, platform, extra = "", ctaType = "auto", customCta = "") {
         const apiKey = getUserGeminiKey();
         if (!apiKey) {
-            alert("Perhatian: Anda belum memasukkan API Key Gemini!\n\nSilakan masukkan API Key Gemini Anda di tab 'Akun' terlebih dahulu agar AI bisa membaca foto produk Anda.");
-            switchTab("accounts");
-            userGeminiKeyInput.focus();
-            return null;
+            const goToSettings = confirm(
+                "Perhatian: Anda belum memasukkan API Key Gemini!\n\n" +
+                "• Klik 'OK' untuk membuka tab 'Pengaturan' & memasukkan API Key Gemini gratis dari aistudio.google.com\n" +
+                "• Klik 'Cancel' untuk tetap membuat prompt video sinematik secara otomatis (menggunakan Built-in Smart Engine)."
+            );
+            if (goToSettings) {
+                switchTab("accounts");
+                if (userGeminiKeyInput) userGeminiKeyInput.focus();
+                return null;
+            }
+            return generateFallbackPrompt(mode, style, platform, extra, ctaType, customCta);
         }
 
         let mimeType = "image/jpeg";
@@ -1629,11 +1809,38 @@ Requirements for the generated prompt:
         try {
             const data = await callGeminiGenerateContent(apiKey, requestBody);
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-            return generatedText || null;
+            return generatedText || generateFallbackPrompt(mode, style, platform, extra, ctaType, customCta);
         } catch (error) {
             console.error("[Gemini API Error]", error);
-            alert(`Gagal menganalisa foto dengan Gemini: ${error.message}\n\nPastikan API Key Gemini Anda valid & aktif di aistudio.google.com.`);
-            return null;
+            const isInvalidKey = error.message?.toLowerCase().includes("api key not valid") || 
+                                error.message?.toLowerCase().includes("invalid api key") ||
+                                error.message?.toLowerCase().includes("api_key_invalid");
+
+            if (isInvalidKey) {
+                localStorage.removeItem("vidora_user_gemini_key");
+                if (geminiKeyStatusBadge) {
+                    geminiKeyStatusBadge.textContent = "Tidak Valid";
+                    geminiKeyStatusBadge.style.background = "rgba(239, 68, 68, 0.15)";
+                    geminiKeyStatusBadge.style.color = "#f87171";
+                }
+                const goToSettings = confirm(
+                    `Peringatan: API Key Gemini Anda tidak valid atau telah kedaluwarsa di Google AI Studio.\n\n` +
+                    `Pesan error: ${error.message}\n\n` +
+                    `• Klik 'OK' untuk buka tab 'Pengaturan' dan masukkan API Key Gemini yang baru (gratis di aistudio.google.com)\n` +
+                    `• Klik 'Cancel' untuk tetap generate prompt otomatis dengan Built-in Smart Engine.`
+                );
+                if (goToSettings) {
+                    switchTab("accounts");
+                    if (userGeminiKeyInput) {
+                        userGeminiKeyInput.value = "";
+                        userGeminiKeyInput.focus();
+                    }
+                }
+                return generateFallbackPrompt(mode, style, platform, extra, ctaType, customCta);
+            }
+
+            alert(`Gagal menganalisa foto dengan Gemini: ${error.message}\n\nSistem otomatis mengaktifkan Smart Prompt VIDORA.`);
+            return generateFallbackPrompt(mode, style, platform, extra, ctaType, customCta);
         }
     }
 
@@ -1761,6 +1968,9 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
                     }
             } catch (err) {
                 console.warn("[Storyboard Gemini fallback]", err);
+                if (err.message?.toLowerCase().includes("api key not valid") || err.message?.toLowerCase().includes("invalid api key") || err.message?.toLowerCase().includes("api_key_invalid")) {
+                    localStorage.removeItem("vidora_user_gemini_key");
+                }
             }
         }
 
