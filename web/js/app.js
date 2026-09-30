@@ -3,6 +3,43 @@
 // =========================================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
+    // Global Toast Notification Helper
+    function showToast(message, type = "info") {
+        try {
+            let toastContainer = document.getElementById("vidoraToastContainer");
+            if (!toastContainer) {
+                toastContainer = document.createElement("div");
+                toastContainer.id = "vidoraToastContainer";
+                toastContainer.style.cssText = "position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 90vw;";
+                document.body.appendChild(toastContainer);
+            }
+
+            const toast = document.createElement("div");
+            const bgColor = type === "success" ? "linear-gradient(135deg, #059669, #10b981)" :
+                            type === "error" ? "linear-gradient(135deg, #dc2626, #ef4444)" :
+                            type === "warning" ? "linear-gradient(135deg, #d97706, #f59e0b)" :
+                            "linear-gradient(135deg, #2563eb, #3b82f6)";
+
+            toast.style.cssText = `background: ${bgColor}; color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 8px; pointer-events: auto; opacity: 0; transform: translateY(-10px); transition: all 0.25s ease;`;
+            toast.innerHTML = `<span>${message}</span>`;
+            toastContainer.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.style.opacity = "1";
+                toast.style.transform = "translateY(0)";
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                toast.style.transform = "translateY(-10px)";
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        } catch (_) {
+            console.log(`[Toast] ${message}`);
+        }
+    }
+    window.showToast = showToast;
+
     lucide.createIcons();
 
     // State
