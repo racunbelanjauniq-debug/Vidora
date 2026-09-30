@@ -2545,29 +2545,63 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         }
 
         btnGenerateImage.disabled = true;
-        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Gambar...</span>`;
+        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Merender Foto AI (Google Imagen / FLUX.1)...</span>`;
         if (window.lucide) lucide.createIcons();
 
         try {
-            let width = 1024;
-            let height = 1024;
-            if (imageRatio === "9:16") {
-                width = 720;
-                height = 1280;
-            } else if (imageRatio === "16:9") {
-                width = 1280;
-                height = 720;
-            } else if (imageRatio === "4:3") {
-                width = 1024;
-                height = 768;
+            const apiKey = getUserGeminiKey();
+            const style = selectedImageStyle || "studio";
+            let chosenUrl = "";
+            let usedEngine = "FLUX.1 Realism Studio (Ultra HD 8K)";
+
+            // 1. Coba Google Imagen 3 via Serverless API jika API Key tersedia
+            if (apiKey) {
+                try {
+                    const imgResp = await fetch("/api/generate-image", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            ratio: imageRatio || "9:16",
+                            style: style,
+                            apiKey: apiKey
+                        })
+                    });
+                    const imgData = await imgResp.json().catch(() => ({}));
+                    if (imgData && imgData.success && imgData.url) {
+                        chosenUrl = imgData.url;
+                        usedEngine = imgData.engine || "Google Imagen 3 (Studio Ultra-HD)";
+                    }
+                } catch (imgErr) {
+                    console.warn("[Imagen 3 API failed, falling back to FLUX.1 Realism]", imgErr);
+                }
             }
 
-            const seed = Math.floor(Math.random() * 1000000);
-            const style = selectedImageStyle || "studio";
-            const cleanPrompt = encodeURIComponent(`${prompt}, ${style} photography, high resolution, 8k uhd, photorealistic, masterpiece`);
-            const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+            // 2. Jika Imagen 3 tidak aktif atau tidak menghasilkan URL, gunakan FLUX.1 Realism Studio (Kualitas Fotorealistik Tinggi)
+            if (!chosenUrl) {
+                let width = 1024;
+                let height = 1024;
+                if (imageRatio === "9:16") {
+                    width = 768;
+                    height = 1344;
+                } else if (imageRatio === "16:9") {
+                    width = 1344;
+                    height = 768;
+                } else if (imageRatio === "4:3") {
+                    width = 1152;
+                    height = 864;
+                }
 
-            await loadImageFromSrc(imageUrl, 15000);
+                const seed = Math.floor(Math.random() * 10000000);
+                // Prompt enhancement khusus untuk FLUX.1 Realism
+                const enhancedPrompt = encodeURIComponent(
+                    `Commercial ${style} photography, 8k uhd, photorealistic, sharp focus, professional 3-point softbox studio lighting, detailed catalog quality: ${prompt}`
+                );
+                // Gunakan model flux-realism dengan enhance=true
+                chosenUrl = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=${width}&height=${height}&seed=${seed}&model=flux-realism&enhance=true&nologo=true`;
+
+                await loadImageFromSrc(chosenUrl, 15000);
+            }
 
             btnGenerateImage.disabled = false;
             btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar</span>`;
@@ -2577,11 +2611,12 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
                 id: "img_" + Date.now(),
                 prompt: prompt,
                 title: prompt.substring(0, 45) + "...",
-                video_url: imageUrl,
-                thumbnail_url: imageUrl,
-                url: imageUrl,
+                video_url: chosenUrl,
+                thumbnail_url: chosenUrl,
+                url: chosenUrl,
                 duration: "photo",
                 type: "image",
+                engine: usedEngine,
                 created_at: new Date().toISOString(),
                 status: "completed"
             };
@@ -2712,6 +2747,62 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         lucide.createIcons();
     }
 
+    // Fungsi Download Langsung ke Galeri / Perangkat
+    async function triggerDirectDownload(url, defaultFilename = "vidora-media.png") {
+        if (!url) return;
+        const btn = document.getElementById("btnDownloadVideo");
+        const origHtml = btn ? btn.innerHTML : "";
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader" class="spin" style="width:16px;height:16px;"></i> <span>Menyimpan ke Perangkat...</span>`;
+            if (window.lucide) lucide.createIcons();
+        }
+
+        try {
+            // Jika data URL (base64)
+            if (url.startsWith("data:")) {
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = defaultFilename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                return;
+            }
+
+            // Jika URL web biasa, fetch sebagai Blob agar browser langsung mendownload ke file lokal
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error("Gagal mengambil file");
+            const blob = await resp.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = blobUrl;
+            a.download = defaultFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+        } catch (e) {
+            console.warn("Direct blob download failed, fallback to direct download link:", e);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.target = "_blank";
+            a.download = defaultFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                if (window.lucide) lucide.createIcons();
+            }
+        }
+    }
+
     // Media Player Modal (Video & Gambar)
     function openMediaModal(job) {
         if (!job) return;
@@ -2719,13 +2810,16 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         const isImg = job.duration === "photo" || job.type === "image" || !job.video_url;
 
         if (isImg) {
-            playerModalTitle.textContent = "Pratinjau Gambar AI";
+            playerModalTitle.textContent = job.engine ? `Pratinjau Foto (${job.engine})` : "Pratinjau Gambar AI";
             playerVideo.style.display = "none";
             playerImage.style.display = "block";
             const imgSrc = job.thumbnail_url || job.video_url || job.url || "";
             playerImage.src = imgSrc;
+            btnDownloadVideo.innerHTML = `<i data-lucide="download" style="width: 18px; height: 18px;"></i> <span>Download Gambar Langsung</span>`;
+            if (window.lucide) lucide.createIcons();
             btnDownloadVideo.onclick = () => {
-                window.open(imgSrc, "_blank");
+                const ext = imgSrc.includes("image/jpeg") ? "jpg" : "png";
+                triggerDirectDownload(imgSrc, `vidora-foto-${Date.now()}.${ext}`);
             };
         } else {
             playerModalTitle.textContent = "Pratinjau Video AI";
@@ -2734,8 +2828,10 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             const vidSrc = job.video_url || job.url || "";
             playerVideo.src = vidSrc;
             playerVideo.play().catch(() => {});
+            btnDownloadVideo.innerHTML = `<i data-lucide="download" style="width: 18px; height: 18px;"></i> <span>Download Video Langsung</span>`;
+            if (window.lucide) lucide.createIcons();
             btnDownloadVideo.onclick = () => {
-                window.open(vidSrc, "_blank");
+                triggerDirectDownload(vidSrc, `vidora-video-${Date.now()}.webm`);
             };
         }
         modalVideoPlayer.classList.add("open");
