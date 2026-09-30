@@ -2534,6 +2534,49 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         }
     });
 
+    function getUserHfToken() {
+        return (localStorage.getItem("vidora_user_hf_token") || "").trim();
+    }
+
+    const cfgHuggingFaceToken = document.getElementById("cfgHuggingFaceToken");
+    const btnSaveHfToken = document.getElementById("btnSaveHfToken");
+    if (cfgHuggingFaceToken) {
+        cfgHuggingFaceToken.value = getUserHfToken();
+    }
+    if (btnSaveHfToken) {
+        btnSaveHfToken.addEventListener("click", () => {
+            const val = (cfgHuggingFaceToken ? cfgHuggingFaceToken.value : "").trim();
+            if (val) {
+                localStorage.setItem("vidora_user_hf_token", val);
+                showToast("Token Hugging Face berhasil disimpan!", "success");
+            } else {
+                localStorage.removeItem("vidora_user_hf_token");
+                showToast("Token Hugging Face dihapus.", "info");
+            }
+        });
+    }
+
+    // Helper untuk menerjemahkan dan mengoptimalkan prompt menjadi instruksi fotografi ultra-fotorealistis
+    async function optimizePromptForPhotorealism(userPrompt, style) {
+        const geminiKey = typeof getUserGeminiKey === "function" ? getUserGeminiKey() : "";
+        if (geminiKey && typeof callGeminiGenerateContent === "function") {
+            try {
+                const systemInst = "You are a world-class fashion & commercial photography prompt engineer. Convert the user's Indonesian visual product or portrait prompt into an ultra-realistic English photography prompt for FLUX.1. Specify authentic human skin texture with natural fine pores, realistic eyes with natural catchlights, authentic fabric draping, soft 3-point commercial studio lighting, 85mm f/1.4 lens, 8k uhd photorealistic raw photograph. Absolutely no CGI, no 3D render, no plastic doll skin, no cartoon. Output ONLY the raw English prompt without preamble or quotes.";
+                const resp = await callGeminiGenerateContent(geminiKey, {
+                    contents: [{ parts: [{ text: `${systemInst}\n\nConcept:\n${userPrompt}` }] }],
+                    generationConfig: { temperature: 0.3, maxOutputTokens: 250 }
+                });
+                const text = resp?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                if (text && text.length > 20) {
+                    return text;
+                }
+            } catch (_) {}
+        }
+
+        // Built-in rule-based photographic prompt builder
+        return `award-winning commercial ${style || "catalog"} photography of ${userPrompt}, authentic Indonesian model, natural human skin texture with subtle fine pores, warm candid gentle expression, soft directional studio lighting, shallow depth of field, 85mm f/1.4 lens, photorealistic, raw candid photo, 8k uhd, sharp focus, masterpiece, highly detailed fabric, no CGI, no 3D render, no anime, no plastic doll`;
+    }
+
     btnGenerateImage.addEventListener("click", async () => {
         if (!checkSubscriptionAccess("Generate Gambar")) return;
 
@@ -2544,67 +2587,62 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             return;
         }
 
+        let hfToken = getUserHfToken();
+        const apiKey = typeof getUserGeminiKey === "function" ? getUserGeminiKey() : "";
+
+        // Jika belum ada Hugging Face Token dan belum ada Gemini Key, minta user memasukkannya
+        if (!hfToken && !apiKey) {
+            const tokenInput = window.prompt(
+                "✨ Untuk menghasilkan foto 100% fotorealistis (FLUX.1 Ultra-HD tanpa watermark):\n\n" +
+                "Masukkan Hugging Face Token Anda (Gratis selamanya di https://huggingface.co/settings/tokens):\n\n" +
+                "Ketik atau tempel token (dimulai dengan hf_):"
+            );
+            if (tokenInput && tokenInput.trim()) {
+                hfToken = tokenInput.trim();
+                localStorage.setItem("vidora_user_hf_token", hfToken);
+                if (cfgHuggingFaceToken) cfgHuggingFaceToken.value = hfToken;
+                showToast("Token Hugging Face berhasil disimpan!", "success");
+            } else {
+                alert("Harap masukkan Hugging Face Access Token untuk merender foto FLUX.1 yang fotorealistis.");
+                if (cfgHuggingFaceToken) cfgHuggingFaceToken.focus();
+                return;
+            }
+        }
+
         btnGenerateImage.disabled = true;
-        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Merender Foto AI (Google Imagen / FLUX.1)...</span>`;
+        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Merender Foto Realistis (FLUX.1 Ultra-HD)...</span>`;
         if (window.lucide) lucide.createIcons();
 
         try {
-            const apiKey = getUserGeminiKey();
-            const style = selectedImageStyle || "studio";
-            let chosenUrl = "";
-            let usedEngine = "FLUX.1 Realism Studio (Ultra HD 8K)";
+            const style = selectedImageStyle || "katalog";
+            showToast("Mengoptimasi prompt fotografi fotorealistis...", "info");
+            const photorealisticPrompt = await optimizePromptForPhotorealism(prompt, style);
 
-            // 1. Coba Google Imagen 3 via Serverless API jika API Key tersedia
-            if (apiKey) {
-                try {
-                    const imgResp = await fetch("/api/generate-image", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            prompt: prompt,
-                            ratio: imageRatio || "9:16",
-                            style: style,
-                            apiKey: apiKey
-                        })
-                    });
-                    const imgData = await imgResp.json().catch(() => ({}));
-                    if (imgData && imgData.success && imgData.url) {
-                        chosenUrl = imgData.url;
-                        usedEngine = imgData.engine || "Google Imagen 3 (Studio Ultra-HD)";
-                    }
-                } catch (imgErr) {
-                    console.warn("[Imagen 3 API failed, falling back to FLUX.1 Realism]", imgErr);
+            const imgResp = await fetch("/api/generate-image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    prompt: photorealisticPrompt,
+                    ratio: imageRatio || "9:16",
+                    style: style,
+                    hfToken: hfToken,
+                    apiKey: apiKey
+                })
+            });
+
+            const imgData = await imgResp.json().catch(() => ({}));
+            if (!imgData.success || !imgData.url) {
+                if (imgData.needsToken) {
+                    throw new Error("Token Hugging Face diperlukan. Buat token gratis di https://huggingface.co/settings/tokens");
                 }
+                throw new Error(imgData.message || "Gagal merender foto dengan model FLUX.1");
             }
 
-            // 2. Jika Imagen 3 tidak aktif atau tidak menghasilkan URL, gunakan FLUX.1 Realism Studio (Kualitas Fotorealistik Tinggi)
-            if (!chosenUrl) {
-                let width = 1024;
-                let height = 1024;
-                if (imageRatio === "9:16") {
-                    width = 768;
-                    height = 1344;
-                } else if (imageRatio === "16:9") {
-                    width = 1344;
-                    height = 768;
-                } else if (imageRatio === "4:3") {
-                    width = 1152;
-                    height = 864;
-                }
-
-                const seed = Math.floor(Math.random() * 10000000);
-                // Prompt enhancement khusus untuk FLUX.1 Realism
-                const enhancedPrompt = encodeURIComponent(
-                    `Commercial ${style} photography, 8k uhd, photorealistic, sharp focus, professional 3-point softbox studio lighting, detailed catalog quality: ${prompt}`
-                );
-                // Gunakan model flux-realism dengan enhance=true
-                chosenUrl = `https://image.pollinations.ai/prompt/${enhancedPrompt}?width=${width}&height=${height}&seed=${seed}&model=flux-realism&enhance=true&nologo=true`;
-
-                await loadImageFromSrc(chosenUrl, 15000);
-            }
+            const chosenUrl = imgData.url;
+            const usedEngine = imgData.engine || "FLUX.1 Ultra-HD (Hugging Face)";
 
             btnGenerateImage.disabled = false;
-            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar</span>`;
+            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (FLUX.1)</span>`;
             if (window.lucide) lucide.createIcons();
 
             const imageJob = {
@@ -2630,9 +2668,9 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
             openMediaModal(imageJob);
         } catch (e) {
             btnGenerateImage.disabled = false;
-            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar</span>`;
+            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (FLUX.1)</span>`;
             if (window.lucide) lucide.createIcons();
-            alert("Gagal memproses gambar: " + e.message);
+            alert("Gagal memproses gambar fotorealistis: " + e.message);
         }
     });
 

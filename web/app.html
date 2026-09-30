@@ -360,10 +360,32 @@
                         </div>
                     </div>
 
+                    <!-- Konfigurasi Mesin AI & Hugging Face Token -->
+                    <div class="form-group" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px; margin-top: 10px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0; font-size: 12px; font-weight: 600; color: #60a5fa; display: flex; align-items: center; gap: 6px;">
+                                <i data-lucide="sparkles" style="width: 14px; height: 14px; color: #f59e0b;"></i>
+                                <span>Mesin AI: Hugging Face (FLUX.1 Ultra-HD)</span>
+                            </label>
+                            <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #10b981; text-decoration: underline; font-weight: 500;">
+                                Dapatkan Token Gratis ↗
+                            </a>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="password" class="form-input" id="cfgHuggingFaceToken" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxx (Token Gratis)" style="font-size: 12px; height: 38px;">
+                            <button type="button" class="btn-secondary" id="btnSaveHfToken" style="padding: 0 14px; font-size: 12px; height: 38px; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; border-radius: 8px; cursor: pointer;">
+                                Simpan
+                            </button>
+                        </div>
+                        <div style="font-size: 10.5px; color: var(--text-tertiary); margin-top: 5px; line-height: 1.4;">
+                            ✨ Menghasilkan foto manusia asli &amp; busana 100% fotorealistis (tekstur pori kulit nyata, lighting studio profesional, tanpa watermark, gratis selamanya).
+                        </div>
+                    </div>
+
                     <!-- Tombol Generate Gambar -->
                     <button class="btn-generate" id="btnGenerateImage" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
-                        <span>Generate Gambar</span>
+                        <span>Generate Gambar (FLUX.1)</span>
                     </button>
                 </div>
             </div>
@@ -1581,6 +1603,6 @@
     <script src="/js/config.js?v=3.8"></script>
     <script src="/js/supabase-client.js?v=3.8"></script>
     <script src="/js/xsender-service.js?v=3.8"></script>
-    <script src="/js/app.js?v=4.4"></script>
+    <script src="/js/app.js?v=4.5"></script>
 </body>
 </html>
