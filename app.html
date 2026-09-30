@@ -268,10 +268,40 @@
                         </div>
                     </div>
 
+                    <!-- Pilihan Akun Google Video -->
+                    <div class="form-group">
+                        <label class="form-label" for="videoAccountSelect">Pilih Akun Google:</label>
+                        <select class="form-select account-dropdown" id="videoAccountSelect">
+                            <option value="">-- Rotasi Otomatis Semua Akun Aktif --</option>
+                        </select>
+                    </div>
+
+                    <!-- Mesin AI Video -->
+                    <div class="form-group">
+                        <label class="form-label" for="videoEngineSelect">Mesin AI Video:</label>
+                        <select class="form-select" id="videoEngineSelect">
+                            <option value="Google Flow (Omni Flash)" selected>Google Flow (Omni Flash AI — Cepat)</option>
+                            <option value="Google Flow (Veo)">Google Flow (Veo — Ultra Realistis)</option>
+                            <option value="Google Vids (Workspace AI)">Google Vids AI (Scene Storyboard, Script, Voiceover &amp; MP4)</option>
+                        </select>
+                    </div>
+
+                    <!-- Mode Tersembunyi (Invisible) -->
+                    <div class="switch-row" style="margin-bottom: 14px;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Mode Tersembunyi (Invisible)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Browser otomasi berjalan di background</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="videoHiddenCheck" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
                     <!-- Tombol Generate Video -->
                     <button class="btn-generate" id="btnGenerateVideo">
                         <i data-lucide="play" style="width: 18px; height: 18px;"></i>
-                        <span>Generate Video</span>
+                        <span>Generate Video AI</span>
                     </button>
                 </div>
             </div>
@@ -360,32 +390,40 @@
                         </div>
                     </div>
 
-                    <!-- Konfigurasi Mesin AI & Hugging Face Token -->
-                    <div class="form-group" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px; margin-top: 10px; margin-bottom: 16px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <label class="form-label" style="margin-bottom: 0; font-size: 12px; font-weight: 600; color: #60a5fa; display: flex; align-items: center; gap: 6px;">
-                                <i data-lucide="sparkles" style="width: 14px; height: 14px; color: #f59e0b;"></i>
-                                <span>Mesin AI: Hugging Face (FLUX.1 Ultra-HD)</span>
-                            </label>
-                            <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #10b981; text-decoration: underline; font-weight: 500;">
-                                Dapatkan Token Gratis ↗
-                            </a>
+                    <!-- Pilihan Akun Google Gambar -->
+                    <div class="form-group">
+                        <label class="form-label" for="imageAccountSelect">Pilih Akun Google:</label>
+                        <select class="form-select account-dropdown" id="imageAccountSelect">
+                            <option value="">-- Rotasi Otomatis Semua Akun Aktif --</option>
+                        </select>
+                    </div>
+
+                    <!-- Mesin AI Gambar -->
+                    <div class="form-group">
+                        <label class="form-label" for="imageEngineSelect">Mesin AI Gambar:</label>
+                        <select class="form-select" id="imageEngineSelect">
+                            <option value="Nano Banana" selected>⭐ Nano Banana (Google Flow Studio) — Kualitas Produk Asli</option>
+                            <option value="Google Imagen 3">Google Imagen 3 (Studio Ultra-HD)</option>
+                            <option value="FLUX.1">FLUX.1-schnell (Hugging Face Serverless)</option>
+                        </select>
+                    </div>
+
+                    <!-- Mode Tersembunyi (Invisible) -->
+                    <div class="switch-row" style="margin-bottom: 14px;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 600;">Mode Tersembunyi (Invisible)</div>
+                            <div style="font-size: 11px; color: var(--text-tertiary);">Browser otomasi berjalan di background</div>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="password" class="form-input" id="cfgHuggingFaceToken" placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxx (Token Gratis)" style="font-size: 12px; height: 38px;">
-                            <button type="button" class="btn-secondary" id="btnSaveHfToken" style="padding: 0 14px; font-size: 12px; height: 38px; white-space: nowrap; background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.4); color: #93c5fd; border-radius: 8px; cursor: pointer;">
-                                Simpan
-                            </button>
-                        </div>
-                        <div style="font-size: 10.5px; color: var(--text-tertiary); margin-top: 5px; line-height: 1.4;">
-                            ✨ Menghasilkan foto manusia asli &amp; busana 100% fotorealistis (tekstur pori kulit nyata, lighting studio profesional, tanpa watermark, gratis selamanya).
-                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="imageHiddenCheck" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
 
                     <!-- Tombol Generate Gambar -->
                     <button class="btn-generate" id="btnGenerateImage" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         <i data-lucide="camera" style="width: 18px; height: 18px;"></i>
-                        <span>Generate Gambar (FLUX.1)</span>
+                        <span>Generate Gambar (Nano Banana)</span>
                     </button>
                 </div>
             </div>
@@ -722,10 +760,66 @@
             </div>
         </section>
 
-        <!-- TAB 2: PENGATURAN API KEY AI PROMPT -->
+        <!-- TAB 2: AKUN GOOGLE & PUSAT STUDIO -->
         <section id="tab-accounts" class="tab-pane">
             
-            <!-- Card: API Key Gemini -->
+            <!-- Card 1: Multi-Akun Google User Sendiri -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="users" style="color: #818cf8; width: 19px; height: 19px;"></i>
+                        <span>Profil Akun Google Saya</span>
+                    </h2>
+                    <button type="button" class="btn-icon" id="btnOpenAddAccount" title="Tambah Akun Google">
+                        <i data-lucide="plus" style="width: 18px; height: 18px; color: #818cf8;"></i>
+                    </button>
+                </div>
+
+                <!-- Limit Progress -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600;">
+                        <span>Kapasitas Akun Terpasang</span>
+                        <span id="accountLimitText" style="color: #a5b4fc;">0 / 5 Slot Terpakai</span>
+                    </div>
+                    <div class="limit-progress-bar" style="margin: 8px 0 12px 0;">
+                        <div class="limit-fill" id="accountLimitFill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.4;">
+                    Setiap akun Google menyimpan sesi login terpisah untuk otomatisasi render di <strong>Google Flow (Nano Banana &amp; Veo)</strong> serta <strong>Google Vids AI</strong>.
+                </div>
+
+                <div id="accountsList" style="margin-top: 10px;">
+                    <!-- Akun ter-render otomatis oleh JS -->
+                </div>
+            </div>
+
+            <!-- Card 2: Akses Langsung Google Flow & Google Vids Studio -->
+            <div class="card" style="margin-bottom: 16px;">
+                <div class="card-title-row">
+                    <h2 class="card-title">
+                        <i data-lucide="sparkles" style="color: #10b981; width: 19px; height: 19px;"></i>
+                        <span>Integrasi Google Flow &amp; Google Vids</span>
+                    </h2>
+                    <span style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Workspace AI</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.5;">
+                    Akses studio resmi Google untuk merender produk fotorealistis dan video presentasi scene demi scene dengan AI Voiceover &amp; ekspor MP4 gratis:
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <a href="https://labs.google/fx/tools/flow" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="padding: 12px; text-decoration: none; justify-content: center; font-size: 12px; font-weight: 600; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #93c5fd;">
+                        <i data-lucide="camera" style="width: 15px; height: 15px; color: #60a5fa;"></i>
+                        <span>Google Flow (Nano Banana) ↗</span>
+                    </a>
+                    <a href="https://docs.google.com/videos/" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="padding: 12px; text-decoration: none; justify-content: center; font-size: 12px; font-weight: 600; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7;">
+                        <i data-lucide="video" style="width: 15px; height: 15px; color: #10b981;"></i>
+                        <span>Google Vids Studio ↗</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 3: API Key Gemini -->
             <div class="card">
                 <div class="card-title-row">
                     <h2 class="card-title">
@@ -1151,8 +1245,8 @@
             <span>Studio</span>
         </button>
         <button class="nav-item" data-tab="accounts">
-            <i data-lucide="settings"></i>
-            <span>Pengaturan</span>
+            <i data-lucide="users"></i>
+            <span>Akun</span>
         </button>
         <button class="nav-item" data-tab="queue">
             <i data-lucide="activity"></i>
@@ -1168,7 +1262,37 @@
         </button>
     </nav>
 
-
+    <!-- MODAL: TAMBAH AKUN GOOGLE -->
+    <div class="modal-backdrop" id="modalAddAccount" style="display: none;">
+        <div class="modal-sheet" style="max-width: 440px; padding: 20px;">
+            <div class="card-title-row">
+                <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="user-plus" style="width: 18px; height: 18px; color: #818cf8;"></i>
+                    <span>Tambah Akun Google</span>
+                </h3>
+                <button type="button" class="btn-icon" id="btnCloseAddAccount">
+                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-secondary); margin: 8px 0 16px 0; line-height: 1.5;">
+                Daftarkan alamat Gmail Anda. Akun ini akan digunakan oleh browser otomasi untuk login ke <strong>Google Flow (Nano Banana)</strong> dan <strong>Google Vids</strong>.
+            </p>
+            <form id="formAddAccount">
+                <div class="form-group">
+                    <label class="form-label" for="newAccountEmail">Email Google (Gmail):</label>
+                    <input type="email" class="form-input" id="newAccountEmail" placeholder="namaakun@gmail.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newAccountLabel">Label / Keterangan (Opsional):</label>
+                    <input type="text" class="form-input" id="newAccountLabel" placeholder="Contoh: Akun Utama / Google Vids">
+                </div>
+                <button type="submit" class="btn-generate" style="margin-top: 10px; width: 100%;">
+                    <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
+                    <span>Simpan Akun Google</span>
+                </button>
+            </form>
+        </div>
+    </div>
 
     <!-- MODAL: MEDIA PLAYER (Video / Gambar) -->
     <div class="modal-backdrop" id="modalVideoPlayer">
@@ -1603,6 +1727,6 @@
     <script src="/js/config.js?v=3.8"></script>
     <script src="/js/supabase-client.js?v=3.8"></script>
     <script src="/js/xsender-service.js?v=3.8"></script>
-    <script src="/js/app.js?v=4.6"></script>
+    <script src="/js/app.js?v=4.7"></script>
 </body>
 </html>

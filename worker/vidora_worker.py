@@ -122,20 +122,26 @@ def process_job(supabase, r2, job):
             raise RuntimeError("Google Flow tidak menghasilkan video atau proses dihentikan.")
 
         generated_file = generator.last_output_paths[0]
-        update_progress("Video selesai dirender. Mengunggah ke Cloudflare R2...", 85)
+        ext = Path(generated_file).suffix.lower() or ".mp4"
+        is_image = ext in [".jpg", ".jpeg", ".png", ".webp"]
+        media_type_label = "Foto Nano Banana" if is_image else "Video"
+        
+        update_progress(f"{media_type_label} selesai dirender. Mengunggah ke Cloudflare R2...", 85)
 
         # 5. Unggah ke Cloudflare R2
-        r2_dest_key = f"videos/{user_id}/{job_id}.mp4"
+        folder = "images" if is_image else "videos"
+        r2_dest_key = f"{folder}/{user_id}/{job_id}{ext}"
         upload_res = r2.upload_file(generated_file, destination_key=r2_dest_key)
-        video_url = upload_res["url"]
+        media_url = upload_res["url"]
 
         # 6. Selesaikan Job di Supabase
-        update_progress("Video berhasil diunggah dan siap ditonton!", 100)
+        update_progress(f"{media_type_label} berhasil diunggah dan siap dilihat!", 100)
         supabase.table("generate_jobs").update({
             "status": "completed",
             "progress": 100,
             "status_message": "Selesai",
-            "video_url": video_url,
+            "video_url": media_url,
+            "thumbnail_url": media_url,
             "r2_key": r2_dest_key,
             "completed_at": datetime.utcnow().isoformat()
         }).eq("id", job_id).execute()

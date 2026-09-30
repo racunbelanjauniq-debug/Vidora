@@ -76,6 +76,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnRemoveVideoPreview = document.getElementById("btnRemoveVideoPreview");
     const videoPromptInput = document.getElementById("videoPromptInput");
     const videoAccountSelect = document.getElementById("videoAccountSelect");
+    const videoEngineSelect = document.getElementById("videoEngineSelect");
+    const videoHiddenCheck = document.getElementById("videoHiddenCheck");
     const btnVideoAutoPrompt = document.getElementById("btnVideoAutoPrompt");
     const btnGenerateVideo = document.getElementById("btnGenerateVideo");
 
@@ -99,6 +101,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnRemoveImagePreview = document.getElementById("btnRemoveImagePreview");
     const imagePromptInput = document.getElementById("imagePromptInput");
     const imageAccountSelect = document.getElementById("imageAccountSelect");
+    const imageEngineSelect = document.getElementById("imageEngineSelect");
+    const imageHiddenCheck = document.getElementById("imageHiddenCheck");
     const btnImageAutoPrompt = document.getElementById("btnImageAutoPrompt");
     const btnGenerateImage = document.getElementById("btnGenerateImage");
 
@@ -133,6 +137,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Modals & Banners
     const modalAddAccount = document.getElementById("modalAddAccount");
+    const btnOpenAddAccount = document.getElementById("btnOpenAddAccount");
+    const btnCloseAddAccount = document.getElementById("btnCloseAddAccount");
+    const formAddAccount = document.getElementById("formAddAccount");
+    const newAccountEmail = document.getElementById("newAccountEmail");
+    const newAccountLabel = document.getElementById("newAccountLabel");
     const modalVideoPlayer = document.getElementById("modalVideoPlayer");
     const modalAuth = document.getElementById("modalAuth");
     const modalUserProfile = document.getElementById("modalUserProfile");
@@ -341,6 +350,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         if (tabId === "accounts") {
             loadUserGeminiKey();
+            refreshAccounts();
         }
 
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2488,6 +2498,13 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
     btnGenerateVideo.addEventListener("click", async () => {
         if (!checkSubscriptionAccess("Generate Video")) return;
 
+        const engine = videoEngineSelect ? videoEngineSelect.value : "Google Flow (Omni Flash)";
+        const isGoogleVids = engine.toLowerCase().includes("vids");
+        const isVeo = engine.toLowerCase().includes("veo");
+
+        let promptText = "";
+        let storyboardScenes = [];
+
         // Storyboard Mode (3 Adegan)
         if (videoApStyleSelect?.value === "storyboard") {
             const sc1 = (sbScene1?.value || "").trim();
@@ -2499,75 +2516,65 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
                 if (sbScene1) sbScene1.focus();
                 return;
             }
-
-            btnGenerateVideo.disabled = true;
-            btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Video Storyboard...</span>`;
-            if (window.lucide) lucide.createIcons();
-
-            try {
-                await generateHybridStoryboardClips({
-                    scene1: sc1 || "Dynamic eye-catching visual hook, cinematic lighting, 4k",
-                    scene2: sc2 || "Close-up product demonstration, showing textures and premium detail",
-                    scene3: sc3 || "Call to action scene, premium product showcase with warm commercial glow",
-                    targetRatio: videoRatio || "9:16",
-                    onProgress: (msg) => {
-                        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span style="font-size:12px;">${msg}</span>`;
-                        if (window.lucide) lucide.createIcons();
-                    }
-                });
-
-                btnGenerateVideo.disabled = false;
-                btnGenerateVideo.innerHTML = `<i data-lucide="film" style="width: 18px; height: 18px;"></i> <span>Generate Video Storyboard (3 Adegan)</span>`;
-                if (window.lucide) lucide.createIcons();
-
-                switchTab("studio");
-                switchSubTab("mixer");
-                alert("🎉 Berhasil!\n\n3 Adegan Storyboard telah dibuat dan otomatis dimasukkan ke Antrian Mixer.\n\nSemua klip sudah tersusun berurutan (Scene 1, 2, 3). Anda bisa menambahkan musik latar, memilih transisi, dan klik 'Gabungkan Semua Klip Menjadi 1 Video'!");
-            } catch (err) {
-                console.error("Storyboard Generation Error:", err);
-                btnGenerateVideo.disabled = false;
-                btnGenerateVideo.innerHTML = `<i data-lucide="film" style="width: 18px; height: 18px;"></i> <span>Generate Video Storyboard (3 Adegan)</span>`;
-                if (window.lucide) lucide.createIcons();
-                alert("Gagal memproses Video Storyboard: " + err.message);
+            storyboardScenes = [sc1, sc2, sc3].filter(Boolean);
+            promptText = `[Adegan 1]: ${sc1 || '-'}\n[Adegan 2]: ${sc2 || '-'}\n[Adegan 3]: ${sc3 || '-'}`;
+        } else {
+            promptText = (videoPromptInput ? videoPromptInput.value : "").trim();
+            if (!promptText) {
+                alert("Harap masukkan prompt video atau gunakan 'Auto Prompt AI' terlebih dahulu!");
+                if (videoPromptInput) videoPromptInput.focus();
+                return;
             }
-            return;
         }
 
-        // Single Video
-        const prompt = videoPromptInput.value.trim();
-        if (!prompt) {
-            alert("Harap masukkan prompt video atau gunakan 'Auto Prompt AI' terlebih dahulu!");
-            videoPromptInput.focus();
+        // Cek ketersediaan Akun Google Vault
+        if (!Array.isArray(userAccounts) || userAccounts.length === 0) {
+            alert("Harap daftarkan Akun Google Anda di tab 'Akun' terlebih dahulu agar sistem dapat terhubung ke Google Flow / Google Vids.");
+            switchTab("accounts");
             return;
         }
 
         btnGenerateVideo.disabled = true;
-        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Memproses Video...</span>`;
+        btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Membuat Antrian Video...</span>`;
         if (window.lucide) lucide.createIcons();
 
         try {
-            await generateSingleHybridClip({
-                prompt,
-                targetRatio: videoRatio || "9:16",
-                onProgress: (msg) => {
-                    btnGenerateVideo.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span style="font-size:12px;">${msg}</span>`;
-                    if (window.lucide) lucide.createIcons();
-                }
+            const chosenModel = isGoogleVids ? "Google Vids AI" : (isVeo ? "Veo" : "Omni Flash");
+            await window.vidoraData.createGenerateJob({
+                prompt: promptText,
+                model: chosenModel,
+                ratio: videoRatio || "9:16",
+                duration: "8s",
+                count: 1,
+                googleAccountId: videoAccountSelect ? videoAccountSelect.value : null,
+                hidden: videoHiddenCheck ? videoHiddenCheck.checked : true
             });
 
             btnGenerateVideo.disabled = false;
-            btnGenerateVideo.innerHTML = `<i data-lucide="play" style="width: 18px; height: 18px;"></i> <span>Generate Video</span>`;
+            btnGenerateVideo.innerHTML = `<i data-lucide="play" style="width: 18px; height: 18px;"></i> <span>Generate Video AI</span>`;
             if (window.lucide) lucide.createIcons();
 
-            switchTab("studio");
-            switchSubTab("mixer");
-            alert("🎉 Berhasil!\n\nVideo telah dibuat dan otomatis dimasukkan ke Antrian Mixer.\n\nAnda dapat memutar video, menambahkan audio, atau menggabungkannya dengan klip lain!");
+            if (isGoogleVids) {
+                const openVids = confirm(
+                    "🎉 Tugas Google Vids AI Berhasil Masuk Antrian!\n\n" +
+                    "Google Vids Studio memungkinkan Anda menyusun scene presentasi, menambahkan voiceover AI, dan ekspor MP4 gratis.\n\n" +
+                    "Buka Google Vids Studio sekarang?"
+                );
+                if (openVids) {
+                    window.open("https://docs.google.com/videos/", "_blank");
+                }
+            } else {
+                showToast("Tugas render video berhasil masuk antrian!", "success");
+            }
+
+            switchTab("queue");
+            await refreshJobs();
         } catch (err) {
-            console.error("Single Video Generation Error:", err);
+            console.error("Video Generation Error:", err);
             btnGenerateVideo.disabled = false;
-            btnGenerateVideo.innerHTML = `<i data-lucide="play" style="width: 18px; height: 18px;"></i> <span>Generate Video</span>`;
+            btnGenerateVideo.innerHTML = `<i data-lucide="play" style="width: 18px; height: 18px;"></i> <span>Generate Video AI</span>`;
             if (window.lucide) lucide.createIcons();
-            alert("Gagal memproses Video: " + err.message);
+            alert("Gagal mendaftarkan tugas Video: " + err.message);
         }
     });
 
@@ -2593,7 +2600,6 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
         });
     }
 
-    // Helper untuk menerjemahkan dan mengoptimalkan prompt menjadi instruksi fotografi ultra-fotorealistis
     async function optimizePromptForPhotorealism(userPrompt, style) {
         const geminiKey = typeof getUserGeminiKey === "function" ? getUserGeminiKey() : "";
         if (geminiKey && typeof callGeminiGenerateContent === "function") {
@@ -2609,113 +2615,279 @@ You MUST return STRICTLY a valid JSON object (no markdown code fence, no text ou
                 }
             } catch (_) {}
         }
-
-        // Built-in rule-based photographic prompt builder
         return `award-winning commercial ${style || "catalog"} photography of ${userPrompt}, authentic Indonesian model, natural human skin texture with subtle fine pores, warm candid gentle expression, soft directional studio lighting, shallow depth of field, 85mm f/1.4 lens, photorealistic, raw candid photo, 8k uhd, sharp focus, masterpiece, highly detailed fabric, no CGI, no 3D render, no anime, no plastic doll`;
     }
 
     btnGenerateImage.addEventListener("click", async () => {
         if (!checkSubscriptionAccess("Generate Gambar")) return;
 
-        const prompt = imagePromptInput.value.trim();
+        const prompt = imagePromptInput ? imagePromptInput.value.trim() : "";
         if (!prompt) {
             alert("Harap masukkan prompt gambar atau gunakan 'Auto Prompt dari Foto'!");
-            imagePromptInput.focus();
+            if (imagePromptInput) imagePromptInput.focus();
             return;
         }
 
-        let hfToken = getUserHfToken();
-        const apiKey = typeof getUserGeminiKey === "function" ? getUserGeminiKey() : "";
+        const engine = imageEngineSelect ? imageEngineSelect.value : "Nano Banana";
 
-        // Jika belum ada Hugging Face Token dan belum ada Gemini Key, minta user memasukkannya
-        if (!hfToken && !apiKey) {
-            const tokenInput = window.prompt(
-                "✨ Untuk menghasilkan foto 100% fotorealistis (FLUX.1 Ultra-HD tanpa watermark):\n\n" +
-                "Masukkan Hugging Face Token Anda (Gratis selamanya di https://huggingface.co/settings/tokens):\n\n" +
-                "Ketik atau tempel token (dimulai dengan hf_):"
-            );
-            if (tokenInput && tokenInput.trim()) {
-                hfToken = tokenInput.trim();
-                localStorage.setItem("vidora_user_hf_token", hfToken);
-                if (cfgHuggingFaceToken) cfgHuggingFaceToken.value = hfToken;
-                showToast("Token Hugging Face berhasil disimpan!", "success");
-            } else {
-                alert("Harap masukkan Hugging Face Access Token untuk merender foto FLUX.1 yang fotorealistis.");
-                if (cfgHuggingFaceToken) cfgHuggingFaceToken.focus();
+        // Jika user sengaja memilih FLUX.1
+        if (engine.toLowerCase().includes("flux")) {
+            let hfToken = getUserHfToken();
+            const apiKey = typeof getUserGeminiKey === "function" ? getUserGeminiKey() : "";
+            if (!hfToken && !apiKey) {
+                alert("Harap masukkan Token Hugging Face atau Gemini API Key untuk FLUX.1.");
                 return;
             }
+
+            btnGenerateImage.disabled = true;
+            btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Merender Foto FLUX.1...</span>`;
+            if (window.lucide) lucide.createIcons();
+
+            try {
+                const style = selectedImageStyle || "katalog";
+                const photorealisticPrompt = await optimizePromptForPhotorealism(prompt, style);
+
+                const imgResp = await fetch("/api/generate-image", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        prompt: photorealisticPrompt,
+                        ratio: imageRatio || "9:16",
+                        style: style,
+                        hfToken: hfToken,
+                        apiKey: apiKey
+                    })
+                });
+
+                const imgData = await imgResp.json().catch(() => ({}));
+                if (!imgData.success || !imgData.url) {
+                    throw new Error(imgData.message || "Gagal merender foto dengan model FLUX.1");
+                }
+
+                const chosenUrl = imgData.url;
+                btnGenerateImage.disabled = false;
+                btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (Nano Banana)</span>`;
+                if (window.lucide) lucide.createIcons();
+
+                const imageJob = {
+                    id: "img_" + Date.now(),
+                    prompt: prompt,
+                    title: prompt.substring(0, 45) + "...",
+                    video_url: chosenUrl,
+                    thumbnail_url: chosenUrl,
+                    url: chosenUrl,
+                    duration: "photo",
+                    type: "image",
+                    engine: "FLUX.1 Ultra-HD",
+                    created_at: new Date().toISOString(),
+                    status: "completed"
+                };
+
+                if (Array.isArray(userJobs)) {
+                    userJobs.unshift(imageJob);
+                    if (typeof renderGallery === "function") renderGallery();
+                }
+                openMediaModal(imageJob);
+            } catch (e) {
+                btnGenerateImage.disabled = false;
+                btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (Nano Banana)</span>`;
+                if (window.lucide) lucide.createIcons();
+                alert("Gagal merender FLUX.1: " + e.message);
+            }
+            return;
+        }
+
+        // Default & Rekomendasi Utama: Nano Banana (Google Flow) & Google Imagen 3
+        if (!Array.isArray(userAccounts) || userAccounts.length === 0) {
+            alert("Harap daftarkan Akun Google Anda di tab 'Akun' terlebih dahulu agar sistem dapat login dan merender di Google Flow (Nano Banana)!");
+            switchTab("accounts");
+            return;
         }
 
         btnGenerateImage.disabled = true;
-        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Merender Foto Realistis (FLUX.1 Ultra-HD)...</span>`;
+        btnGenerateImage.innerHTML = `<i data-lucide="loader" class="spin" style="width:18px;height:18px;"></i> <span>Mengirim Tugas Nano Banana ke Antrian...</span>`;
         if (window.lucide) lucide.createIcons();
 
         try {
             const style = selectedImageStyle || "katalog";
-            showToast("Mengoptimasi prompt fotografi fotorealistis...", "info");
-            const photorealisticPrompt = await optimizePromptForPhotorealism(prompt, style);
+            const fullPrompt = `${prompt} [Style: ${style}]`;
 
-            const imgResp = await fetch("/api/generate-image", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    prompt: photorealisticPrompt,
-                    ratio: imageRatio || "9:16",
-                    style: style,
-                    hfToken: hfToken,
-                    apiKey: apiKey
-                })
+            await window.vidoraData.createGenerateJob({
+                prompt: fullPrompt,
+                model: engine.includes("Imagen") ? "Google Imagen 3" : "Nano Banana",
+                ratio: imageRatio || "9:16",
+                duration: "photo",
+                count: 1,
+                googleAccountId: imageAccountSelect ? imageAccountSelect.value : null,
+                hidden: imageHiddenCheck ? imageHiddenCheck.checked : true
             });
 
-            const imgData = await imgResp.json().catch(() => ({}));
-            if (!imgData.success || !imgData.url) {
-                if (imgData.needsToken) {
-                    throw new Error("Token Hugging Face diperlukan. Buat token gratis di https://huggingface.co/settings/tokens");
-                }
-                throw new Error(imgData.message || "Gagal merender foto dengan model FLUX.1");
-            }
-
-            const chosenUrl = imgData.url;
-            const usedEngine = imgData.engine || "FLUX.1 Ultra-HD (Hugging Face)";
-
             btnGenerateImage.disabled = false;
-            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (FLUX.1)</span>`;
+            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (Nano Banana)</span>`;
             if (window.lucide) lucide.createIcons();
 
-            const imageJob = {
-                id: "img_" + Date.now(),
-                prompt: prompt,
-                title: prompt.substring(0, 45) + "...",
-                video_url: chosenUrl,
-                thumbnail_url: chosenUrl,
-                url: chosenUrl,
-                duration: "photo",
-                type: "image",
-                engine: usedEngine,
-                created_at: new Date().toISOString(),
-                status: "completed"
-            };
-
-            // Simpan ke daftar tugas dan perbarui galeri
-            if (Array.isArray(userJobs)) {
-                userJobs.unshift(imageJob);
-                if (typeof renderGallery === "function") renderGallery();
-            }
-
-            openMediaModal(imageJob);
-        } catch (e) {
+            showToast("Tugas foto produk Nano Banana telah masuk ke Antrian!", "success");
+            switchTab("queue");
+            await refreshJobs();
+        } catch (err) {
+            console.error("Image Generation Error:", err);
             btnGenerateImage.disabled = false;
-            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (FLUX.1)</span>`;
+            btnGenerateImage.innerHTML = `<i data-lucide="camera" style="width: 18px; height: 18px;"></i> <span>Generate Gambar (Nano Banana)</span>`;
             if (window.lucide) lucide.createIcons();
-            alert("Gagal memproses gambar fotorealistis: " + e.message);
+            alert("Gagal membuat tugas antrian gambar: " + err.message);
         }
     });
 
     // =========================================================================
-    // 10. Accounts Management (Dinonaktifkan - Sistem 100% Bebas Akun Google)
+    // 10. Accounts Management (Google Multi-Account Vault)
     // =========================================================================
+    if (btnOpenAddAccount) {
+        btnOpenAddAccount.addEventListener("click", () => {
+            if (!checkSubscriptionAccess("Tambah Akun Google")) return;
+
+            const limit = activeProfile?.max_google_accounts || 5;
+            if (activeProfile?.role !== "superadmin" && userAccounts.length >= limit) {
+                if (confirm(`Batas kuota ${limit} akun Google tercapai!\n\nIngin upgrade ke paket Pro / Agency untuk menambah slot akun?`)) {
+                    openCheckoutModal("pro");
+                }
+                return;
+            }
+            if (modalAddAccount) {
+                modalAddAccount.style.display = "flex";
+                modalAddAccount.classList.add("open");
+            }
+        });
+    }
+
+    if (btnCloseAddAccount) {
+        btnCloseAddAccount.addEventListener("click", () => {
+            if (modalAddAccount) {
+                modalAddAccount.style.display = "none";
+                modalAddAccount.classList.remove("open");
+            }
+        });
+    }
+
+    if (formAddAccount) {
+        formAddAccount.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const email = newAccountEmail ? newAccountEmail.value.trim() : "";
+            const label = newAccountLabel ? newAccountLabel.value.trim() : "";
+
+            if (!email) return;
+
+            try {
+                await window.vidoraData.addGoogleAccount(email, label);
+                if (newAccountEmail) newAccountEmail.value = "";
+                if (newAccountLabel) newAccountLabel.value = "";
+                if (modalAddAccount) {
+                    modalAddAccount.style.display = "none";
+                    modalAddAccount.classList.remove("open");
+                }
+                await refreshAccounts();
+                alert(`Akun Google ${email} berhasil didaftarkan ke vault!\n\nSesi browser otomatis tersambung saat worker dijalankan.`);
+            } catch (err) {
+                alert(err.message || "Gagal mendaftarkan akun Google");
+            }
+        });
+    }
+
     async function refreshAccounts() {
-        return;
+        try {
+            userAccounts = (await window.vidoraData.getGoogleAccounts()) || [];
+        } catch (err) {
+            console.warn("getGoogleAccounts fallback:", err);
+            userAccounts = [];
+        }
+
+        // Update dropdowns
+        const updateDropdown = (selectElem) => {
+            if (!selectElem) return;
+            const currentVal = selectElem.value;
+            selectElem.innerHTML = `<option value="">-- Rotasi Otomatis Semua Akun Aktif (${userAccounts.length} Akun) --</option>`;
+            userAccounts.forEach(acc => {
+                const opt = document.createElement("option");
+                opt.value = acc.id;
+                opt.textContent = `${acc.email} (${acc.label || 'Akun'})`;
+                if (currentVal === acc.id) opt.selected = true;
+                selectElem.appendChild(opt);
+            });
+            if (currentVal && selectElem.querySelector(`option[value="${currentVal}"]`)) {
+                selectElem.value = currentVal;
+            }
+        };
+
+        updateDropdown(videoAccountSelect);
+        updateDropdown(imageAccountSelect);
+
+        // Update Quota limits bar
+        const limit = activeProfile?.max_google_accounts || 5;
+        if (accountLimitText && accountLimitFill) {
+            if (activeProfile?.role === "superadmin") {
+                accountLimitText.textContent = `${userAccounts.length} / Unlimited (Super Admin)`;
+                accountLimitFill.style.width = "100%";
+                accountLimitFill.style.background = "#fbbf24";
+            } else {
+                accountLimitText.textContent = `${userAccounts.length} / ${limit} Akun Terpasang`;
+                const pct = Math.min(100, Math.round((userAccounts.length / limit) * 100));
+                accountLimitFill.style.width = `${pct}%`;
+                accountLimitFill.style.background = pct >= 100 ? "#f43f5e" : "var(--primary)";
+            }
+        }
+
+        // Render List
+        if (accountsList) {
+            accountsList.innerHTML = "";
+            if (userAccounts.length === 0) {
+                accountsList.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: var(--text-tertiary);">
+                        <i data-lucide="user-plus" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+                        <p>Belum ada akun Google terdaftar. Ketuk "+ Tambah Akun Google" di atas.</p>
+                    </div>
+                `;
+            } else {
+                userAccounts.forEach(acc => {
+                    const item = document.createElement("div");
+                    item.className = "account-item";
+                    item.style.display = "flex";
+                    item.style.justifyContent = "space-between";
+                    item.style.alignItems = "center";
+                    item.style.padding = "12px";
+                    item.style.marginBottom = "8px";
+                    item.style.background = "rgba(255, 255, 255, 0.03)";
+                    item.style.border = "1px solid rgba(255, 255, 255, 0.08)";
+                    item.style.borderRadius = "var(--radius-md)";
+                    item.innerHTML = `
+                        <div class="account-info">
+                            <div class="account-email" style="font-weight: 600; font-size: 13.5px; color: white;">${acc.email}</div>
+                            <div class="account-meta" style="font-size: 11.5px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                                <span>${acc.label || 'Akun Google Vault'}</span> &bull; 
+                                <span style="color: #10b981; font-weight: 600;">● Aktif</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="btn-remove-account" data-id="${acc.id}" title="Hapus Akun" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer;">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    `;
+                    accountsList.appendChild(item);
+                });
+
+                // Wire delete buttons
+                accountsList.querySelectorAll(".btn-remove-account").forEach(btn => {
+                    btn.addEventListener("click", async (e) => {
+                        e.stopPropagation();
+                        const accId = btn.getAttribute("data-id");
+                        if (confirm("Hapus akun Google ini dari VIDORA Vault?")) {
+                            await window.vidoraData.deleteGoogleAccount(accId);
+                            await refreshAccounts();
+                        }
+                    });
+                });
+            }
+        }
+        if (window.lucide) lucide.createIcons();
     }
 
     // =========================================================================

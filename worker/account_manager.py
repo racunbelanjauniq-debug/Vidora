@@ -10,24 +10,30 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flow_engine import GoogleAccountSession, get_profile_dir, sanitize_email, get_chrome_exe
 
-def pair_google_account(email, headful=True):
+def pair_google_account(email, headful=True, service="flow"):
     """
     Buka jendela Chrome secara tampak (headful) agar user/admin bisa login ke Google.
     Setelah user selesai login dan menutup jendela, profil tersimpan permanen.
+    Mendukung Google Flow (Nano Banana & Veo) serta Google Vids (docs.google.com/videos).
     """
     email = email.strip()
     if not email:
         raise ValueError("Email tidak boleh kosong.")
 
+    service = (service or "flow").lower()
+    target_url = "https://docs.google.com/videos" if service in ("vids", "google_vids") else "https://labs.google/fx/tools/flow"
+    service_label = "Google Vids" if service in ("vids", "google_vids") else "Google Flow (Nano Banana & Veo)"
+
     print(f"\n=======================================================")
     print(f" [VIDORA] Membuka browser untuk login Google: {email}")
+    print(f" Layanan: {service_label} ({target_url})")
     print(f" Silakan login ke akun Google Anda di jendela browser yang muncul.")
-    print(f" Setelah selesai login dan masuk ke Google Flow, tutup jendela.")
+    print(f" Setelah selesai login dan masuk ke {service_label}, tutup jendela.")
     print(f"=======================================================\n")
 
     session = GoogleAccountSession(email=email, hidden=False)
-    # Buka langsung ke Google Flow atau halaman login
-    proc = session.launch_browser(url="https://labs.google/fx/tools/flow", headful=True)
+    # Buka langsung ke Google Flow atau Google Vids
+    proc = session.launch_browser(url=target_url, headful=True)
     
     # Tunggu sampai proses browser ditutup oleh user
     try:
@@ -73,8 +79,9 @@ def delete_account_profile(email):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         cmd = sys.argv[1].lower()
-        if cmd == "login" and len(sys.argv) > 2:
-            pair_google_account(sys.argv[2])
+        if cmd in ("login", "pair") and len(sys.argv) > 2:
+            service = sys.argv[3] if len(sys.argv) > 3 else "flow"
+            pair_google_account(sys.argv[2], service=service)
         elif cmd == "check" and len(sys.argv) > 2:
             res = check_account_credit(sys.argv[2])
             print(f"Hasil Cek: {res}")
@@ -82,8 +89,8 @@ if __name__ == "__main__":
             delete_account_profile(sys.argv[2])
         else:
             print("Penggunaan:")
-            print("  python account_manager.py login <email>")
+            print("  python account_manager.py login <email> [flow|vids]")
             print("  python account_manager.py check <email>")
             print("  python account_manager.py delete <email>")
     else:
-        print("Penggunaan: python account_manager.py [login|check|delete] <email>")
+        print("Penggunaan: python account_manager.py [login|check|delete] <email> [flow|vids]")
