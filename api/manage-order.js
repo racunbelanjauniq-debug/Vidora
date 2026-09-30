@@ -89,11 +89,14 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const body = await parseBody(req);
+    const body = await parseBody(req) || {};
     const query = req.query || (req.url && req.url.includes('?') ? Object.fromEntries(new URL(req.url, 'http://localhost').searchParams) : {});
-    const action = body.action || query.action || (req.method === 'DELETE' ? 'delete_order' : '');
+    const action = (body.action || query.action || (req.method === 'DELETE' ? 'delete_order' : '')).trim();
     const orderId = body.order_id || body.orderId || query.order_id || query.orderId;
     const userId = body.user_id || body.userId || query.user_id || query.userId;
+
+    // DEBUG LOG - untuk trace masalah di Vercel logs
+    console.log(`[Manage Order] method=${req.method} action="${action}" bodyKeys=${Object.keys(body).join(',') || 'none'}`);
 
     if (action === 'delete_order') {
       if (!orderId) {
@@ -791,7 +794,8 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, accounts: [] });
     }
 
-    return res.status(400).json({ error: 'Aksi tidak valid' });
+    console.error(`[Manage Order] AKSI TIDAK VALID: action="${action}" method=${req.method} bodyKeys=${Object.keys(body).join(',') || 'none'}`);
+    return res.status(400).json({ error: `Aksi tidak valid: "${action || '(kosong)'}" tidak dikenal oleh server.` });
   } catch (err) {
     console.error('[Manage Order Fatal Error]:', err);
     return res.status(500).json({ error: err.message });
