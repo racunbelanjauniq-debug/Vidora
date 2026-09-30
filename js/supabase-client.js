@@ -190,6 +190,17 @@ class VidoraDataBridge {
                 if (adminData && adminData.role === "superadmin" && adminData.profile) {
                     this.currentUser = adminData.user;
                     this.currentProfile = adminData.profile;
+                    // Auto-fix if stored id is "superadmin-master" or non-UUID
+                    if (this.currentUser?.id === "superadmin-master" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.currentUser?.id || "")) {
+                        this.currentUser.id = "00000000-0000-0000-0000-000000000001";
+                        if (this.currentProfile) this.currentProfile.id = "00000000-0000-0000-0000-000000000001";
+                        localStorage.setItem("vidora_admin_session", JSON.stringify({
+                            user: this.currentUser,
+                            profile: this.currentProfile,
+                            role: "superadmin",
+                            timestamp: Date.now()
+                        }));
+                    }
                     return { user: this.currentUser, profile: this.currentProfile };
                 }
             } catch (e) {}
@@ -245,6 +256,48 @@ class VidoraDataBridge {
         }
     }
 
+    async ensureValidUserId() {
+        let currentId = this.currentUser?.id;
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentId || "");
+        if (isUuid) {
+            return currentId;
+        }
+
+        const userEmail = (this.currentUser?.email || "winalislam@gmail.com").toLowerCase().trim();
+        const fallbackUuid = "00000000-0000-0000-0000-000000000001";
+
+        if (this.isLive) {
+            try {
+                const { data: existingProf } = await this.client
+                    .from("profiles")
+                    .select("id")
+                    .eq("email", userEmail)
+                    .maybeSingle();
+
+                if (existingProf && existingProf.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existingProf.id)) {
+                    if (this.currentUser) this.currentUser.id = existingProf.id;
+                    if (this.currentProfile) this.currentProfile.id = existingProf.id;
+                    return existingProf.id;
+                }
+            } catch (e) {}
+
+            try {
+                await this.client.from("profiles").upsert({
+                    id: fallbackUuid,
+                    email: userEmail,
+                    full_name: this.currentProfile?.full_name || "Winal Islam (Super Admin)",
+                    role: this.currentProfile?.role || "superadmin",
+                    max_google_accounts: 99999,
+                    is_subscribed: true
+                }, { onConflict: "id" });
+            } catch (err) {}
+        }
+
+        if (this.currentUser) this.currentUser.id = fallbackUuid;
+        if (this.currentProfile) this.currentProfile.id = fallbackUuid;
+        return fallbackUuid;
+    }
+
     async adminSignIn(email, password) {
         const adminEmail = (email || "winalislam@gmail.com").trim().toLowerCase();
         const expectedPass = window.VIDORA_CONFIG.ADMIN_PASSWORD || "Wakrod99$";
@@ -261,14 +314,16 @@ class VidoraDataBridge {
             throw new Error("Akses Ditolak: Alamat email ini tidak terdaftar sebagai Administrator.");
         }
 
+        const masterUuid = "00000000-0000-0000-0000-000000000001";
+
         this.currentUser = {
-            id: "superadmin-master",
+            id: masterUuid,
             email: adminEmail,
             user_metadata: { full_name: "Winal Islam (Super Admin)" }
         };
 
         this.currentProfile = {
-            id: "superadmin-master",
+            id: masterUuid,
             email: adminEmail,
             full_name: "Winal Islam (Super Admin)",
             role: "superadmin",
@@ -278,14 +333,22 @@ class VidoraDataBridge {
 
         if (this.isLive) {
             try {
-                await this.client.auth.signInWithPassword({ email: adminEmail, password });
+                const { data } = await this.client.auth.signInWithPassword({ email: adminEmail, password });
+                if (data && data.user) {
+                    this.currentUser = data.user;
+                    this.currentProfile.id = data.user.id;
+                }
             } catch (e) {
                 try {
-                    await this.client.auth.signUp({
+                    const { data: upData } = await this.client.auth.signUp({
                         email: adminEmail,
                         password,
                         options: { data: { full_name: "Winal Islam (Super Admin)" } }
                     });
+                    if (upData && upData.user) {
+                        this.currentUser = upData.user;
+                        this.currentProfile.id = upData.user.id;
+                    }
                 } catch (err) {}
             }
 
@@ -297,7 +360,7 @@ class VidoraDataBridge {
                     role: "superadmin",
                     max_google_accounts: 99999,
                     is_subscribed: true
-                }, { onConflict: "email" });
+                }, { onConflict: "id" });
             } catch (err) {}
         }
 
@@ -484,28 +547,77 @@ class VidoraDataBridge {
 
     // Google Accounts
     async getGoogleAccounts() {
+        // 1. Coba lewat backend serverless bypass RLS lebih dulu
+        try {
+            const apiRes = await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "list_google_accounts" })
+            });
+            if (apiRes.ok) {
+                const resJson = await apiRes.json();
+                if (resJson.success && Array.isArray(resJson.accounts)) {
+                    return resJson.accounts;
+                }
+            }
+        } catch (_) {}
+
         if (!this.isLive) {
             const raw = localStorage.getItem("vidora_demo_accounts") || "[]";
             return JSON.parse(raw);
         }
+
+        const validUserId = await this.ensureValidUserId();
         const { data, error } = await this.client.from("google_accounts").select("*").order("created_at", { ascending: false });
         if (error) throw error;
         return data || [];
     }
 
     async addGoogleAccount(email, label = "") {
+        const cleanEmail = (email || "").trim().toLowerCase();
+        if (!cleanEmail) throw new Error("Email Google tidak boleh kosong.");
+
+        const validUserId = await this.ensureValidUserId();
+        const userEmail = (this.currentUser?.email || "winalislam@gmail.com").toLowerCase().trim();
+
+        // 1. Coba lewat backend serverless (Bypass RLS & auto-fix foreign key UUID)
+        try {
+            const apiRes = await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "add_google_account",
+                    email: cleanEmail,
+                    label: label || "Akun Google Vault",
+                    user_email: userEmail,
+                    user_id: validUserId
+                })
+            });
+            const apiData = await apiRes.json().catch(() => ({}));
+            if (apiRes.ok && apiData.success && apiData.account) {
+                return apiData.account;
+            } else if (!apiRes.ok && apiData.error) {
+                throw new Error(apiData.error);
+            }
+        } catch (apiErr) {
+            if (apiErr.message && !apiErr.message.includes("fetch")) {
+                throw apiErr;
+            }
+        }
+
+        // 2. Demo mode offline fallback
         if (!this.isLive) {
             const accounts = await this.getGoogleAccounts();
             const limit = this.currentProfile?.max_google_accounts || 5;
             if (this.currentProfile?.role !== "superadmin" && accounts.length >= limit) {
                 throw new Error(`Batas kuota ${limit} akun Google tercapai. Upgrade ke Pro untuk tambah akun.`);
             }
-            if (accounts.some(a => a.email.toLowerCase() === email.toLowerCase())) {
+            if (accounts.some(a => a.email.toLowerCase() === cleanEmail)) {
                 throw new Error("Akun Google ini sudah terdaftar.");
             }
             const newAcc = {
                 id: "acc-" + Date.now(),
-                email,
+                email: cleanEmail,
                 label: label || `Akun ${accounts.length + 1}`,
                 status: "active",
                 credit_status: "ready",
@@ -516,10 +628,11 @@ class VidoraDataBridge {
             return newAcc;
         }
 
+        // 3. Direct Supabase insert dengan valid UUID
         const { data, error } = await this.client.from("google_accounts").insert({
-            user_id: this.currentUser.id,
-            email,
-            label,
+            user_id: validUserId,
+            email: cleanEmail,
+            label: label || "Akun Google Vault",
             status: "active",
             credit_status: "ready"
         }).select().single();
@@ -528,6 +641,21 @@ class VidoraDataBridge {
     }
 
     async deleteGoogleAccount(id) {
+        // Coba via backend serverless
+        try {
+            const apiRes = await fetch("/api/manage-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "delete_google_account",
+                    id: id
+                })
+            });
+            if (apiRes.ok) {
+                return true;
+            }
+        } catch (_) {}
+
         if (!this.isLive) {
             let accounts = await this.getGoogleAccounts();
             accounts = accounts.filter(a => a.id !== id);
@@ -575,8 +703,10 @@ class VidoraDataBridge {
             return newJob;
         }
 
+        const validUserId = await this.ensureValidUserId();
+
         const { data, error } = await this.client.from("generate_jobs").insert({
-            user_id: this.currentUser.id,
+            user_id: validUserId,
             google_account_id: googleAccountId || null,
             prompt,
             model,

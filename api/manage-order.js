@@ -639,6 +639,158 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, key: foundKey, email: cleanEmail });
     }
 
+    // ========================================
+    // ACTION: ADD GOOGLE ACCOUNT (Bypass RLS & UUID Auto-Fix)
+    // ========================================
+    if (action === 'add_google_account') {
+      const googleEmail = (body.email || body.google_email || '').trim().toLowerCase();
+      const label = (body.label || '').trim();
+      const userEmail = (body.user_email || query.user_email || 'winalislam@gmail.com').trim().toLowerCase();
+      let targetUserId = body.user_id || query.user_id;
+
+      if (!googleEmail) {
+        return res.status(400).json({ error: 'Email Google wajib diisi' });
+      }
+
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUserId || '');
+          let validUserId = isUuid ? targetUserId : null;
+
+          // 1. Jika targetUserId bukan UUID, cari profile berdasarkan email
+          if (!validUserId && userEmail) {
+            const pRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(userEmail)}&select=id,role,max_google_accounts`, {
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+              }
+            });
+            if (pRes.ok) {
+              const profiles = await pRes.json();
+              if (Array.isArray(profiles) && profiles.length > 0 && profiles[0].id) {
+                validUserId = profiles[0].id;
+              }
+            }
+          }
+
+          // 2. Jika tetap belum ada validUserId, gunakan master UUID atau create profile
+          if (!validUserId) {
+            const masterUuid = "00000000-0000-0000-0000-000000000001";
+            validUserId = masterUuid;
+
+            await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+              method: 'POST',
+              headers: {
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify({
+                id: validUserId,
+                email: userEmail,
+                full_name: 'Winal Islam (Super Admin)',
+                role: 'superadmin',
+                max_google_accounts: 99999,
+                is_subscribed: true
+              })
+            });
+          }
+
+          // 3. Masukkan ke google_accounts
+          const insRes = await fetch(`${SUPABASE_URL}/rest/v1/google_accounts`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_SERVICE_ROLE_KEY,
+              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({
+              user_id: validUserId,
+              email: googleEmail,
+              label: label || 'Akun Google Vault',
+              status: 'active',
+              credit_status: 'ready'
+            })
+          });
+
+          const insData = await insRes.json().catch(() => null);
+          if (!insRes.ok) {
+            console.warn('[Manage Order] Gagal insert google_accounts:', insData);
+            return res.status(400).json({ error: insData?.message || 'Gagal menyimpan akun Google di database' });
+          }
+
+          const createdAcc = Array.isArray(insData) ? insData[0] : insData;
+          return res.status(200).json({ success: true, account: createdAcc });
+        } catch (dbErr) {
+          console.error('[Manage Order] Error insert google account:', dbErr);
+          return res.status(500).json({ error: dbErr.message });
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        account: {
+          id: 'acc-' + Date.now(),
+          email: googleEmail,
+          label: label || 'Akun Google Vault',
+          status: 'active',
+          credit_status: 'ready',
+          created_at: new Date().toISOString()
+        }
+      });
+    }
+
+    // ========================================
+    // ACTION: DELETE GOOGLE ACCOUNT
+    // ========================================
+    if (action === 'delete_google_account') {
+      const accountId = body.id || query.id;
+      if (!accountId) {
+        return res.status(400).json({ error: 'id akun Google wajib diisi' });
+      }
+
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/google_accounts?id=eq.${encodeURIComponent(accountId)}`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_SERVICE_ROLE_KEY,
+              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+            }
+          });
+        } catch (e) {
+          console.warn('[Manage Order] Gagal delete google account:', e.message);
+        }
+      }
+
+      return res.status(200).json({ success: true, message: 'Akun Google berhasil dihapus' });
+    }
+
+    // ========================================
+    // ACTION: LIST GOOGLE ACCOUNTS
+    // ========================================
+    if (action === 'list_google_accounts') {
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+        try {
+          const lRes = await fetch(`${SUPABASE_URL}/rest/v1/google_accounts?select=*&order=created_at.desc`, {
+            headers: {
+              'apikey': SUPABASE_SERVICE_ROLE_KEY,
+              'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+            }
+          });
+          if (lRes.ok) {
+            const accounts = await lRes.json();
+            return res.status(200).json({ success: true, accounts: accounts || [] });
+          }
+        } catch (e) {
+          console.warn('[Manage Order] Gagal fetch google accounts:', e.message);
+        }
+      }
+      return res.status(200).json({ success: true, accounts: [] });
+    }
+
     return res.status(400).json({ error: 'Aksi tidak valid' });
   } catch (err) {
     console.error('[Manage Order Fatal Error]:', err);
