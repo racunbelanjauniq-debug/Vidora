@@ -547,9 +547,10 @@ class VidoraDataBridge {
 
     // Google Accounts
     async getGoogleAccounts() {
-        // 1. Coba lewat backend serverless bypass RLS lebih dulu
+        // 1. Coba lewat backend serverless bypass RLS
+        // Action juga dikirim via URL query param sebagai backup jika body parsing Vercel bermasalah
         try {
-            const apiRes = await fetch("/api/manage-order", {
+            const apiRes = await fetch("/api/manage-order?action=list_google_accounts", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "list_google_accounts" })
@@ -581,28 +582,33 @@ class VidoraDataBridge {
         const userEmail = (this.currentUser?.email || "winalislam@gmail.com").toLowerCase().trim();
 
         // 1. Coba lewat backend serverless (Bypass RLS & auto-fix foreign key UUID)
+        // Action WAJIB ada di URL query param agar tidak bergantung pada body parsing
         try {
-            const apiRes = await fetch("/api/manage-order", {
+            const payload = {
+                action: "add_google_account",
+                email: cleanEmail,
+                label: label || "Akun Google Vault",
+                user_email: userEmail,
+                user_id: validUserId
+            };
+            const apiRes = await fetch("/api/manage-order?action=add_google_account", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "add_google_account",
-                    email: cleanEmail,
-                    label: label || "Akun Google Vault",
-                    user_email: userEmail,
-                    user_id: validUserId
-                })
+                body: JSON.stringify(payload)
             });
             const apiData = await apiRes.json().catch(() => ({}));
             if (apiRes.ok && apiData.success && apiData.account) {
                 return apiData.account;
-            } else if (!apiRes.ok && apiData.error) {
+            } else if (apiData.error) {
+                // Tampilkan error nyata dari server ke user
                 throw new Error(apiData.error);
             }
         } catch (apiErr) {
-            if (apiErr.message && !apiErr.message.includes("fetch")) {
+            // Re-throw error dari server (bukan error network)
+            if (apiErr.message && !apiErr.message.toLowerCase().includes("failed to fetch") && !apiErr.message.toLowerCase().includes("networkerror")) {
                 throw apiErr;
             }
+            console.warn("[VIDORA] Backend add_google_account gagal, coba fallback:", apiErr.message);
         }
 
         // 2. Demo mode offline fallback
@@ -641,9 +647,9 @@ class VidoraDataBridge {
     }
 
     async deleteGoogleAccount(id) {
-        // Coba via backend serverless
+        // Coba via backend serverless — action di URL query param agar aman
         try {
-            const apiRes = await fetch("/api/manage-order", {
+            const apiRes = await fetch("/api/manage-order?action=delete_google_account", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
