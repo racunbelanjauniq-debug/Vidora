@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     full_name TEXT,
     avatar_url TEXT,
     role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
-    max_google_accounts INT DEFAULT 5, -- Maksimal 5 akun untuk user, 99999 untuk superadmin
+    max_google_accounts INT DEFAULT 3, -- Maksimal 3 akun untuk user biasa, 99999 untuk superadmin
     is_subscribed BOOLEAN DEFAULT FALSE, -- Status langganan Creator Pass
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -160,13 +160,13 @@ BEGIN
     IF NEW.status = 'paid' AND (OLD.status IS DISTINCT FROM 'paid') THEN
         IF NEW.user_id IS NOT NULL THEN
             UPDATE public.profiles
-            SET max_google_accounts = 5,
+            SET max_google_accounts = 3,
                 is_subscribed = TRUE,
                 updated_at = now()
             WHERE id = NEW.user_id;
         ELSIF NEW.customer_email IS NOT NULL THEN
             UPDATE public.profiles
-            SET max_google_accounts = 5,
+            SET max_google_accounts = 3,
                 is_subscribed = TRUE,
                 updated_at = now()
             WHERE email = NEW.customer_email;

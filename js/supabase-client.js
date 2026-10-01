@@ -120,7 +120,7 @@ class VidoraDataBridge {
             email: this.currentUser.email,
             full_name: role === "superadmin" ? "Winal Islam (Super Admin)" : "Winal Islam (Member)",
             role: role,
-            max_google_accounts: role === "superadmin" ? 99999 : 5,
+            max_google_accounts: role === "superadmin" ? 99999 : 3,
             is_subscribed: sub
         };
         localStorage.setItem("vidora_demo_current_user", JSON.stringify({
@@ -226,7 +226,7 @@ class VidoraDataBridge {
                 email: this.currentUser.email, 
                 full_name: this.currentUser.user_metadata?.full_name || this.currentUser.email.split("@")[0],
                 role: 'user', 
-                max_google_accounts: 5 
+                max_google_accounts: 3 
             };
             // Whitelist Super Admin for Owner
             const isOwner = this.currentUser.email === "winalislam@gmail.com" || 
@@ -391,7 +391,7 @@ class VidoraDataBridge {
                 email: cleanEmail,
                 full_name: cleanEmail.split("@")[0],
                 role: (isOwner || cleanEmail.includes("admin")) ? "superadmin" : "user",
-                max_google_accounts: (isOwner || cleanEmail.includes("admin")) ? 99999 : 5
+                max_google_accounts: (isOwner || cleanEmail.includes("admin")) ? 99999 : 3
             };
             localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
             return { user: this.currentUser, profile: this.currentProfile };
@@ -445,7 +445,7 @@ class VidoraDataBridge {
                 full_name: cleanName,
                 phone: cleanPhone,
                 role: (isOwner || cleanEmail.includes("admin")) ? "superadmin" : "user",
-                max_google_accounts: (isOwner || cleanEmail.includes("admin")) ? 99999 : 5
+                max_google_accounts: (isOwner || cleanEmail.includes("admin")) ? 99999 : 3
             };
             localStorage.setItem("vidora_demo_current_user", JSON.stringify({ user: this.currentUser, profile: this.currentProfile }));
             return { user: this.currentUser, profile: this.currentProfile };
@@ -614,7 +614,7 @@ class VidoraDataBridge {
         // 2. Demo mode offline fallback
         if (!this.isLive) {
             const accounts = await this.getGoogleAccounts();
-            const limit = this.currentProfile?.max_google_accounts || 5;
+            const limit = this.currentProfile?.max_google_accounts || 3;
             if (this.currentProfile?.role !== "superadmin" && accounts.length >= limit) {
                 throw new Error(`Batas kuota ${limit} akun Google tercapai. Upgrade ke Pro untuk tambah akun.`);
             }
@@ -790,7 +790,7 @@ class VidoraDataBridge {
                     email: "kreator_affiliate@gmail.com",
                     full_name: "Budi Santoso (Kreator Pro)",
                     role: "user",
-                    max_google_accounts: 5,
+                    max_google_accounts: 3,
                     is_subscribed: true,
                     created_at: new Date(Date.now() - 172800000).toISOString()
                 },
@@ -799,7 +799,7 @@ class VidoraDataBridge {
                     email: "toko_cantik@gmail.com",
                     full_name: "Siti Rahma (Olshop)",
                     role: "user",
-                    max_google_accounts: 5,
+                    max_google_accounts: 3,
                     is_subscribed: false,
                     created_at: new Date(Date.now() - 86400000).toISOString()
                 }
@@ -976,7 +976,7 @@ class VidoraDataBridge {
             email: email.trim(),
             full_name: fullName.trim() || email.split("@")[0],
             role: role || "user",
-            max_google_accounts: role === "superadmin" ? 99999 : 5,
+            max_google_accounts: role === "superadmin" ? 99999 : 3,
             is_subscribed: isSubscribed === true,
             created_at: new Date().toISOString()
         };

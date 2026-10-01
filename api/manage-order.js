@@ -333,7 +333,7 @@ module.exports = async function handler(req, res) {
               full_name: fullName,
               phone: phone,
               role: (email === 'winalislam@gmail.com' || email.includes('admin')) ? 'superadmin' : 'user',
-              max_google_accounts: 5,
+              max_google_accounts: 3,
               updated_at: new Date().toISOString()
             })
           }).catch(e => console.warn('[Manage Order] profiles sync error:', e.message));
@@ -410,7 +410,7 @@ module.exports = async function handler(req, res) {
                 phone: (au.user_metadata && au.user_metadata.phone) || au.phone || '',
                 role: (au.email === 'winalislam@gmail.com' || au.email.includes('admin')) ? 'superadmin' : 'user',
                 is_subscribed: (au.email === 'winalislam@gmail.com' || au.email.includes('admin')),
-                max_google_accounts: (au.email === 'winalislam@gmail.com' || au.email.includes('admin')) ? 99999 : 5,
+                max_google_accounts: (au.email === 'winalislam@gmail.com' || au.email.includes('admin')) ? 99999 : 3,
                 created_at: au.created_at || new Date().toISOString()
               };
               profileList.unshift(newProf);
@@ -464,7 +464,7 @@ module.exports = async function handler(req, res) {
       if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
         return res.status(200).json({ success: true, message: 'Akses diset (mode lokal)' });
       }
-      const maxAccounts = parseInt(body.max_google_accounts) || 5;
+      const maxAccounts = parseInt(body.max_google_accounts) || 3;
 
       let filterQuery = targetId ? `id=eq.${encodeURIComponent(targetId)}` : `email=eq.${encodeURIComponent(targetEmail)}`;
       const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?${filterQuery}`, {
