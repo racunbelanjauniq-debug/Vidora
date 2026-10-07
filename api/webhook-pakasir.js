@@ -69,6 +69,23 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'order_id wajib disertakan dalam payload' });
     }
 
+    // FORWARDING UNTUK ORDER VIDEOZ (VZ- / VIDEOZ-)
+    if (String(order_id).startsWith('VZ-') || String(order_id).startsWith('VIDEOZ-')) {
+      console.log(`[Vidora Webhook Proxy] Terdeteksi order Videoz (${order_id}), meneruskan ke videoz.biz.id...`);
+      try {
+        const vzRes = await fetch('https://www.videoz.biz.id/api/webhook-pakasir', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const vzData = await vzRes.json();
+        return res.status(vzRes.status).json(vzData);
+      } catch (vzErr) {
+        console.error('[Vidora Webhook Proxy Error]:', vzErr.message);
+        return res.status(500).json({ error: 'Gagal meneruskan webhook ke Videoz', detail: vzErr.message });
+      }
+    }
+
     // Hanya proses jika status transaksi 'completed'
     if (status !== 'completed') {
       return res.status(200).json({
